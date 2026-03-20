@@ -1,0 +1,9 @@
+# .gitignore
+skills-lock.json
+.skill-lock.json
+.agents/
+.claude/
+.cursor/
+.codex/
+node_modules/
+.DS_Store
