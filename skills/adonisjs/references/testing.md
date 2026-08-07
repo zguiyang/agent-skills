@@ -1,60 +1,62 @@
 # Testing — AdonisJS v7
 
-Official: https://docs.adonisjs.com/guides/testing/introduction.md  
-Lookup: `python3 scripts/lookup_docs.py --fetch guides/testing/api-tests`
+Lookup:
 
-## Official pages
-
-- [Introduction](https://docs.adonisjs.com/guides/testing/introduction.md)
-- [API tests](https://docs.adonisjs.com/guides/testing/api-tests.md)
-- [Browser tests](https://docs.adonisjs.com/guides/testing/browser-tests.md)
-- [Console tests](https://docs.adonisjs.com/guides/testing/console-tests.md)
-- [Resetting state](https://docs.adonisjs.com/guides/testing/resetting-state-between-tests.md)
-- [Database assertions](https://docs.adonisjs.com/guides/testing/database-assertions.md)
-- [Test doubles](https://docs.adonisjs.com/guides/testing/test-doubles.md)
+- `python3 scripts/lookup_docs.py --fetch guides/testing/introduction`
+- `python3 scripts/lookup_docs.py --fetch guides/testing/api-tests`
+- `python3 scripts/lookup_docs.py --fetch guides/testing/browser-tests`
+- `python3 scripts/lookup_docs.py --fetch guides/testing/mocks-and-fakes`
 
 ## Stack
 
-- Runner: **Japa** + `@japa/plugin-adonisjs`
-- Suites in `adonisrc.ts`; plugins in `tests/bootstrap.ts`
-- Prefer real HTTP via API client over mocking the stack
+**Japa** + `@japa/plugin-adonisjs` (not Jest/Vitest by default).
 
 ```bash
-node ace make:test posts/index --suite=functional
 node ace test
-node ace test --files=posts/index
 ```
 
-## API tests (pattern)
+v7 globs use `*.spec.{ts,js}` (see `adonisrc.ts`).
+
+## Bootstrap (API kit pattern)
+
+`tests/bootstrap.ts` typically registers:
+
+- `pluginAdonisJS(app)`
+- `apiClient()` (`@japa/api-client`)
+- `sessionApiClient(app)` / `authApiClient(app)` when testing session or tokens
+
+## API tests
+
+Real HTTP against the app (not mocked Express handlers):
 
 ```ts
 import { test } from '@japa/runner'
 
 test.group('Posts API', () => {
-  test('list posts', async ({ client }) => {
-    const response = await client.get('/posts')
+  test('lists posts', async ({ client }) => {
+    const response = await client.get('/api/posts')
+    response.assertStatus(200)
+  })
+
+  test('creates post', async ({ client }) => {
+    const response = await client.visit('posts.store').json({
+      title: 'Hello',
+      content: 'Body',
+    })
     response.assertStatus(200)
   })
 })
 ```
 
-Use `client.visit('route.name')` when working with named routes; enable `authApiClient` / `sessionApiClient` as documented. `.env.test` often sets `SESSION_DRIVER=memory`.
+Also: `client.post|put|patch|delete(url)`. Prefer route names via `visit` when the registry is typed.
 
-## DB isolation
+Protect routes: use auth/session API-client plugins from the docs — do not invent Passport helpers.
 
-```ts
-test.group('Posts', (group) => {
-  group.each.setup(async () => {
-    // truncate / migrate helpers from testUtils.db() — see resetting-state guide
-  })
-})
-```
+## Practices
 
-## Fakes
+- Reset DB / state between tests per official “resetting state” guide
+- Prefer framework fakes (mail, hash, emitter, drive) and container swaps
+- Browser tests → Playwright guide; console tests → Ace command guide
+- Assert with Japa assert API on status / body / cookies
 
-Mail, Hash, Emitter, Drive fakes + container swaps — see test-doubles guide. Prefer fakes over monkey-patching internals.
-
-## Do not
-
-- Default to Jest/Vitest for new Adonis apps.
-- Skip DB cleanup between tests that write data.
+When unsure: `--fetch` the matching testing guide before inventing a runner.

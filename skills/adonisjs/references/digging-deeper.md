@@ -1,47 +1,72 @@
 # Digging deeper — AdonisJS v7
 
-Official index: see [llms.md](llms.md) → Digging Deeper  
-Lookup: `python3 scripts/lookup_docs.py --fetch guides/digging-deeper/mail`
+Lookup: `python3 scripts/lookup_docs.py --fetch guides/digging-deeper/<package>`  
+Queues: `python3 scripts/lookup_docs.py --fetch guides/digging-deeper/queues`
 
 ## Official pages
 
-- [Cache](https://docs.adonisjs.com/guides/digging-deeper/cache.md)
-- [Drive](https://docs.adonisjs.com/guides/digging-deeper/drive.md)
-- [Emitter](https://docs.adonisjs.com/guides/digging-deeper/emitter.md)
-- [Health checks](https://docs.adonisjs.com/guides/digging-deeper/health-checks.md)
-- [I18n](https://docs.adonisjs.com/guides/digging-deeper/i18n.md)
-- [Atomic locks](https://docs.adonisjs.com/guides/digging-deeper/locks.md)
-- [Logger](https://docs.adonisjs.com/guides/digging-deeper/logger.md)
-- [Mail](https://docs.adonisjs.com/guides/digging-deeper/mail.md)
-- [Queues](https://docs.adonisjs.com/guides/digging-deeper/queues.md)
-- [Server-Sent Events](https://docs.adonisjs.com/guides/digging-deeper/server-sent-events.md)
-- [OpenTelemetry](https://docs.adonisjs.com/guides/digging-deeper/opentelemetry.md)
+Cache · Drive · Emitter · Health checks · I18n · Locks · Logger · Mail · **Queues** · SSE (Transmit) · OpenTelemetry
 
-## Install pattern
+## Integration rule
 
 ```bash
-node ace add @adonisjs/mail
-node ace add @adonisjs/cache
-node ace add @adonisjs/drive
-# …same pattern for other first-party packages
+node ace add @adonisjs/<package>
 ```
 
-Always prefer `node ace add` / `configure` so providers, env, and stubs land correctly.
+Read the matching guide for config keys; implement the minimal feature the user asked for; `--fetch` for API depth. Do not invent Express/Bull/Laravel queue APIs.
 
-## Quick intent map
+## Queues (`@adonisjs/queue` — experimental)
 
-| Need | Package / guide |
-|------|-----------------|
-| Background jobs | Queues |
-| Email | Mail |
-| File storage (S3/R2/local) | Drive |
-| App cache | Cache |
-| Domain events | Emitter |
-| i18n | I18n |
-| Liveness/readiness | Health checks |
-| Realtime push | Transmit / SSE |
-| Tracing | OpenTelemetry |
-| Mutex across processes | Locks |
-| Structured logs | Logger (Pino) |
+Pin the package version in `package.json` (API may change between minors).
 
-Fetch the specific guide before implementing — APIs differ by package version.
+```bash
+node ace add @adonisjs/queue
+# → config/queue.ts, providers, scheduler preload, commands
+```
+
+Backends: **Redis** (prod), **Database**, **Sync** (dev/test). Prefer `QUEUE_DRIVER` per environment.
+
+### Minimal job spine
+
+```bash
+node ace make:job process_payment
+```
+
+```ts
+import { Job } from '@adonisjs/queue'
+import type { JobOptions } from '@adonisjs/queue/types'
+
+interface ProcessPaymentPayload {
+  orderId: number
+  amount: number
+}
+
+export default class ProcessPayment extends Job<ProcessPaymentPayload> {
+  static options: JobOptions = {
+    queue: 'default',
+    maxRetries: 3,
+  }
+
+  async execute() {
+    // use this.payload.*
+  }
+}
+```
+
+```ts
+import ProcessPayment from '#jobs/process_payment'
+
+await ProcessPayment.dispatch({ orderId: 1, amount: 100 })
+// optional: .toQueue('payments') | .priority(1) | .in('24h') | .with('redis')
+```
+
+### Workers
+
+Jobs are **not** processed by the HTTP process alone:
+
+```bash
+node ace queue:work
+node ace queue:work --queue=payments,emails --concurrency=10
+```
+
+Run a separate worker beside the web server (PM2 / orchestrator in prod). For depth (retries, batches, fakes): `--fetch guides/digging-deeper/queues`.

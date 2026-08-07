@@ -1,53 +1,49 @@
 # Frontend — AdonisJS v7
 
-Official: https://docs.adonisjs.com/guides/frontend/edgejs.md  
-Lookup: `python3 scripts/lookup_docs.py --fetch guides/frontend/inertia`
+Lookup: `python3 scripts/lookup_docs.py --fetch guides/frontend/inertia`  
+Transformers: `python3 scripts/lookup_docs.py --fetch guides/frontend/transformers`
 
 ## Official pages
 
-- [EdgeJS](https://docs.adonisjs.com/guides/frontend/edgejs.md)
-- [Inertia](https://docs.adonisjs.com/guides/frontend/inertia.md)
-- [Transformers](https://docs.adonisjs.com/guides/frontend/transformers.md)
-- [Type-safe API client (Tuyau)](https://docs.adonisjs.com/guides/frontend/api-client.md)
-- [TanStack Query](https://docs.adonisjs.com/guides/frontend/tanstack-query.md)
-- [Vite](https://docs.adonisjs.com/guides/frontend/vite.md)
+EdgeJS · Inertia · Transformers · Tuyau API client · TanStack Query · Vite
 
-## Pick a stack
-
-| Stack | When |
-|-------|------|
-| Edge | Server-rendered HTML (Hypermedia kit) |
-| Inertia + React/Vue | Monolith SPA-like UX |
-| API + Tuyau | Separate frontend; end-to-end types |
-
-## Edge
+## Same controller, three returns
 
 ```ts
-return view.render('pages/posts/index', { posts })
+return view.render('posts/index', { posts })           // Hypermedia
+return inertia.render('posts/index', { posts: ... }) // Inertia
+return response.json(...)                              // API
 ```
 
-Templates under `resources/views`. Use `urlFor` in templates (v7), not legacy `route()`.
-
-## Inertia
-
-```ts
-return inertia.render('posts/index', { posts })
-```
-
-Follow v7 Inertia config/middleware (entrypoint / shared data shapes changed from v6 — see upgrade guide).
-
-## Transformers
-
-Serialize models/DTOs for JSON or Inertia props; generate frontend types when using the API kit / Tuyau flow. Prefer official transformer stubs:
+## Transformers (Inertia / API)
 
 ```bash
 node ace make:transformer post
 ```
 
-## Tuyau + TanStack Query
+```ts
+import { BaseTransformer } from '@adonisjs/core/transformers'
+import type Post from '#models/post'
+import UserTransformer from '#transformers/user_transformer'
 
-Type-safe HTTP client for Adonis routes. Integrate with TanStack Query for caching/infinite scroll — follow `/guides/frontend/api-client.md` and `/guides/frontend/tanstack-query.md`.
+export default class PostTransformer extends BaseTransformer<Post> {
+  toObject() {
+    return {
+      ...this.pick(this.resource, ['id', 'title', 'url', 'summary', 'createdAt']),
+      author: UserTransformer.transform(this.resource.user),
+      // permissions: can.edit via bouncer.allows in a variant / inject — never import policies into React
+    }
+  }
+}
+```
 
-## Vite
+Prefer transformers over raw Lucid models as props. For `can.*` flags, compute with `allows` on the server (see tutorial authorization + [auth.md](auth.md)).
 
-Asset bundling for Edge/Inertia kits. Entrypoints live under `resources/` or kit-specific paths. Dev HMR via `node ace serve --hmr`.
+## Inertia v7 notes
+
+- Shared props → Inertia **server middleware** (`share`), not config `sharedData`
+- Entrypoints under `inertia/app.tsx` (not `inertia/app/app.tsx`)
+- `tsconfig.inertia.json` project references for codegen cycles
+- Typed `inertia.render` — fix props rather than bypassing
+
+Stack comparison: [stacks.md](stacks.md).

@@ -1,8 +1,0 @@
-{
-  "name": "adonisjs",
-  "version": "1.0.0",
-  "description": "Develop AdonisJS v7 apps using official docs conventions only. Prevents outdated APIs.",
-  "author": {
-    "name": "agent-skill-creator"
-  }
-}

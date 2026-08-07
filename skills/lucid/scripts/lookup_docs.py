@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
-"""Resolve AdonisJS official doc topics to URLs and optional live Markdown."""
+"""Generic official-docs lookup for Knowledge-to-Skill generated Skills.
+
+Configure DOCS_BASE (and optional aliases) per skill. Reads assets/doc-index.json.
+"""
 
 from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import sys
 import urllib.request
@@ -15,43 +19,64 @@ INDEX_PATH = ROOT / "assets" / "doc-index.json"
 URLS_PATH = ROOT / "assets" / "doc-urls.txt"
 REFS = ROOT / "references"
 
-DOCS_BASE = "https://docs.adonisjs.com"
-DOCS_LABEL = "AdonisJS v7"
-USER_AGENT = "adonisjs-skill-kts/1.0"
+# --- skill-specific config (edit when copying into a skill) ---
+DOCS_BASE = os.environ.get("SKILL_DOCS_BASE", "https://lucid.adonisjs.com")
+DOCS_LABEL = os.environ.get("SKILL_DOCS_LABEL", "Lucid docs")
+USER_AGENT = "knowledge-to-skill-lookup/1.0"
 ALIASES: dict[str, str] = {
-    "orm": "lucid",
-    "db": "database",
-    "validator": "validation",
-    "validate": "validation",
-    "test": "testing",
-    "tests": "testing",
-    "cli": "ace",
-    "command": "ace",
-    "upgrade": "v6-to-v7",
-    "login": "session-guard",
-    "token": "access-tokens",
-    "jwt": "access-tokens",
-    "queue": "queues",
-    "job": "queues",
+    "orm": "models",
+    "model": "models",
+    "migration": "migrations",
+    "schema": "schema-generation",
+    "relation": "relationships",
+    "relations": "relationships",
+    "query": "select-query-builder",
+    "factory": "model-factories",
+    "hook": "model-hooks",
+    "hooks": "model-hooks",
+    "trx": "transactions",
+    "transaction": "transactions",
+    "seed": "seeders",
+    "crud": "crud-operations",
 }
 SECTION_FILES: dict[str, str] = {
-    "guides/basics": "http-basics.md",
-    "guides/frontend": "frontend.md",
-    "guides/database": "database.md",
-    "guides/auth": "auth.md",
-    "guides/security": "security.md",
-    "guides/concepts": "concepts.md",
-    "guides/digging-deeper": "digging-deeper.md",
-    "guides/ace": "ace-cli.md",
-    "guides/testing": "testing.md",
-    "tutorial": "tutorial.md",
-    "reference": "reference.md",
-    "v6-to-v7": "upgrade-v6-to-v7.md",
-    "installation": "getting-started.md",
-    "stacks-and-starter-kits": "getting-started.md",
-    "folder-structure": "getting-started.md",
-    "configuration": "getting-started.md",
+    "docs/introduction": "getting-started.md",
+    "docs/installation": "getting-started.md",
+    "docs/configuration": "getting-started.md",
+    "docs/commands": "getting-started.md",
+    "docs/database-service": "database-service.md",
+    "docs/transactions": "database-service.md",
+    "docs/pagination": "database-service.md",
+    "docs/debugging": "database-service.md",
+    "docs/connection-manager": "database-service.md",
+    "docs/validation": "database-service.md",
+    "docs/models": "models.md",
+    "docs/crud-operations": "models.md",
+    "docs/model-hooks": "models.md",
+    "docs/model-query-builder": "models.md",
+    "docs/model-query-scopes": "models.md",
+    "docs/serializing-models": "models.md",
+    "docs/relationships": "relationships.md",
+    "docs/belongs-to": "relationships.md",
+    "docs/has-one": "relationships.md",
+    "docs/has-many": "relationships.md",
+    "docs/has-many-through": "relationships.md",
+    "docs/many-to-many": "relationships.md",
+    "docs/migrations": "migrations-schema.md",
+    "docs/schema-builder": "migrations-schema.md",
+    "docs/table-builder": "migrations-schema.md",
+    "docs/schema-classes": "migrations-schema.md",
+    "docs/schema-generation": "migrations-schema.md",
+    "docs/schema-dumps": "migrations-schema.md",
+    "docs/select-query-builder": "query-builders.md",
+    "docs/insert-query-builder": "query-builders.md",
+    "docs/update-and-delete-queries": "query-builders.md",
+    "docs/raw-query-builder": "query-builders.md",
+    "docs/seeders": "seeders-factories.md",
+    "docs/model-factories": "seeders-factories.md",
+    "docs/testing": "testing.md",
 }
+# --- end config ---
 
 
 def to_md_url(url: str) -> str:
@@ -98,10 +123,9 @@ def resolve(query: str, limit: int = 8) -> list[dict]:
     if q.startswith("http://") or q.startswith("https://"):
         md = to_md_url(q)
         return [{"slug": md, "url": md, "title": md, "_score": 100}]
-    prefixes = ("guides/", "reference/", "tutorial/")
-    if q.startswith("/") or q.startswith(prefixes) or q in {"v6-to-v7", "installation", "introduction"}:
+    if "/" in q or q.endswith(".md"):
         slug = q.lstrip("/").removesuffix(".md")
-        return [{"slug": slug, "url": f"{DOCS_BASE}/{slug}.md", "title": slug, "_score": 100}]
+        return [{"slug": slug, "url": f"{DOCS_BASE.rstrip('/')}/{slug}.md", "title": slug, "_score": 100}]
     tokens = tokenize(q)
     ranked: list[dict] = []
     for item in load_index():
@@ -113,10 +137,10 @@ def resolve(query: str, limit: int = 8) -> list[dict]:
 
 
 def local_excerpt(slug: str, max_chars: int = 2500) -> str | None:
-    slug = slug.replace(DOCS_BASE + "/", "").removesuffix(".md").lstrip("/")
+    slug = slug.replace(DOCS_BASE.rstrip("/") + "/", "").removesuffix(".md").lstrip("/")
     ref_name = None
     for prefix, name in SECTION_FILES.items():
-        if slug.startswith(prefix) or slug == prefix or slug.split("/")[0] == prefix:
+        if slug.startswith(prefix) or slug == prefix:
             ref_name = name
             break
     if not ref_name:
@@ -128,10 +152,6 @@ def local_excerpt(slug: str, max_chars: int = 2500) -> str | None:
     if len(text) > max_chars:
         return text[:max_chars] + "\n…\n"
     return text
-
-
-def looks_like_marketing_shell(text: str) -> bool:
-    return "Everything you need to get building" in text and "Our sponsors" in text
 
 
 def fetch_url(url: str, timeout: int = 45) -> str:
@@ -147,9 +167,6 @@ def fetch_url(url: str, timeout: int = 45) -> str:
             if "Markdown Content:" in raw:
                 raw = raw.split("Markdown Content:", 1)[1]
             raw = re.sub(r"\n{3,}", "\n\n", raw).strip()
-            if looks_like_marketing_shell(raw):
-                errors.append(f"marketing shell from {target}")
-                continue
             if len(raw) > 400:
                 return raw
             errors.append(f"too short from {target}")
@@ -159,7 +176,7 @@ def fetch_url(url: str, timeout: int = 45) -> str:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Look up AdonisJS official docs")
+    parser = argparse.ArgumentParser(description=f"Look up {DOCS_LABEL}")
     parser.add_argument("query", help="topic keywords, slug, or full docs URL")
     parser.add_argument("--fetch", action="store_true", help="download latest official Markdown")
     parser.add_argument("--limit", type=int, default=8)
@@ -168,7 +185,7 @@ def main() -> int:
 
     hits = resolve(args.query, limit=args.limit)
     if not hits:
-        print("No matches. Browse references/docs-index.md or open https://docs.adonisjs.com")
+        print(f"No matches. Browse references/docs-index.md or open {DOCS_BASE}")
         return 1
 
     print(f"Pinned docs base: {DOCS_BASE} ({DOCS_LABEL})\n")

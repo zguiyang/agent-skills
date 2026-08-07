@@ -3,8 +3,8 @@ name: adonisjs
 description: >-
   Develop AdonisJS v7 apps using official docs conventions only. Use when working
   with AdonisJS, Adonis, Lucid ORM, VineJS, Edge, Inertia on Adonis, Ace CLI, Japa
-  tests, controllers, routes, middleware, auth, sessions, or upgrading Adonis v6
-  to v7. Prevents outdated v5/v6 APIs and invented helpers.
+  tests, controllers, routes, middleware, auth, Bouncer, queues, or upgrading
+  Adonis v6 to v7. Prevents outdated v5/v6 APIs and invented helpers.
 ---
 
 # AdonisJS (v7)
@@ -15,7 +15,7 @@ Do not invent APIs or copy Express/Nest/Laravel patterns without labeling them a
 ## Pinned version
 
 | Item | Value |
-|------|--------|
+| --- | --- |
 | Framework | **AdonisJS v7** |
 | Docs | https://docs.adonisjs.com |
 | Legacy v6 | https://v6-docs.adonisjs.com |
@@ -51,32 +51,44 @@ python3 scripts/detect_version.py
 ```
 1. detect_version.py → pin v6 vs v7
 2. Map task → topic table below
-3. Read the matching references/*.md (short cheat-sheet)
+3. Read the matching references/*.md (short cheat-sheet + distilled rules)
 4. If thin/stale: lookup_docs.py --fetch <slug>
-5. Implement with Ace make:* + official patterns
+5. Implement with Ace make:* / ace add + official patterns
 6. Add/adjust Japa tests; cite docs for non-trivial choices
 ```
 
 ## Topic → reference map
 
 | Task | Read first | Official docs |
-|------|------------|---------------|
+| --- | --- | --- |
 | New app / kits / folders | [getting-started.md](references/getting-started.md) | `/installation.md`, `/stacks-and-starter-kits.md` |
 | Routes, HTTP, VineJS, uploads | [http-basics.md](references/http-basics.md) | `/guides/basics/*` |
 | Edge, Inertia, Vite, Tuyau | [frontend.md](references/frontend.md) | `/guides/frontend/*` |
+| Stack deltas (Hypermedia vs Inertia) | [stacks.md](references/stacks.md) | tutorials + frontend guides |
 | Lucid, Redis | [database.md](references/database.md) | `/guides/database/*` |
 | Auth / Bouncer | [auth.md](references/auth.md) | `/guides/auth/*` |
 | Hash, encrypt, CORS, limiter | [security.md](references/security.md) | `/guides/security/*` |
-| DI, providers, barrels, codemods | [concepts.md](references/concepts.md) | `/guides/concepts/*` |
+| DI, providers, barrels, hooks | [concepts.md](references/concepts.md) | `/guides/concepts/*` |
 | Cache, Drive, Mail, Queues… | [digging-deeper.md](references/digging-deeper.md) | `/guides/digging-deeper/*` |
 | Ace CLI / REPL | [ace-cli.md](references/ace-cli.md) | `/guides/ace/*` |
 | Japa tests | [testing.md](references/testing.md) | `/guides/testing/*` |
 | API / helpers reference | [reference.md](references/reference.md) | `/reference/*` |
-| Hands-on tutorial | [tutorial.md](references/tutorial.md) | `/tutorial/*` |
-| Full URL catalog | [docs-index.md](references/docs-index.md) | [llms.md](references/llms.md) |
+| Hands-on / CRUD vertical | [tutorial.md](references/tutorial.md), [examples/crud-resource.md](examples/crud-resource.md) | `/tutorial/*` |
+| Full URL catalog | [docs-index.md](references/docs-index.md) | `llms.txt` |
 | Avoid outdated APIs | [anti-patterns.md](references/anti-patterns.md) | — |
 
-Official pages also expose Markdown: append `.md` to any docs URL (e.g. `…/guides/basics/routing.md`).
+Official pages also expose Markdown: append `.md` to any docs URL.
+
+## Hard conventions (distilled)
+
+1. Prefer controllers + `#generated/controllers` over fat route closures; keep HMR server on when scaffolding.
+2. Validate at controller with Vine (`request.validateUsing`); then trust the payload.
+3. Auth ≠ authorization: guards authenticate; **Bouncer** authorizes (`authorize` on server always).
+4. Lucid: columns in **migrations**; models extend generated `*Schema`; add relations on the model; `preload` before reading relations. Do not hand-edit `database/schema.ts`.
+5. URLs: `urlFor` — **not** `router.makeUrl` / deprecated Edge `route`.
+6. Inertia: transformers for props; permission flags via `allows` → `can.*`; **never** import policies into React.
+7. Pick stack early (Hypermedia / Inertia / API); same backend, different returns — see [stacks.md](references/stacks.md).
+8. Deep Lucid/Queues APIs: integration only here → `--fetch` official guide (Queues package is **experimental** — pin version).
 
 ## v7 conventions (quick)
 
@@ -105,20 +117,14 @@ import { createPostValidator } from '#validators/post'
 export default class PostsController {
   async store({ request, response }: HttpContext) {
     const payload = await request.validateUsing(createPostValidator)
-    // …
     return response.redirect().toRoute('posts.index')
   }
 }
 ```
 
-- URLs: `urlFor` from `@adonisjs/core/services/url_builder` — **not** `router.makeUrl`.
-- Subpaths: `#controllers/*`, `#models/*`, `#validators/*`, `#generated/*`.
-- Validation errors: let the global exception handler negotiate HTML / Inertia / JSON — avoid unnecessary try/catch around `validateUsing`.
+- Subpaths: `#controllers/*`, `#models/*`, `#validators/*`, `#generated/*`, `#transformers/*`
+- Validation errors: global exception handler negotiates HTML / Inertia / JSON; after v7 use `inputErrorsBag` not flash `errors`
 
 ## Anti-goals
 
-- No Express-style `app.get` apps inside Adonis.
-- No `ts-node` as v7 JIT (use `@poppinss/ts-exec`).
-- No v6 lazy `() => import('#controllers/...')` walls when `#generated/controllers` exists.
-- No inventing Passport/JWT “because APIs usually have it” — use official guards (session / access tokens / basic / custom).
-- Do not load entire doc dumps into context; use the topic map + `--fetch`.
+Defer the full avoid/prefer table to [anti-patterns.md](references/anti-patterns.md). In short: no Express-in-Adonis, no invented JWT/Passport, no doc-dumping whole guides into context — use the topic map + `--fetch`.

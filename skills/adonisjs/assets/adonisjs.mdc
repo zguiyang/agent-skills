@@ -1,6 +1,0 @@
----
-description: Develop AdonisJS v7 apps using official docs conventions only. Prevents outdated APIs.
-alwaysApply: false
----
-
-Follow the adonisjs SKILL.md rules: pin AdonisJS v7, use official docs APIs only, look up unknowns via scripts/lookup_docs.py, write Japa tests per official testing guides.

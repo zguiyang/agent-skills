@@ -1,13 +1,11 @@
 # AdonisJS Official Docs Index (v7)
 
-> **Pinned**: AdonisJS **v7** — https://docs.adonisjs.com
-> Legacy v6: https://v6-docs.adonisjs.com
+> **Docs**: https://docs.adonisjs.com
+> Legacy: https://v6-docs.adonisjs.com
 >
-> Source: official `llms.md`. Pages are also available as Markdown (`.md` suffix).
 > Lookup: `python3 scripts/lookup_docs.py --fetch <slug-or-topic>`
 
 Total pages indexed: **102**
-
 
 ## Getting started
 

@@ -1,42 +1,22 @@
 # Upgrade v6 → v7
 
 Official: https://docs.adonisjs.com/v6-to-v7.md  
-Legacy docs: https://v6-docs.adonisjs.com  
 Lookup: `python3 scripts/lookup_docs.py --fetch v6-to-v7`
 
-Also read [anti-patterns.md](anti-patterns.md).
+## Checklist
 
-## Baseline requirements
+1. Node.js **24+** (local/CI/prod)
+2. Bump `@adonisjs/*`, Vine, Edge, Inertia, Vite, related deps
+3. Replace JIT with `@poppinss/ts-exec`; fix `ace.js`; remove ts-node
+4. `npm i -D youch`
+5. `adonisrc.ts` hooks: `indexEntities()` + stack hooks; rename assembler hooks (`buildStarting`, …)
+6. Tests glob `*.spec.{ts,js}`; remove `assetsBundler`
+7. `config/encryption.ts`; drop `appKey` export; use `legacy` driver for old ciphertext
+8. `urlFor` instead of `makeUrl` / Edge `route`
+9. `HttpRequest` / `HttpResponse` if macros/augmentation used Request/Response
+10. Flash: `inputErrorsBag`
+11. Inertia: file moves, shared props → middleware, `tsconfig.inertia.json`
+12. `package.json` imports: `#generated/*`, `#transformers/*`, `#database/*`
+13. Boot; fix duplicate auto route names + typed `inertia.render` errors
 
-- **Node.js ≥ 24**
-- TypeScript 5.9/6.x, ESLint 10 ecosystem as per upgrade guide
-- Vite 7 integration updates
-
-## High-impact breaking changes (agent checklist)
-
-Work through the official guide in order. Common mechanical items:
-
-| Area | Action |
-|------|--------|
-| Node | Upgrade runtime + CI/prod to ≥ 24 |
-| Ace JIT | `@poppinss/ts-exec` instead of `ts-node` |
-| Controllers in routes | Prefer `#generated/controllers` barrels |
-| URLs | `urlFor` instead of `router.makeUrl` / legacy Edge `route()` |
-| HTTP types | `HttpRequest` / `HttpResponse` renames where applicable |
-| Helpers | Drop removed helpers (`cuid`, `getDirname`, …) |
-| Assembler hooks | New hook names (`buildStarting`, …) |
-| Flash errors | `inputErrorsBag.*` |
-| Encryption | `config/encryption.ts` |
-| Inertia | New config/middleware/paths |
-| Tests | Glob `*.spec.{ts,js}` |
-
-## Process
-
-1. Confirm the app is v6 (`@adonisjs/core` major 6) and Node ≥ 24 available.
-2. Fetch and follow https://docs.adonisjs.com/v6-to-v7.md step by step.
-3. After each cluster of changes: `node ace list:routes`, `node ace test`, fix compile errors.
-4. Do not mix v6 blog snippets with v7 APIs mid-upgrade.
-
-## Official upgrade agent prompt
-
-The docs include a ready-made “Upgrade Agent” prompt — when the user asks for an automated upgrade, fetch the live page and follow **that** prompt rather than inventing steps.
+Re-fetch the official page when executing — pins change.

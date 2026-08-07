@@ -1,64 +1,104 @@
 # Auth — AdonisJS v7
 
-Official: https://docs.adonisjs.com/guides/auth/introduction.md  
-Lookup: `python3 scripts/lookup_docs.py --fetch guides/auth/session-guard`
+Lookup:
 
-## Official pages
+- `python3 scripts/lookup_docs.py --fetch guides/auth/introduction`
+- `python3 scripts/lookup_docs.py --fetch guides/auth/verifying-user-credentials`
+- `python3 scripts/lookup_docs.py --fetch guides/auth/session-guard`
+- `python3 scripts/lookup_docs.py --fetch guides/auth/access-tokens-guard`
+- `python3 scripts/lookup_docs.py --fetch guides/auth/authorization`
 
-- [Introduction](https://docs.adonisjs.com/guides/auth/introduction.md)
-- [Verifying credentials](https://docs.adonisjs.com/guides/auth/verifying-user-credentials.md)
-- [Session guard](https://docs.adonisjs.com/guides/auth/session-guard.md) — web apps
-- [Access tokens guard](https://docs.adonisjs.com/guides/auth/access-tokens-guard.md) — APIs / mobile
-- [Basic auth](https://docs.adonisjs.com/guides/auth/basic-auth-guard.md)
-- [Custom guard](https://docs.adonisjs.com/guides/auth/custom-auth-guard.md)
-- [Social (Ally)](https://docs.adonisjs.com/guides/auth/social-authentication.md)
-- [Authorization (Bouncer)](https://docs.adonisjs.com/guides/auth/authorization.md)
+Auth package authenticates HTTP requests — not full product signup/reset flows (kits / custom).
 
-## Choose a guard
+## Guards
 
-| Need | Guard |
-|------|--------|
-| Cookie sessions (SSR / Inertia) | **Session** |
-| Bearer tokens (SPA on other domain, mobile) | **Access tokens** (opaque `oat_…`, not JWT by default) |
-| Simple internal tools over HTTPS | Basic auth |
+| Need | Guard | Install flag |
+| --- | --- | --- |
+| SSR / same-site SPA | **Session** (`web`) | `--guard=session` |
+| Cross-origin SPA / mobile / 3rd party | **Access tokens** (`api`, opaque hashed — not JWT) | `--guard=access_tokens` |
+| Prototype / internal | Basic | `--guard=basic_auth` (avoid for production user apps) |
 
 ```bash
-node ace add @adonisjs/auth   # usually already in starter kits
+node ace add @adonisjs/auth --guard=session
 node ace add @adonisjs/bouncer
-node ace add @adonisjs/ally    # social
 ```
 
-## Credentials
+## Verify credentials (AuthFinder)
 
-User models typically use AuthFinder (`withAuthFinder`) and `User.verifyCredentials(email, password)`.
+Use **AuthFinder** — do not hand-roll `findBy` + `hash.verify` (timing attacks).
 
-## Session guard (web)
+Official auth pages often show `compose(BaseModel, AuthFinder)`. For **v7 schema-codegen** apps, compose the same mixin with generated `UserSchema` instead of re-declaring `@column`s:
+
+```ts
+import { compose } from '@adonisjs/core/helpers'
+import hash from '@adonisjs/core/services/hash'
+import { withAuthFinder } from '@adonisjs/auth/mixins/lucid'
+import { UserSchema } from '#database/schema'
+
+const AuthFinder = withAuthFinder(() => hash.use('scrypt'), {
+  uids: ['email'],
+  passwordColumnName: 'password',
+})
+
+export default class User extends compose(UserSchema, AuthFinder) {}
+```
+
+If the project still uses columns-on-model, follow the docs’ `compose(BaseModel, AuthFinder)` sample — do not mix both styles on one model.
+
+```ts
+const user = await User.verifyCredentials(email, password)
+// invalid → E_INVALID_CREDENTIALS (content-negotiated)
+```
+
+## Session login / logout / protect
 
 ```ts
 await auth.use('web').login(user)
 await auth.use('web').logout()
-const user = auth.user // after middleware.auth()
 ```
 
-Protect routes with `middleware.auth()` from `#start/kernel`.
+```ts
+import { middleware } from '#start/kernel'
 
-## Access tokens (API)
+router.post('/login', …).use(middleware.guest())
+router.post('/logout', …).use(middleware.auth())
+router.resource('posts', …).use(middleware.auth())
+```
 
-Configure tokens provider on the User model. Issue / revoke tokens via the provider API; send `Authorization: Bearer …`. Prefer official docs examples over inventing JWT.
+Prefer `verifyCredentials` → `auth.use('web').login(user)` → redirect (`toIntendedRoute` when applicable).
 
-## Authorization (Bouncer)
+## Access tokens
+
+```ts
+const token = await User.accessTokens.create(user)
+// plain value only at creation:
+return { type: 'bearer', value: token.value!.release() }
+
+await User.accessTokens.delete(user, tokenId)
+```
+
+Guard helpers (mobile/API primary auth):
+
+```ts
+const user = await User.verifyCredentials(email, password)
+return await auth.use('api').createToken(user)
+// logout-equivalent:
+await auth.use('api').invalidateToken()
+```
+
+Client sends `Authorization: Bearer <token>`. Do not invent Passport/JWT stacks.
+
+## Bouncer (authorization ≠ auth)
 
 ```bash
 node ace make:policy post
 ```
 
 ```ts
-// abilities / policies — check with bouncer
-await bouncer.with('PostPolicy').authorize('edit', post)
+await bouncer.with(PostPolicy).authorize('edit', post) // throws 403
+const ok = await bouncer.with(PostPolicy).allows('edit', post)
 ```
 
-## Do not
-
-- Invent Passport-style stacks by default.
-- Assume JWT is the Adonis default for APIs (opaque access tokens are).
-- Skip HTTPS for basic auth in production.
+- Edge: `@can('PostPolicy.edit', post)`
+- Inertia: compute `can.*` in transformers via `allows`; still `authorize` in controllers
+- Never import policies into React

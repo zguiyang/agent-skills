@@ -9,30 +9,37 @@ import re
 import sys
 from pathlib import Path
 
+PACKAGE_KEYS = ("@adonisjs/core",)
+DOCS_BY_MAJOR = {
+    7: "https://docs.adonisjs.com",
+    6: "https://v6-docs.adonisjs.com",
+}
+DEFAULT_MAJOR = 7
+DEFAULT_DOCS = DOCS_BY_MAJOR[DEFAULT_MAJOR]
+
 
 def find_pkg(start: Path) -> Path | None:
     cur = start.resolve()
-    for p in [cur, *cur.parents]:
-        cand = p / "package.json"
+    for path in [cur, *cur.parents]:
+        cand = path / "package.json"
         if cand.exists():
             return cand
-        # stop at filesystem root
-        if p.parent == p:
+        if path.parent == path:
             break
     return None
 
 
 def major_from_spec(spec: str) -> int | None:
-    m = re.search(r"(\d+)\.", spec)
-    if m:
-        return int(m.group(1))
-    m = re.search(r"(\d+)$", spec.strip())
-    return int(m.group(1)) if m else None
+    match = re.search(r"(\d+)\.", spec)
+    if match:
+        return int(match.group(1))
+    match = re.search(r"(\d+)$", spec.strip())
+    return int(match.group(1)) if match else None
 
 
 def detect(path: Path) -> dict:
     pkg_path = find_pkg(path)
-    result = {
+    result: dict = {
         "project_path": str(path.resolve()),
         "package_json": str(pkg_path) if pkg_path else None,
         "adonis_core": None,
@@ -42,37 +49,36 @@ def detect(path: Path) -> dict:
     }
     if not pkg_path:
         result["notes"].append("No package.json found; default guidance is AdonisJS v7 docs.")
-        result["major"] = 7
-        result["docs"] = "https://docs.adonisjs.com"
+        result["major"] = DEFAULT_MAJOR
+        result["docs"] = DEFAULT_DOCS
         return result
 
-    data = json.loads(pkg_path.read_text())
+    data = json.loads(pkg_path.read_text(encoding="utf-8"))
     deps = {**data.get("dependencies", {}), **data.get("devDependencies", {})}
     core = deps.get("@adonisjs/core")
     result["adonis_core"] = core
     if not core:
         result["notes"].append("@adonisjs/core not found; not an Adonis app, or incomplete package.json.")
-        result["major"] = 7
-        result["docs"] = "https://docs.adonisjs.com"
+        result["major"] = DEFAULT_MAJOR
+        result["docs"] = DEFAULT_DOCS
         return result
 
     major = major_from_spec(core)
     result["major"] = major
     if major and major >= 7:
-        result["docs"] = "https://docs.adonisjs.com"
+        result["docs"] = DOCS_BY_MAJOR[7]
         result["notes"].append("Use AdonisJS v7 docs and this skill’s v7 conventions.")
     elif major == 6:
-        result["docs"] = "https://v6-docs.adonisjs.com"
+        result["docs"] = DOCS_BY_MAJOR[6]
         result["notes"].append(
             "Project appears to be v6. Prefer v6 docs unless upgrading; see references/upgrade-v6-to-v7.md."
         )
     else:
-        result["docs"] = "https://docs.adonisjs.com"
+        result["docs"] = DEFAULT_DOCS
         result["notes"].append(f"Unrecognized or old major ({major}); verify before coding.")
 
-    adonisrc = pkg_path.parent / "adonisrc.ts"
-    if adonisrc.exists():
-        result["notes"].append(f"Found {adonisrc}")
+    if (pkg_path.parent / "adonisrc.ts").exists():
+        result["notes"].append(f"Found {pkg_path.parent / 'adonisrc.ts'}")
     return result
 
 
@@ -90,8 +96,8 @@ def main() -> int:
         print(f"@adonisjs/core: {info['adonis_core']}")
         print(f"major: {info['major']}")
         print(f"docs: {info['docs']}")
-        for n in info["notes"]:
-            print(f"- {n}")
+        for note in info["notes"]:
+            print(f"- {note}")
     return 0
 
 

@@ -1,0 +1,212 @@
+[
+  {
+    "title": "docs/belongs-to",
+    "url": "https://lucid.adonisjs.com/docs/belongs-to.md",
+    "slug": "docs/belongs-to",
+    "section": "Index"
+  },
+  {
+    "title": "docs/commands",
+    "url": "https://lucid.adonisjs.com/docs/commands.md",
+    "slug": "docs/commands",
+    "section": "Index"
+  },
+  {
+    "title": "docs/configuration",
+    "url": "https://lucid.adonisjs.com/docs/configuration.md",
+    "slug": "docs/configuration",
+    "section": "Index"
+  },
+  {
+    "title": "docs/connection-manager",
+    "url": "https://lucid.adonisjs.com/docs/connection-manager.md",
+    "slug": "docs/connection-manager",
+    "section": "Index"
+  },
+  {
+    "title": "docs/crud-operations",
+    "url": "https://lucid.adonisjs.com/docs/crud-operations.md",
+    "slug": "docs/crud-operations",
+    "section": "Index"
+  },
+  {
+    "title": "docs/database-service",
+    "url": "https://lucid.adonisjs.com/docs/database-service.md",
+    "slug": "docs/database-service",
+    "section": "Index"
+  },
+  {
+    "title": "docs/debugging",
+    "url": "https://lucid.adonisjs.com/docs/debugging.md",
+    "slug": "docs/debugging",
+    "section": "Index"
+  },
+  {
+    "title": "docs/has-many",
+    "url": "https://lucid.adonisjs.com/docs/has-many.md",
+    "slug": "docs/has-many",
+    "section": "Index"
+  },
+  {
+    "title": "docs/has-many-through",
+    "url": "https://lucid.adonisjs.com/docs/has-many-through.md",
+    "slug": "docs/has-many-through",
+    "section": "Index"
+  },
+  {
+    "title": "docs/has-one",
+    "url": "https://lucid.adonisjs.com/docs/has-one.md",
+    "slug": "docs/has-one",
+    "section": "Index"
+  },
+  {
+    "title": "docs/insert-query-builder",
+    "url": "https://lucid.adonisjs.com/docs/insert-query-builder.md",
+    "slug": "docs/insert-query-builder",
+    "section": "Index"
+  },
+  {
+    "title": "docs/installation",
+    "url": "https://lucid.adonisjs.com/docs/installation.md",
+    "slug": "docs/installation",
+    "section": "Index"
+  },
+  {
+    "title": "docs/introduction",
+    "url": "https://lucid.adonisjs.com/docs/introduction.md",
+    "slug": "docs/introduction",
+    "section": "Index"
+  },
+  {
+    "title": "docs/many-to-many",
+    "url": "https://lucid.adonisjs.com/docs/many-to-many.md",
+    "slug": "docs/many-to-many",
+    "section": "Index"
+  },
+  {
+    "title": "docs/migrations",
+    "url": "https://lucid.adonisjs.com/docs/migrations.md",
+    "slug": "docs/migrations",
+    "section": "Index"
+  },
+  {
+    "title": "docs/model-factories",
+    "url": "https://lucid.adonisjs.com/docs/model-factories.md",
+    "slug": "docs/model-factories",
+    "section": "Index"
+  },
+  {
+    "title": "docs/model-hooks",
+    "url": "https://lucid.adonisjs.com/docs/model-hooks.md",
+    "slug": "docs/model-hooks",
+    "section": "Index"
+  },
+  {
+    "title": "docs/model-query-builder",
+    "url": "https://lucid.adonisjs.com/docs/model-query-builder.md",
+    "slug": "docs/model-query-builder",
+    "section": "Index"
+  },
+  {
+    "title": "docs/model-query-scopes",
+    "url": "https://lucid.adonisjs.com/docs/model-query-scopes.md",
+    "slug": "docs/model-query-scopes",
+    "section": "Index"
+  },
+  {
+    "title": "docs/models",
+    "url": "https://lucid.adonisjs.com/docs/models.md",
+    "slug": "docs/models",
+    "section": "Index"
+  },
+  {
+    "title": "docs/pagination",
+    "url": "https://lucid.adonisjs.com/docs/pagination.md",
+    "slug": "docs/pagination",
+    "section": "Index"
+  },
+  {
+    "title": "docs/raw-query-builder",
+    "url": "https://lucid.adonisjs.com/docs/raw-query-builder.md",
+    "slug": "docs/raw-query-builder",
+    "section": "Index"
+  },
+  {
+    "title": "docs/relationships",
+    "url": "https://lucid.adonisjs.com/docs/relationships.md",
+    "slug": "docs/relationships",
+    "section": "Index"
+  },
+  {
+    "title": "docs/schema-builder",
+    "url": "https://lucid.adonisjs.com/docs/schema-builder.md",
+    "slug": "docs/schema-builder",
+    "section": "Index"
+  },
+  {
+    "title": "docs/schema-classes",
+    "url": "https://lucid.adonisjs.com/docs/schema-classes.md",
+    "slug": "docs/schema-classes",
+    "section": "Index"
+  },
+  {
+    "title": "docs/schema-dumps",
+    "url": "https://lucid.adonisjs.com/docs/schema-dumps.md",
+    "slug": "docs/schema-dumps",
+    "section": "Index"
+  },
+  {
+    "title": "docs/schema-generation",
+    "url": "https://lucid.adonisjs.com/docs/schema-generation.md",
+    "slug": "docs/schema-generation",
+    "section": "Index"
+  },
+  {
+    "title": "docs/seeders",
+    "url": "https://lucid.adonisjs.com/docs/seeders.md",
+    "slug": "docs/seeders",
+    "section": "Index"
+  },
+  {
+    "title": "docs/select-query-builder",
+    "url": "https://lucid.adonisjs.com/docs/select-query-builder.md",
+    "slug": "docs/select-query-builder",
+    "section": "Index"
+  },
+  {
+    "title": "docs/serializing-models",
+    "url": "https://lucid.adonisjs.com/docs/serializing-models.md",
+    "slug": "docs/serializing-models",
+    "section": "Index"
+  },
+  {
+    "title": "docs/table-builder",
+    "url": "https://lucid.adonisjs.com/docs/table-builder.md",
+    "slug": "docs/table-builder",
+    "section": "Index"
+  },
+  {
+    "title": "docs/testing",
+    "url": "https://lucid.adonisjs.com/docs/testing.md",
+    "slug": "docs/testing",
+    "section": "Index"
+  },
+  {
+    "title": "docs/transactions",
+    "url": "https://lucid.adonisjs.com/docs/transactions.md",
+    "slug": "docs/transactions",
+    "section": "Index"
+  },
+  {
+    "title": "docs/update-and-delete-queries",
+    "url": "https://lucid.adonisjs.com/docs/update-and-delete-queries.md",
+    "slug": "docs/update-and-delete-queries",
+    "section": "Index"
+  },
+  {
+    "title": "docs/validation",
+    "url": "https://lucid.adonisjs.com/docs/validation.md",
+    "slug": "docs/validation",
+    "section": "Index"
+  }
+]

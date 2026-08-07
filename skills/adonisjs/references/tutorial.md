@@ -1,31 +1,15 @@
-# Tutorial — AdonisJS v7
+# Tutorial — DevShow
 
-Official: https://docs.adonisjs.com/tutorial/hypermedia/overview.md  
-Lookup: `python3 scripts/lookup_docs.py --fetch tutorial/hypermedia/overview`
+Official Hypermedia / React tutorial tracks under `/tutorial/*`.
 
-Hands-on **DevShow** community showcase. Prefer the guide matching the user’s kit.
+## How to use
 
-## Hypermedia (Edge)
+1. Match the user’s kit (Hypermedia vs React).
+2. `python3 scripts/lookup_docs.py --fetch tutorial/react/overview` (or hypermedia).
+3. Mirror Ace + folder conventions from that chapter.
+4. For a condensed vertical, follow [../examples/crud-resource.md](../examples/crud-resource.md).
+5. Do not paste entire tutorials into context — one chapter at a time.
 
-1. [Overview](https://docs.adonisjs.com/tutorial/hypermedia/overview.md)
-2. [CLI and REPL](https://docs.adonisjs.com/tutorial/hypermedia/cli-and-repl.md)
-3. [Database and models](https://docs.adonisjs.com/tutorial/hypermedia/database-and-models.md)
-4. [Routes, controllers, views](https://docs.adonisjs.com/tutorial/hypermedia/routes-controller-views.md)
-5. [Forms and validation](https://docs.adonisjs.com/tutorial/hypermedia/forms-and-validation.md)
-6. [Styling and cleanup](https://docs.adonisjs.com/tutorial/hypermedia/styling-and-cleanup.md)
-7. [Authorization](https://docs.adonisjs.com/tutorial/hypermedia/authorization.md)
+## Distilled deltas
 
-## React (Inertia)
-
-1. [Overview](https://docs.adonisjs.com/tutorial/react/overview.md)
-2. [CLI and REPL](https://docs.adonisjs.com/tutorial/react/cli-and-repl.md)
-3. [Database and models](https://docs.adonisjs.com/tutorial/react/database-and-models.md)
-4. [Routes, controllers, views](https://docs.adonisjs.com/tutorial/react/routes-controller-views.md)
-5. [Forms and validation](https://docs.adonisjs.com/tutorial/react/forms-and-validation.md)
-6. [Styling and cleanup](https://docs.adonisjs.com/tutorial/react/styling-and-cleanup.md)
-7. [Authorization](https://docs.adonisjs.com/tutorial/react/authorization.md)
-
-## How to use in this skill
-
-- For “build a feature like the tutorial”, fetch the matching chapter with `--fetch` and mirror its Ace + folder conventions.
-- Do not paste the entire tutorial into context — open one chapter at a time.
+See [stacks.md](stacks.md) for Hypermedia vs Inertia differences (transformers, `@can` vs `can.*`).
