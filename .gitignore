@@ -7,3 +7,4 @@ skills-lock.json
 .codex/
 node_modules/
 .DS_Store
+output/

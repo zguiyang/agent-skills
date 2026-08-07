@@ -1,69 +1,1669 @@
-# Reference — AdonisJS v7
+# Adonisjs - Reference
 
-Pinned to official docs: https://docs.adonisjs.com
+**Pages:** 14
 
-## Official pages in this section
+---
 
-- [reference/adonisrc-rcfile](https://docs.adonisjs.com/reference/adonisrc-rcfile)
-- [reference/application](https://docs.adonisjs.com/reference/application)
-- [reference/commands](https://docs.adonisjs.com/reference/commands)
-- [reference/edge](https://docs.adonisjs.com/reference/edge)
-- [reference/events](https://docs.adonisjs.com/reference/events)
-- [reference/exceptions](https://docs.adonisjs.com/reference/exceptions)
-- [reference/helpers](https://docs.adonisjs.com/reference/helpers)
-- [reference/types-helpers](https://docs.adonisjs.com/reference/types-helpers)
+## Commands reference
 
-## Condensed excerpts (prefer live docs if conflict)
+**URL:** https://docs.adonisjs.com/reference/commands.md
 
-### reference/adonisrc-rcfile
-Source: https://docs.adonisjs.com/reference/adonisrc-rcfile
+**Contents:**
+- serve
+- build
+- add
+- configure
+- eject
+- generate\:key
+- make\:controller
+- make\:middleware
+- make\:event
+- make\:validator
 
-AdonisRC file (Root) - AdonisJS Documentation 
+In this guide, we cover the usage of all the commands shipped with the framework core and the official packages. You may also view the commands help using the `node ace list` command or the `node ace <command-name> --help` command.
 
-Reference
-            /
-            Root AdonisRC file 
+:::media{alt="The output of the help screen is formatted as per the http://docopt.org standard"} ![](../guides/ace/node*ace*list.png) :::
 
-AdonisRC file 
-This guide covers the configuration file. You will learn how to: 
-Register service providers and preload files 
-Configure directory paths for scaffolding commands 
-Define command aliases for frequently used Ace commands 
-Set up assembler hooks for build-time code generation 
-Specify meta files to include in production builds 
-Configure test suites and runner options 
-Overview 
-The file serves as the central configuration for your AdonisJS workspace. It controls how the framework boots, where scaffolding commands place generated files, which providers to load, and how the build process behaves. 
-This file is processed by multiple tools beyond your main application, including the Ace CLI, the Assembler (which handles the dev server and production builds), and various code generators. Because of this broad usage, the file must remain environment-agnostic and free of application-specific logic. 
-The file contains the minimum required configuration to run your application. You can view the complete expanded configuration, including all defaults, by running the 
+The `serve` uses the [@adonisjs/assembler](https://github.com/adonisjs/assembler?tab=readme-ov-file#dev-server) package to start the AdonisJS application in development environment. You can optionally watch for file changes and restart the HTTP server on every file change.
+
+The `serve` command starts the development server (via the `bin/server.ts` file) as a child process. If you want to pass [node arguments](https://nodejs.org/api/cli.html#options) to the child process, you can define them before the command name.
+
+Following is the list of available options you can pass to the `serve` command. Alternatively, use the `--help` flag to view the command's help.
+
+:::option{name="--hmr"}
+
+Watch the filesystem and reload the server in HMR mode.
+
+:::option{name="--watch"}
+
+Watch the filesystem and always restart the process on file change.
+
+:::option{name="--poll"}
+
+Use polling to detect filesystem changes. You might want to use polling when using a Docker container for development.
+
+:::option{name="--clear | --no-clear"}
+
+Clear the terminal after every file change and before displaying the new logs. Use the `--no-clear` flag to retain old logs.
+
+The `build` command uses the [@adonisjs/assembler](https://github.com/adonisjs/assembler?tab=readme-ov-file#bundler) package to create the production build of your AdonisJS application. The following steps are performed to generate the build.
+
+See also: [Creating the production build](../start/deployment.md#creating-the-production-build).
+
+Following is the list of available options you can pass to the `build` command. Alternatively, use the `--help` flag to view the command's help.
+
+:::option{name="--ignore-ts-errors"}
+
+The build command terminates the build process when your project has TypeScript errors. However, you can ignore those errors and finish the build using the `--ignore-ts-errors` flag.
+
+:::option{name="--package-manager"}
+
+The build command copies the `package.json` file alongside the lock file of the package manager your application is using.
+
+We detect the package manager using the `@antfu/install-pkg` package. However, you can turn off detection by explicitly providing the package manager's name.
+
+The `add` command combines the `npm install <package-name>` and `node ace configure` commands. So, instead of running two separate commands, you can install and configure the package in one go using the `add` command.
+
+The `add` command will automatically detect the package manager used by your application and use that to install the package. However, you can always opt for a specific package manager using the `--package-manager` CLI flag.
+
+If the package can be configured using flags, you can pass them directly to the `add` command. Every unknown flag will be passed down to the `configure` command.
+
+Enable verbose mode to display the package installation and configuration logs.
+
+Passed down to the `configure` command. Force overwrite files when configuring the package. See the `configure` command for more information.
+
+Define the package manager to use for installing the package. The value must be `npm`, `pnpm`, `bun` or `yarn`.
+
+Install the package as a development dependency.
+
+Configure a package after it has been installed. The command accepts the package name as the first argument.
+
+Enable verbose mode to display the package installation logs.
+
+The stubs system of AdonisJS does not overwrite existing files. For example, if you configure the `@adonisjs/lucid` package and your application already has a `config/database.ts` file, the configure process will not overwrite the existing config file.
+
+However, you can force overwrite files using the `--force` flag.
+
+Eject stubs from a given package to your application `stubs` directory. In the following example, we copy the `make/controller` stubs to our application for modification.
+
+See also: [Customizing stubs](../guides/concepts/scaffolding.md#ejecting-stubs)
+
+Generate a cryptographically secure random key and write to the `.env` file as the `APP_KEY` environment variable.
+
+See also: [App key](../guides/security/encryption.md)
+
+Display the key on the terminal instead of writing it to the `.env` file. By default, the key is written to the env file.
+
+The `generate:key` command does not write the key to the `.env` file when running your application in production. However, you can use the `--force` flag to override this behavior.
+
+Create a new HTTP controller class. Controllers are created inside the `app/controllers` directory and use the following naming conventions.
+
+You also generate a controller with custom action names, as shown in the following example.
+
+Force the controller name to be in singular form.
+
+Generate a controller with methods to perform CRUD operations on a resource.
+
+The `--api` flag is similar to the `--resource` flag. However, it does not define the `create` and the `edit` methods since they are used to display forms.
+
+Create a new middleware for HTTP requests. Middleware are stored inside the `app/middleware` directory and uses the following naming conventions.
+
+Skip the [middleware stack](../guides/basics/middleware.md#middleware-stacks) selection prompt by defining the stack explicitly. The value must be `server`, `named`, or `router`.
+
+Create a new event class. Events are stored inside the `app/events` directory and use the following naming conventions.
+
+Create a new VineJS validator file. The validators are stored inside the `app/validators` directory, and each file may export multiple validators.
+
+Create a validator file with pre-defined validators for `create` and `update` actions.
+
+Create a new event listener class. The listener classes are stored inside the `app/listeners` directory and use the following naming conventions.
+
+Generate an event class alongside the event listener.
+
+Create a new service class. Service classes are stored inside the `app/services` directory and use the following naming conventions.
+
+A service has no pre-defined meaning, and you can use it to extract the business logic inside your application. For example, if your application generates a lot of PDFs, you may create a service called `PdfGeneratorService` and reuse it in multiple places.
+
+Create a new [custom exception class](../guides/basics/exception_handling.md#custom-exceptions). Exceptions are stored inside the `app/exceptions` directory.
+
+Create a new Ace command. By default, the commands are stored inside the `commands` directory at the root of your application.
+
+Commands from this directory are imported automatically by AdonisJS when you try to execute any Ace command. You may prefix the filename with an `_` to store additional files that are not Ace commands in this directory.
+
+Create a new Edge.js template file. The templates are created inside the `resources/views` directory.
+
+Create a [service provider file](../guides/concepts/service_providers.md). Providers are stored inside the `providers` directory at the root of your application and use the following naming conventions.
+
+Define environments in which the provider should get imported. [Learn more about app environments](./application.md#environment)
+
+Create a new [preload file](./adonisrc_file.md#preloads). Preload files are stored inside the `start` directory.
+
+Define environments in which the preload file should get imported. [Learn more about app environments](./application.md#environment)
+
+Create a new test file inside the `tests/<suite>` directory.
+
+Define the suite for which you want to create the test file. Otherwise, the command will display a prompt for suite selection.
+
+Create a new mail class inside the `app/mails` directory. The mail classes are suffixed with the `Notification` keyword. However, you may define a custom suffix using the `--intent` CLI flag.
+
+Define a custom intent for the mail.
+
+Create a new Bouncer policy class. The policies are stored inside the `app/policies` folder and use the following naming conventions.
+
+View the contents of the `adonisrc.ts` file after merging the defaults. You may use this command to inspect the available configuration options and override them per your application requirements.
+
+See also: [AdonisRC file](./adonisrc_file.md)
+
+View list of routes registered by your application. This command will boot your AdonisJS application in the `console` environment.
+
+Also, you can see the routes list from the VSCode activity bar if you are using our [official VSCode extension](https://marketplace.visualstudio.com/items?itemName=jripouteau.adonis-vscode-extension).
+
+:::media ![](../guides/basics/vscode*routes*list.png) :::
+
+View routes as a JSON string. The output will be an array of object.
+
+View routes inside a CLI table. By default, we display routes inside a compact, pretty list.
+
+Filter routes list and include the ones using the mentioned middleware. You may use the `*` keyword to include routes using one or more middleware.
+
+Filter routes list and include the ones NOT using the mentioned middleware. You may use the `*` keyword to include routes that do not use any middleware.
+
+The `env:add` command allows you to add a new environment variables to the `.env`, `.env.example` files and will also define the validation rules in the `start/env.ts` file.
+
+You can just run the command and it will prompt you for the variable name, value, and validation rules. Or you can pass them as arguments.
+
+Define the type of the environment variable. The value must be one of the following: `string`, `boolean`, `number`, `enum`.
+
+Define the allowed values for the environment variable when the type is `enum`.
+
+**Examples:**
+
+Example 1 (sh):
+```sh
+node ace list
 ```
+
+Example 2 (sh):
+```sh
+node ace serve --hmr
+```
+
+Example 3 (sh):
+```sh
+node ace --no-warnings --inspect serve --hmr
+```
+
+Example 4 (sh):
+```sh
+node ace build
+```
+
+---
+
+## Exceptions reference
+
+**URL:** https://docs.adonisjs.com/reference/exceptions.md
+
+**Contents:**
+- E_ROUTE_NOT_FOUND
+- E_ROW_NOT_FOUND
+- E_AUTHORIZATION_FAILURE
+- E_TOO_MANY_REQUESTS
+- E_BAD_CSRF_TOKEN
+- E_OAUTH_MISSING_CODE
+- E_OAUTH_STATE_MISMATCH
+- E_UNAUTHORIZED_ACCESS
+- E_INVALID_CREDENTIALS
+- E_CANNOT_LOOKUP_ROUTE
+
+In this guide we will go through the list of known exceptions raised by the framework core and the official packages. Some of the exceptions are marked as **self-handled**. [Self-handled exceptions](../guides/basics/exception_handling.md#defining-the-handle-method) can convert themselves to an HTTP response.
+
+The exception is raised when the HTTP server receives a request for a non-existing route. By default, the client will get a 404 response, and optionally, you may render an HTML page using [status pages](../guides/basics/exception_handling.md#status-pages).
+
+The exception is raised when the database query for finding one item fails [e.g when using `Model.findOrFail()`]. By default, the client will get a 404 response, and optionally, you may render an HTML page using [status pages](../guides/basics/exception_handling.md#status-pages).
+
+The exception is raised when a bouncer authorization check fails. The exception is self-handled and [uses content-negotiation](../guides/auth/authorization.md#throwing-authorizationexception) to return an appropriate error response to the client.
+
+The exception is raised by the [@adonisjs/rate-limiter](../guides/security/rate*limiting.md) package when a request exhausts all the requests allowed during a given duration. The exception is self-handled and [uses content-negotiation](../guides/security/rate*limiting.md#handling-throttleexception) to return an appropriate error response to the client.
+
+The exception is raised when a form using [CSRF protection](../guides/security/securing*ssr*applications.md#csrf-protection) is submitted without the CSRF token, or the CSRF token is invalid.
+
+The `E*BAD*CSRF_TOKEN` exception is [self-handled](https://github.com/adonisjs/shield/blob/9.x/src/errors.ts#L23-L66), and the user will be redirected back to the form, and you can access the error using the flash messages.
+
+The `@adonisjs/ally` package raises the exception when the OAuth service does not provide the OAuth code during the redirect.
+
+You can avoid this exception if you [handle the errors](../guides/auth/social_authentication.md#handling-callback-response) before calling the `.accessToken` or `.user` methods.
+
+The `@adonisjs/ally` package raises the exception when the CSRF state defined during the redirect is missing.
+
+You can avoid this exception if you [handle the errors](../guides/auth/social_authentication.md#handling-callback-response) before calling the `.accessToken` or `.user` methods.
+
+The exception is raised when one of the authentication guards is not able to authenticate the request. The exception is self-handled and uses [content-negotiation](../guides/auth/session_guard.md#handling-authentication-exception) to return an appropriate error response to the client.
+
+The exception is raised when the auth finder is not able to verify the user credentials. The exception is handled and use [content-negotiation](../guides/auth/verifying*user*credentials.md#handling-exceptions) to return an appropriate error response to the client.
+
+The exception is raised when you attempt to create a URL for a route using the [URL builder](../guides/basics/routing.md#url-builder).
+
+The `E*HTTP*EXCEPTION` is a generic exception for throwing errors during an HTTP request. You can use this exception directly or create a custom exception extending it.
+
+The `E*HTTP*REQUEST*ABORTED` is a sub-class of the `E*HTTP_EXCEPTION` exception. This exception is raised by the [response.abort](../guides/basics/response.md#aborting-request-with-an-error) method.
+
+The exception is raised when the length of `appKey` is smaller than 16 characters. You can use the [generate:key](./commands.md#generatekey) ace command to generate a secure app key.
+
+The exception is raised when the `appKey` property is not defined inside the `config/app.ts` file. By default, the value of the `appKey` is set using the `APP_KEY` environment variable.
+
+The exception is raised when one or more environment variables fail the validation. The detailed validation errors can be accessed using the `error.help` property.
+
+The exception is raised when a command does not define the `commandName` property or its value is an empty string.
+
+The exception is raised by Ace when unable to find a command.
+
+The exception is raised when executing a command without passing a required CLI flag.
+
+The exception is raised when trying to execute a command without providing any value to a non-boolean CLI flag.
+
+The exception is raised when executing a command without defining the required arguments.
+
+The exception is raised when executing a command without defining the value for a required argument.
+
+The exception is raised when executing a command with an unknown CLI flag.
+
+The exception is raised when the value provided for a CLI flag is invalid—for example, passing a string value to a flag that accepts numeric values.
+
+The `@adonisjs/redis` package raises the exception when you attempt to [subscribe to a given pub/sub channel](../guides/database/redis.md#pubsub) multiple times.
+
+The `@adonisjs/redis` package raises the exception when you attempt to [subscribe to a given pub/sub pattern](../guides/database/redis.md#pubsub) multiple times.
+
+The exception is raised by the `@adonisjs/mail` package when unable to send the email using a given transport. Usually, this will happen when the HTTP API of the email service returns a non-200 HTTP response.
+
+You may access the network request error using the `error.cause` property. The `cause` property is the [error object](https://github.com/sindresorhus/got/blob/main/documentation/8-errors.md) returned by `got` (npm package).
+
+The exception is raised by the `@adonisjs/session` package when the session store is initiated in the read-only mode.
+
+The exception is raised by the `@adonisjs/session` package when the session store has not been initiated yet. This will be the case when you are not using the session middleware.
+
+The exception is raised when the `pattern` property is missing in the [metaFile](./adonisrc_file.md#metaFiles).
+
+The exception is raised when a preload file registered in the `adonisrc.ts` file cannot be found.
+
+The exception is raised when the preload `file` property is not a function.
+
+The exception is raised when a service provider file registered in the `adonisrc.ts` file cannot be found.
+
+The exception is raised when the provider `file` property is not a function.
+
+The exception is raised when a test suite configuration in the `adonisrc.ts` file is missing the required `name` property.
+
+The exception is raised when a test suite configuration in the `adonisrc.ts` file is missing the required `files` property.
+
+The exception is raised when an unknown assembler hook is defined in the `adonisrc.ts` file.
+
+The exception is raised when the `hooks` configuration in the `adonisrc.ts` file is not an array of lazy imports.
+
+The exception is raised when the `presets` configuration is not an array of preset functions.
+
+The exception is raised when a preset is not defined as a function.
+
+The exception is raised when an error occurs during preset execution.
+
+The exception is raised when one or more environment variables are invalid as per the rules defined within the `start/env.ts` file.
+
+The exception is raised when trying to override the implementation of an Env identifier. Consider using `Env.defineIdentifierIfMissing` method instead.
+
+**Examples:**
+
+Example 1 (ts):
+```ts
+import { errors } from '@adonisjs/core'
+if (error instanceof errors.E_ROUTE_NOT_FOUND) {
+  // handle error
+}
+```
+
+Example 2 (ts):
+```ts
+import { errors as lucidErrors } from '@adonisjs/lucid'
+if (error instanceof lucidErrors.E_ROW_NOT_FOUND) {
+  // handle error
+  console.log(`${error.model?.name || 'Row'} not found`)
+}
+```
+
+Example 3 (ts):
+```ts
+import { errors as bouncerErrors } from '@adonisjs/bouncer'
+if (error instanceof bouncerErrors.E_AUTHORIZATION_FAILURE) {
+}
+```
+
+Example 4 (ts):
+```ts
+import { errors as limiterErrors } from '@adonisjs/limiter'
+if (error instanceof limiterErrors.E_TOO_MANY_REQUESTS) {
+}
+```
+
+---
+
+## Events (Root) - AdonisJS Documentation
+
+**URL:** https://docs.adonisjs.com/reference/events
+
+**Contents:**
+- Events reference
+- http:request_completed
+- http:server_ready
+- container_binding:resolved
+- session:initiated
+- session:committed
+- session:migrated
+- i18n:missing:translation
+- mail:sending
+- mail:sent
+
+In this guide, we look at the list of events dispatched by the framework core and the official packages. Check out the emitter documentation to learn more about its usage.
+
+The http:request_completed event is dispatched after an HTTP request is completed. The event contains an instance of the HttpContext and the request duration. The duration value is the output of the process.hrtime method.
+
+The event is dispatched once the AdonisJS HTTP server is ready to accept incoming requests.
+
+The event is dispatched after the IoC container resolves a binding or constructs a class instance. The event.binding property will be a string (binding name) or a class constructor, and the event.value property is the resolved value.
+
+The @adonisjs/session package emits the event when the session store is initiated during an HTTP request. The event.session property is an instance of the Session class .
+
+The @adonisjs/session package emits the event when the session data is written to the session store during an HTTP request.
+
+The @adonisjs/session package emits the event when a new session ID is generated using the session.regenerate() method.
+
+The event is dispatched by the @adonisjs/i18n package when a translation for a specific key and locale is missing. You may listen to this event to find the missing translations for a given locale.
+
+The @adonisjs/mail package emits the event before sending an email. In the case of the mail.sendLater method call, the event will be emitted when the mail queue processes the job.
+
+After sending the email, the event is dispatched by the @adonisjs/mail package.
+
+The @adonisjs/mail package emits the event before queueing the job to send the email.
+
+After the email has been queued, the event is dispatched by the @adonisjs/mail package.
+
+The event is dispatched when the MemoryQueue implementation of the @adonisjs/mail package is unable to send the email queued using the mail.sendLater method.
+
+If you are using a custom queue implementation, you must capture the job errors and emit this event.
+
+The event is dispatched by the SessionGuard implementation of the @adonisjs/auth package when the auth.login method is called either directly or internally by the session guard.
+
+The event is dispatched by the SessionGuard implementation of the @adonisjs/auth package after a user has been logged in successfully.
+
+You may use this event to track sessions associated with a given user.
+
+The event is dispatched by the @adonisjs/auth package when an attempt is made to validate the request session and check for a logged-in user.
+
+The event is dispatched by the @adonisjs/auth package after the request session has been validated and the user is logged in. You may access the logged-in user using the event.user property.
+
+The event is dispatched by the @adonisjs/auth package when the authentication check fails, and the user is not logged in during the current HTTP request.
+
+The event is dispatched by the @adonisjs/auth package after the user has been logged out.
+
+The event is dispatched by the @adonisjs/auth package when an attempt is made to validate the access token during an HTTP request.
+
+The event is dispatched by the @adonisjs/auth package after the access token has been verified. You may access the authenticated user using the event.user property.
+
+The event is dispatched by the @adonisjs/auth package when the authentication check fails.
+
+The event is dispatched by the @adonisjs/bouncer package after the authorization check has been performed. The event payload includes the final response you may inspect to know the status of the check.
+
+The event is dispatched by the @adonisjs/cache package after the cache has been cleared using the cache.clear method.
+
+The event is dispatched by the @adonisjs/cache package after a cache key has been deleted using the cache.delete method.
+
+The event is dispatched by the @adonisjs/cache package when a cache key is found in the cache store.
+
+The event is dispatched by the @adonisjs/cache package when a cache key is not found in the cache store.
+
+The event is dispatched by the @adonisjs/cache package after a cache key has been written to the cache store.
+
+**Examples:**
+
+Example 1 (javascript):
+```javascript
+import emitter from '@adonisjs/core/services/emitter'
+import string from '@adonisjs/core/helpers/string'
+
+emitter.on('http:request_completed', (event) => {
+  const method = event.ctx.request.method()
+  const url = event.ctx.request.url(true)
+  const duration = event.duration
+
+  console.log(`${method} ${url}: ${string.prettyHrTime(duration)}`)
+})
+```
+
+Example 2 (javascript):
+```javascript
+import emitter from '@adonisjs/core/services/emitter'
+
+emitter.on('http:server_ready', (event) => {
+  console.log(event.host)
+  console.log(event.port)
+
+  /**
+   * Time it took to boot the app and start
+   * the HTTP server.
+   */
+  console.log(event.duration)
+})
+```
+
+Example 3 (javascript):
+```javascript
+import emitter from '@adonisjs/core/services/emitter'
+
+emitter.on('container_binding:resolved', (event) => {
+  console.log(event.binding)
+  console.log(event.value)
+})
+```
+
+Example 4 (javascript):
+```javascript
+import emitter from '@adonisjs/core/services/emitter'
+
+emitter.on('session:initiated', (event) => {
+  console.log(`Initiated store for ${event.session.sessionId}`)
+})
+```
+
+---
+
+## Commands (Root) - AdonisJS Documentation
+
+**URL:** https://docs.adonisjs.com/reference/commands
+
+**Contents:**
+- Commands reference
+- serve
+- build
+- add
+- configure
+- eject
+- generate:key
+- make:controller
+- make:middleware
+- make:event
+
+In this guide, we cover the usage of all the commands shipped with the framework core and the official packages. You may also view the commands help using the node ace list command or the node ace <command-name> --help command.
+
+The output of the help screen is formatted as per the http://docopt.org standard
+
+The serve uses the @adonisjs/assembler package to start the AdonisJS application in development environment. You can optionally watch for file changes and restart the HTTP server on every file change.
+
+The serve command starts the development server (via the bin/server.ts file) as a child process. If you want to pass node arguments to the child process, you can define them before the command name.
+
+Following is the list of available options you can pass to the serve command. Alternatively, use the --help flag to view the command's help.
+
+Watch the filesystem and reload the server in HMR mode.
+
+Watch the filesystem and always restart the process on file change.
+
+Use polling to detect filesystem changes. You might want to use polling when using a Docker container for development.
+
+Clear the terminal after every file change and before displaying the new logs. Use the --no-clear flag to retain old logs.
+
+The build command uses the @adonisjs/assembler package to create the production build of your AdonisJS application. The following steps are performed to generate the build.
+
+See also: Creating the production build .
+
+Following is the list of available options you can pass to the build command. Alternatively, use the --help flag to view the command's help.
+
+The build command terminates the build process when your project has TypeScript errors. However, you can ignore those errors and finish the build using the --ignore-ts-errors flag.
+
+The build command copies the package.json file alongside the lock file of the package manager your application is using.
+
+We detect the package manager using the @antfu/install-pkg package. However, you can turn off detection by explicitly providing the package manager's name.
+
+The add command combines the npm install <package-name> and node ace configure commands. So, instead of running two separate commands, you can install and configure the package in one go using the add command.
+
+The add command will automatically detect the package manager used by your application and use that to install the package. However, you can always opt for a specific package manager using the --package-manager CLI flag.
+
+If the package can be configured using flags, you can pass them directly to the add command. Every unknown flag will be passed down to the configure command.
+
+Enable verbose mode to display the package installation and configuration logs.
+
+Passed down to the configure command. Force overwrite files when configuring the package. See the configure command for more information.
+
+Define the package manager to use for installing the package. The value must be npm, pnpm, bun or yarn.
+
+Install the package as a development dependency.
+
+Configure a package after it has been installed. The command accepts the package name as the first argument.
+
+Enable verbose mode to display the package installation logs.
+
+The stubs system of AdonisJS does not overwrite existing files. For example, if you configure the @adonisjs/lucid package and your application already has a config/database.ts file, the configure process will not overwrite the existing config file.
+
+However, you can force overwrite files using the --force flag.
+
+Eject stubs from a given package to your application stubs directory. In the following example, we copy the make/controller stubs to our application for modification.
+
+See also: Customizing stubs
+
+Generate a cryptographically secure random key and write to the .env file as the APP_KEY environment variable.
+
+Display the key on the terminal instead of writing it to the .env file. By default, the key is written to the env file.
+
+The generate:key command does not write the key to the .env file when running your application in production. However, you can use the --force flag to override this behavior.
+
+Create a new HTTP controller class. Controllers are created inside the app/controllers directory and use the following naming conventions.
+
+You also generate a controller with custom action names, as shown in the following example.
+
+Force the controller name to be in singular form.
+
+Generate a controller with methods to perform CRUD operations on a resource.
+
+The --api flag is similar to the --resource flag. However, it does not define the create and the edit methods since they are used to display forms.
+
+Create a new middleware for HTTP requests. Middleware are stored inside the app/middleware directory and uses the following naming conventions.
+
+Skip the middleware stack selection prompt by defining the stack explicitly. The value must be server, named, or router.
+
+Create a new event class. Events are stored inside the app/events directory and use the following naming conventions.
+
+Create a new VineJS validator file. The validators are stored inside the app/validators directory, and each file may export multiple validators.
+
+Create a validator file with pre-defined validators for create and update actions.
+
+Create a new event listener class. The listener classes are stored inside the app/listeners directory and use the following naming conventions.
+
+Generate an event class alongside the event listener.
+
+Create a new service class. Service classes are stored inside the app/services directory and use the following naming conventions.
+
+A service has no pre-defined meaning, and you can use it to extract the business logic inside your application. For example, if your application generates a lot of PDFs, you may create a service called PdfGeneratorService and reuse it in multiple places.
+
+Create a new custom exception class . Exceptions are stored inside the app/exceptions directory.
+
+Create a new Ace command. By default, the commands are stored inside the commands directory at the root of your application.
+
+Commands from this directory are imported automatically by AdonisJS when you try to execute any Ace command. You may prefix the filename with an _ to store additional files that are not Ace commands in this directory.
+
+Create a new Edge.js template file. The templates are created inside the resources/views directory.
+
+Create a service provider file . Providers are stored inside the providers directory at the root of your application and use the following naming conventions.
+
+Define environments in which the provider should get imported. Learn more about app environments
+
+Create a new preload file . Preload files are stored inside the start directory.
+
+Define environments in which the preload file should get imported. Learn more about app environments
+
+Create a new test file inside the tests/<suite> directory.
+
+Define the suite for which you want to create the test file. Otherwise, the command will display a prompt for suite selection.
+
+Create a new mail class inside the app/mails directory. The mail classes are suffixed with the Notification keyword. However, you may define a custom suffix using the --intent CLI flag.
+
+Define a custom intent for the mail.
+
+Create a new Bouncer policy class. The policies are stored inside the app/policies folder and use the following naming conventions.
+
+View the contents of the adonisrc.ts file after merging the defaults. You may use this command to inspect the available configuration options and override them per your application requirements.
+
+See also: AdonisRC file
+
+View list of routes registered by your application. This command will boot your AdonisJS application in the console environment.
+
+Also, you can see the routes list from the VSCode activity bar if you are using our official VSCode extension .
+
+View routes as a JSON string. The output will be an array of object.
+
+View routes inside a CLI table. By default, we display routes inside a compact, pretty list.
+
+Filter routes list and include the ones using the mentioned middleware. You may use the * keyword to include routes using one or more middleware.
+
+Filter routes list and include the ones NOT using the mentioned middleware. You may use the * keyword to include routes that do not use any middleware.
+
+The env:add command allows you to add a new environment variables to the .env, .env.example files and will also define the validation rules in the start/env.ts file.
+
+You can just run the command and it will prompt you for the variable name, value, and validation rules. Or you can pass them as arguments.
+
+Define the type of the environment variable. The value must be one of the following: string, boolean, number, enum.
+
+Define the allowed values for the environment variable when the type is enum.
+
+**Examples:**
+
+Example 1 (unknown):
+```unknown
+node ace list
+```
+
+Example 2 (unknown):
+```unknown
+node ace serve --hmr
+```
+
+Example 3 (unknown):
+```unknown
+node ace --no-warnings --inspect serve --hmr
+```
+
+Example 4 (unknown):
+```unknown
+node ace build
+```
+
+---
+
+## Exceptions (Root) - AdonisJS Documentation
+
+**URL:** https://docs.adonisjs.com/reference/exceptions
+
+**Contents:**
+- Exceptions reference
+- E_ROUTE_NOT_FOUND
+- E_ROW_NOT_FOUND
+- E_AUTHORIZATION_FAILURE
+- E_TOO_MANY_REQUESTS
+- E_BAD_CSRF_TOKEN
+- E_OAUTH_MISSING_CODE
+- E_OAUTH_STATE_MISMATCH
+- E_UNAUTHORIZED_ACCESS
+- E_INVALID_CREDENTIALS
+
+In this guide we will go through the list of known exceptions raised by the framework core and the official packages. Some of the exceptions are marked as self-handled. Self-handled exceptions can convert themselves to an HTTP response.
+
+The exception is raised when the HTTP server receives a request for a non-existing route. By default, the client will get a 404 response, and optionally, you may render an HTML page using status pages .
+
+The exception is raised when the database query for finding one item fails e.g when using Model.findOrFail(). By default, the client will get a 404 response, and optionally, you may render an HTML page using status pages .
+
+The exception is raised when a bouncer authorization check fails. The exception is self-handled and uses content-negotiation to return an appropriate error response to the client.
+
+The exception is raised by the @adonisjs/rate-limiter package when a request exhausts all the requests allowed during a given duration. The exception is self-handled and uses content-negotiation to return an appropriate error response to the client.
+
+The exception is raised when a form using CSRF protection is submitted without the CSRF token, or the CSRF token is invalid.
+
+The E_BAD_CSRF_TOKEN exception is self-handled , and the user will be redirected back to the form, and you can access the error using the flash messages.
+
+The @adonisjs/ally package raises the exception when the OAuth service does not provide the OAuth code during the redirect.
+
+You can avoid this exception if you handle the errors before calling the .accessToken or .user methods.
+
+The @adonisjs/ally package raises the exception when the CSRF state defined during the redirect is missing.
+
+You can avoid this exception if you handle the errors before calling the .accessToken or .user methods.
+
+The exception is raised when one of the authentication guards is not able to authenticate the request. The exception is self-handled and uses content-negotiation to return an appropriate error response to the client.
+
+The exception is raised when the auth finder is not able to verify the user credentials. The exception is handled and use content-negotiation to return an appropriate error response to the client.
+
+The exception is raised when you attempt to create a URL for a route using the URL builder .
+
+The E_HTTP_EXCEPTION is a generic exception for throwing errors during an HTTP request. You can use this exception directly or create a custom exception extending it.
+
+The E_HTTP_REQUEST_ABORTED is a sub-class of the E_HTTP_EXCEPTION exception. This exception is raised by the response.abort method.
+
+The exception is raised when the length of appKey is smaller than 16 characters. You can use the generate:key ace command to generate a secure app key.
+
+The exception is raised when the appKey property is not defined inside the config/app.ts file. By default, the value of the appKey is set using the APP_KEY environment variable.
+
+The exception is raised when one or more environment variables fail the validation. The detailed validation errors can be accessed using the error.help property.
+
+The exception is raised when a command does not define the commandName property or its value is an empty string.
+
+The exception is raised by Ace when unable to find a command.
+
+The exception is raised when executing a command without passing a required CLI flag.
+
+The exception is raised when trying to execute a command without providing any value to a non-boolean CLI flag.
+
+The exception is raised when executing a command without defining the required arguments.
+
+The exception is raised when executing a command without defining the value for a required argument.
+
+The exception is raised when executing a command with an unknown CLI flag.
+
+The exception is raised when the value provided for a CLI flag is invalid—for example, passing a string value to a flag that accepts numeric values.
+
+The @adonisjs/redis package raises the exception when you attempt to subscribe to a given pub/sub channel multiple times.
+
+The @adonisjs/redis package raises the exception when you attempt to subscribe to a given pub/sub pattern multiple times.
+
+The exception is raised by the @adonisjs/mail package when unable to send the email using a given transport. Usually, this will happen when the HTTP API of the email service returns a non-200 HTTP response.
+
+You may access the network request error using the error.cause property. The cause property is the error object returned by got (npm package).
+
+The exception is raised by the @adonisjs/session package when the session store is initiated in the read-only mode.
+
+The exception is raised by the @adonisjs/session package when the session store has not been initiated yet. This will be the case when you are not using the session middleware.
+
+The exception is raised when the pattern property is missing in the metaFile .
+
+The exception is raised when a preload file registered in the adonisrc.ts file cannot be found.
+
+The exception is raised when the preload file property is not a function.
+
+The exception is raised when a service provider file registered in the adonisrc.ts file cannot be found.
+
+The exception is raised when the provider file property is not a function.
+
+The exception is raised when a test suite configuration in the adonisrc.ts file is missing the required name property.
+
+The exception is raised when a test suite configuration in the adonisrc.ts file is missing the required files property.
+
+The exception is raised when an unknown assembler hook is defined in the adonisrc.ts file.
+
+The exception is raised when the hooks configuration in the adonisrc.ts file is not an array of lazy imports.
+
+The exception is raised when the presets configuration is not an array of preset functions.
+
+The exception is raised when a preset is not defined as a function.
+
+The exception is raised when an error occurs during preset execution.
+
+The exception is raised when one or more environment variables are invalid as per the rules defined within the start/env.ts file.
+
+The exception is raised when trying to override the implementation of an Env identifier. Consider using Env.defineIdentifierIfMissing method instead.
+
+**Examples:**
+
+Example 1 (sql):
+```sql
+import { errors } from '@adonisjs/core'
+if (error instanceof errors.E_ROUTE_NOT_FOUND) {
+  // handle error
+}
+```
+
+Example 2 (swift):
+```swift
+import { errors as lucidErrors } from '@adonisjs/lucid'
+if (error instanceof lucidErrors.E_ROW_NOT_FOUND) {
+  // handle error
+  console.log(`${error.model?.name || 'Row'} not found`)
+}
+```
+
+Example 3 (sql):
+```sql
+import { errors as bouncerErrors } from '@adonisjs/bouncer'
+if (error instanceof bouncerErrors.E_AUTHORIZATION_FAILURE) {
+}
+```
+
+Example 4 (sql):
+```sql
+import { errors as limiterErrors } from '@adonisjs/limiter'
+if (error instanceof limiterErrors.E_TOO_MANY_REQUESTS) {
+}
+```
+
+---
+
+## Edge helpers (Root) - AdonisJS Documentation
+
+**URL:** https://docs.adonisjs.com/reference/edge
+
+**Contents:**
+- Edge helpers and tags
+- request
+- route/signedRoute
+- app
+- config
+- session
+- flashMessages
+- old
+- t
+- i18n
+
+In this guide, we will learn about the helpers and the tags contributed to Edge by the AdonisJS official packages. The helpers shipped with Edge are not covered in this guide and must reference Edge documentation for the same.
+
+Reference to the instance of ongoing HTTP request . The property is only available when a template is rendered using the ctx.view.render method.
+
+Helper functions to create URL for a route using the URL builder . Unlike the URL builder, the view helpers do not have a fluent API and accept the following parameters.
+
+The options object with the following properties.
+
+Reference to the Application instance .
+
+A helper function to reference configuration values inside Edge templates. You may use the config.has method to check if the value for a key exists.
+
+A read-only copy of the session object . You cannot mutate session data within Edge templates. The session property is only available when the template is rendered using the ctx.view.render method.
+
+A read-only copy of session flash messages . The flashMessages property is only available when the template is rendered using the ctx.view.render method.
+
+The old method is a shorthand for the flashMessages.get method.
+
+The t method is contributed by the @adonisjs/i18n package to display translations using the i18n class . The method accepts the translation key identifier, message data and a fallback message as the parameters.
+
+Reference to an instance of the I18n class configured using the application's default locale. However, the DetectUserLocaleMiddleware overrides this property with an instance created for the current HTTP request locale.
+
+Reference to the ctx.auth property shared by the InitializeAuthMiddleware . You may use this property to access information about the logged-in user.
+
+If you are displaying the logged-in user info on a public page (not protected by the auth middleware), then you may want to first silently check if the user is logged-in or not.
+
+Resolve the URL of an asset processed by Vite. Learn more about referencing assets inside Edge templates .
+
+The embedImage and the embedImageData helpers are added by the mail package and are only available when rendering a template to send an email.
+
+The @flashMessage tag provides a better DX for reading flash messages for a given key conditionally.
+
+Instead of writing conditionals
+
+You may prefer using the tag
+
+The @error tag provides a better DX for reading error messages stored inside the errorsBag key in flashMessages.
+
+Instead of writing conditionals
+
+You may prefer using the tag
+
+The @inputError tag provides a better DX for reading validation error messages stored inside the inputErrorsBag key in flashMessages.
+
+Instead of writing conditionals
+
+You may prefer using the tag
+
+The @vite tag accepts an array of entry point paths and returns the script and the link tags for the same. The path you provide to the @vite tag should match exactly the path registered inside the vite.config.js file.
+
+You can define the script tag attributes as the 2nd argument. For example:
+
+The @viteReactRefresh tag returns a script tag to enable React HMR for project using the @vitejs/plugin-react package.
+
+The @can and @cannot tags allows you write authorization checks in Edge templates by referencing the ability name or the policy name as a string.
+
+The first argument is the ability or the policy reference followed by the arguments accepted by the check.
+
+See also: Pre-registering abilities and policies
+
+**Examples:**
+
+Example 1 (json):
+```json
+{{ request.url() }}
+{{ request.input('signature') }}
+```
+
+Example 2 (jsx):
+```jsx
+<a href="{{ route('posts.show', [post.id]) }}">
+  View post
+</a>
+```
+
+Example 3 (jsx):
+```jsx
+<a href="{{
+  signedRoute('unsubscribe', [user.id], {
+    expiresIn: '3 days',
+    prefixUrl: 'https://blog.adonisjs.com'    
+  })
+}}">
+ Unsubscribe
+</a>
+```
+
+Example 4 (json):
+```json
+{{ app.getEnvironment() }}
+```
+
+---
+
+## Application (Root) - AdonisJS Documentation
+
+**URL:** https://docs.adonisjs.com/reference/application
+
+**Contents:**
+- Application
+- Overview
+- Environment
+  - Switching the environment
+- Node environment
+  - Shorthand properties
+- State
+  - Shorthand properties
+- Listening for process signals
+  - Conditional listeners
+
+This guide covers the Application class in AdonisJS. You will learn how to:
+
+The Application class handles the heavy lifting of wiring together an AdonisJS application. It manages the application lifecycle, provides access to environment information, tracks the current state, and offers helper methods for generating paths to various project directories.
+
+You access the Application instance through the app service, which is available throughout your application.
+
+See also: Application lifecycle
+
+The environment refers to the runtime context in which your application is running. AdonisJS recognizes four distinct environments:
+
+You can access the current environment using the getEnvironment method.
+
+You can switch the application environment before it has been booted. This is useful when a command needs to run in a different context than it was started in. For example, the node ace repl command starts in the console environment but switches to repl before presenting the prompt.
+
+The nodeEnvironment property provides access to the Node.js environment, derived from the NODE_ENV environment variable. AdonisJS normalizes common variations to ensure consistency across different deployment configurations.
+
+Instead of comparing strings, you can use these boolean properties to check the current environment.
+
+The state represents where the application is in its lifecycle. The features you can access depend on the current state—for example, you cannot access container bindings or container services until the app reaches the booted state.
+
+You can listen for POSIX signals using the app.listen or app.listenOnce methods. These register listeners with the Node.js process object.
+
+Use listenIf or listenOnceIf to register listeners only when a condition is met. The listener is registered only when the first argument is truthy.
+
+When your application runs as a child process, you can send messages to the parent using the app.notify method. This wraps the process.send method.
+
+The Application class provides helper methods that generate absolute paths to files and directories within your project. These helpers respect the directory structure configured in your adonisrc.ts file, ensuring paths remain correct even if you customize directory locations.
+
+Returns an absolute path to a file or directory within the project root.
+
+Returns a file URL to a file or directory within the project root. This is useful when dynamically importing files.
+
+Returns a path to a file inside the tmp directory within the project root.
+
+Returns a path to a file inside the .adonisjs/server directory, which contains server-side barrel files like controller imports.
+
+Returns a path to a file inside the .adonisjs/client directory, which contains client-side generated files.
+
+Generators create consistent class names and file names for different entities in your application. They ensure naming conventions are followed when creating new files programmatically.
+
+See the generators.ts source code for the complete list of available generators.
+
+**Examples:**
+
+Example 1 (python):
+```python
+import app from '@adonisjs/core/services/app'
+```
+
+Example 2 (python):
+```python
+import app from '@adonisjs/core/services/app'
+
+console.log(app.getEnvironment())
+```
+
+Example 3 (python):
+```python
+import app from '@adonisjs/core/services/app'
+
+if (!app.isBooted) {
+  app.setEnvironment('repl')
+}
+```
+
+Example 4 (python):
+```python
+import app from '@adonisjs/core/services/app'
+
+console.log(app.nodeEnvironment)
+```
+
+---
+
+## Application
+
+**URL:** https://docs.adonisjs.com/reference/application.md
+
+**Contents:**
+- Overview
+- Environment
+  - Switching the environment
+- Node environment
+  - Shorthand properties
+- State
+  - Shorthand properties
+- Listening for process signals
+  - Conditional listeners
+- Notifying parent process
+
+This guide covers the Application class in AdonisJS. You will learn how to:
+
+The [Application](https://github.com/adonisjs/application/blob/9.x/src/application.ts) class handles the heavy lifting of wiring together an AdonisJS application. It manages the application lifecycle, provides access to environment information, tracks the current state, and offers helper methods for generating paths to various project directories.
+
+You access the Application instance through the `app` service, which is available throughout your application.
+
+See also: [Application lifecycle](../guides/concepts/application_lifecycle.md)
+
+The environment refers to the runtime context in which your application is running. AdonisJS recognizes four distinct environments:
+
+You can access the current environment using the `getEnvironment` method.
+
+You can switch the application environment before it has been booted. This is useful when a command needs to run in a different context than it was started in. For example, the `node ace repl` command starts in the `console` environment but switches to `repl` before presenting the prompt.
+
+The `nodeEnvironment` property provides access to the Node.js environment, derived from the `NODE_ENV` environment variable. AdonisJS normalizes common variations to ensure consistency across different deployment configurations.
+
+Instead of comparing strings, you can use these boolean properties to check the current environment.
+
+The state represents where the application is in its lifecycle. The features you can access depend on the current state—for example, you cannot access [container bindings](../guides/concepts/dependency*injection.md#bindings) or [container services](../guides/concepts/container*services.md) until the app reaches the `booted` state.
+
+You can listen for [POSIX signals](https://man7.org/linux/man-pages/man7/signal.7.html) using the `app.listen` or `app.listenOnce` methods. These register listeners with the Node.js `process` object.
+
+Use `listenIf` or `listenOnceIf` to register listeners only when a condition is met. The listener is registered only when the first argument is truthy.
+
+When your application runs as a child process, you can send messages to the parent using the `app.notify` method. This wraps the `process.send` method.
+
+The Application class provides helper methods that generate absolute paths to files and directories within your project. These helpers respect the directory structure configured in your `adonisrc.ts` file, ensuring paths remain correct even if you customize directory locations.
+
+Returns an absolute path to a file or directory within the project root.
+
+Returns a file URL to a file or directory within the project root. This is useful when dynamically importing files.
+
+Returns a path to a file inside the `tmp` directory within the project root.
+
+Returns a path to a file inside the `.adonisjs/server` directory, which contains server-side barrel files like controller imports.
+
+Returns a path to a file inside the `.adonisjs/client` directory, which contains client-side generated files.
+
+Generators create consistent class names and file names for different entities in your application. They ensure naming conventions are followed when creating new files programmatically.
+
+See the [`generators.ts` source code](https://github.com/adonisjs/application/blob/9.x/src/generators.ts) for the complete list of available generators.
+
+**Examples:**
+
+Example 1 (text):
+```text
+import app from '@adonisjs/core/services/app'
+```
+
+Example 2 (text):
+```text
+import app from '@adonisjs/core/services/app'
+
+console.log(app.getEnvironment())
+```
+
+Example 3 (text):
+```text
+import app from '@adonisjs/core/services/app'
+
+if (!app.isBooted) {
+  app.setEnvironment('repl')
+}
+```
+
+Example 4 (text):
+```text
+import app from '@adonisjs/core/services/app'
+
+console.log(app.nodeEnvironment)
+```
+
+---
+
+## Helpers reference
+
+**URL:** https://docs.adonisjs.com/reference/helpers.md
+
+**Contents:**
+- escapeHTML
+- encodeSymbols
+- prettyHrTime
+- isEmpty
+- truncate
+- excerpt
+- slug
+- interpolate
+- plural
+- isPlural
+
+AdonisJS bundles its utilities into the `helpers` module and makes them available to your application code. Since these utilities are already installed and used by the framework, the `helpers` module does not add any additional bloat to your `node_modules`.
+
+The helper methods are exported from the following modules.
+
+Escape HTML entities in a string value. Under the hood, we use the [he](https://www.npmjs.com/package/he#heescapetext) package.
+
+Optionally, you can encode non-ASCII symbols using the `encodeSymbols` option.
+
+You may encode non-ASCII symbols in a string value using the `encodeSymbols` helper. Under the hood, we use [he.encode](https://www.npmjs.com/package/he#heencodetext-options) method.
+
+Pretty print the diff of [process.hrtime](https://nodejs.org/api/process.html#processhrtimetime) method.
+
+Check if a string value is empty.
+
+Truncate a string at a given number of characters.
+
+By default, the string is truncated exactly at the given index. However, you can instruct the method to wait for the words to complete.
+
+You can customize the suffix using the `suffix` option.
+
+The `excerpt` method is identical to the `truncate` method. However, it strips the HTML tags from the string.
+
+Generate slug for a string value. The method is exported from the [slugify package](https://www.npmjs.com/package/slugify); therefore, consult its documentation for available options.
+
+You can add custom replacements for Unicode values as follows.
+
+Interpolate variables inside a string. The variables must be inside double curly braces.
+
+Curly braces can be escaped using the `\\` prefix.
+
+Convert a word to its plural form. The method is exported from the [pluralize package](https://www.npmjs.com/package/pluralize).
+
+Find if a word already is in plural form.
+
+This method combines the `singular` and the `plural` methods and uses one or the other based on the count. For example:
+
+The `pluralize` property exports [additional methods](https://www.npmjs.com/package/pluralize) to register custom uncountable, irregular, plural, and singular rules.
+
+Convert a word to its singular form. The method is exported from the [pluralize package](https://www.npmjs.com/package/pluralize).
+
+Find if a word is already in a singular form.
+
+Convert a string value to camelcase.
+
+Following are some of the conversion examples.
+
+| Input            | Output        | | ---------------- | ------------- | | 'test'           | 'test'        | | 'test string'    | 'testString'  | | 'Test String'    | 'testString'  | | 'TestV2'         | 'testV2'      | | '*foo*bar_'      | 'fooBar'      | | 'version 1.2.10' | 'version1210' | | 'version 1.21.0' | 'version1210' |
+
+Convert a string value to a capital case.
+
+Following are some of the conversion examples.
+
+| Input            | Output           | | ---------------- | ---------------- | | 'test'           | 'Test'           | | 'test string'    | 'Test String'    | | 'Test String'    | 'Test String'    | | 'TestV2'         | 'Test V 2'       | | 'version 1.2.10' | 'Version 1.2.10' | | 'version 1.21.0' | 'Version 1.21.0' |
+
+Convert a string value to a dash case.
+
+Optionally, you can capitalize the first letter of each word.
+
+Following are some of the conversion examples.
+
+| Input            | Output         | | ---------------- | -------------- | | 'test'           | 'test'         | | 'test string'    | 'test-string'  | | 'Test String'    | 'test-string'  | | 'Test V2'        | 'test-v2'      | | 'TestV2'         | 'test-v-2'     | | 'version 1.2.10' | 'version-1210' | | 'version 1.21.0' | 'version-1210' |
+
+Convert a string value to a dot case.
+
+Optionally, you can convert the first letter of all the words to lowercase.
+
+Following are some of the conversion examples.
+
+| Input            | Output         | | ---------------- | -------------- | | 'test'           | 'test'         | | 'test string'    | 'test.string'  | | 'Test String'    | 'Test.String'  | | 'dot.case'       | 'dot.case'     | | 'path/case'      | 'path.case'    | | 'TestV2'         | 'Test.V.2'     | | 'version 1.2.10' | 'version.1210' | | 'version 1.21.0' | 'version.1210' |
+
+Remove all sorts of casing from a string value.
+
+Following are some of the conversion examples.
+
+| Input                  | Output                 | | ---------------------- | ---------------------- | | 'test'                 | 'test'                 | | 'TEST'                 | 'test'                 | | 'testString'           | 'test string'          | | 'testString123'        | 'test string123'       | | 'testString*1*2*3'     | 'test string 1 2 3'    | | 'ID123String'          | 'id123 string'         | | 'foo bar123'           | 'foo bar123'           | | 'a1bStar'              | 'a1b star'             | | 'CONSTANT*CASE '       | 'constant case'        | | 'CONST123*FOO'         | 'const123 foo'         | | 'FOO*bar'              | 'foo bar'              | | 'XMLHttpRequest'       | 'xml http request'     | | 'IQueryAArgs'          | 'i query a args'       | | 'dot\.case'            | 'dot case'             | | 'path/case'            | 'path case'            | | 'snake*case'           | 'snake case'           | | 'snake*case123'        | 'snake case123'        | | 'snake*case*123'       | 'snake case 123'       | | '"quotes"'             | 'quotes'               | | 'version 0.45.0'       | 'version 0 45 0'       | | 'version 0..78..9'     | 'version 0 78 9'       | | 'version 4*99/4'       | 'version 4 99 4'       | | ' test '               | 'test'                 | | 'something*2014*other' | 'something 2014 other' | | 'amazon s3 data'       | 'amazon s3 data'       | | 'foo*13_bar'           | 'foo 13 bar'           |
+
+Convert a string value to a Pascal case. Great for generating JavaScript class names.
+
+Following are some of the conversion examples.
+
+| Input            | Output        | | ---------------- | ------------- | | 'test'           | 'Test'        | | 'test string'    | 'TestString'  | | 'Test String'    | 'TestString'  | | 'TestV2'         | 'TestV2'      | | 'version 1.2.10' | 'Version1210' | | 'version 1.21.0' | 'Version1210' |
+
+Convert a value to a sentence.
+
+Following are some of the conversion examples.
+
+| Input            | Output           | | ---------------- | ---------------- | | 'test'           | 'Test'           | | 'test string'    | 'Test string'    | | 'Test String'    | 'Test string'    | | 'TestV2'         | 'Test v2'        | | 'version 1.2.10' | 'Version 1 2 10' | | 'version 1.21.0' | 'Version 1 21 0' |
+
+Convert value to snake case.
+
+Following are some of the conversion examples.
+
+| Input            | Output         | | ---------------- | -------------- | | '\*id'           | 'id'           | | 'test'           | 'test'         | | 'test string'    | 'test*string'  | | 'Test String'    | 'test*string'  | | 'Test V2'        | 'test*v2'      | | 'TestV2'         | 'test*v*2'     | | 'version 1.2.10' | 'version*1210' | | 'version 1.21.0' | 'version*1210' |
+
+Convert a string value to the title case.
+
+Following are some of the conversion examples.
+
+| Input                              | Output                             | | ---------------------------------- | ---------------------------------- | | 'one. two.'                        | 'One. Two.'                        | | 'a small word starts'              | 'A Small Word Starts'              | | 'small word ends on'               | 'Small Word Ends On'               | | 'we keep NASA capitalized'         | 'We Keep NASA Capitalized'         | | 'pass camelCase through'           | 'Pass camelCase Through'           | | 'follow step-by-step instructions' | 'Follow Step-by-Step Instructions' | | 'this vs. that'                    | 'This vs. That'                    | | 'this vs that'                     | 'This vs That'                     | | 'newcastle upon tyne'              | 'Newcastle upon Tyne'              | | 'newcastle \*upon\* tyne'          | 'Newcastle \*upon\* Tyne'          |
+
+Generate a cryptographically secure random string of a given length. The output value is a URL-safe base64 encoded string.
+
+Convert an array of words to a comma-separated sentence.
+
+You can replace the `and` with an `or` by specifying the `options.lastSeparator` property.
+
+In the following example, the two words are combined using the `and` separator, not the comma (usually advocated in English). However, you can use a custom separator for a pair of words.
+
+Remove multiple whitespaces from a string to a single whitespace.
+
+Parse a string-based time expression to seconds.
+
+Passing a numeric value to the `parse` method is returned as it is, assuming the value is already in seconds.
+
+You can format seconds to a pretty string using the `format` method.
+
+Parse a string-based time expression to milliseconds.
+
+Passing a numeric value to the `parse` method is returned as it is, assuming the value is already in milliseconds.
+
+Using the `format` method, you can format milliseconds to a pretty string.
+
+Parse a string-based unit expression to bytes.
+
+Passing a numeric value to the `parse` method is returned as it is, assuming the value is already in bytes.
+
+Using the `format` method, you can format bytes to a pretty string. The method is exported directly from the [bytes](https://www.npmjs.com/package/bytes) package. Please reference the package README for available options.
+
+Get the ordinal letter for a given number.
+
+Check if two buffer or string values are the same. This method does not leak any timing information and prevents [timing attack](https://javascript.plainenglish.io/what-are-timing-attacks-and-how-to-prevent-them-using-nodejs-158cc7e2d70c).
+
+Under the hood, this method uses Node.js [crypto.timeSafeEqual](https://nodejs.org/api/crypto.html#cryptotimingsafeequala-b) method, with support for comparing string values. *(crypto.timeSafeEqual does not support string comparison)*
+
+Ensure a callback takes at least a minimum amount of time to execute. This prevents [timing attacks](https://en.wikipedia.org/wiki/Timing_attack) where an attacker measures response times to infer sensitive information (for example, user enumeration via password reset).
+
+The first argument is the minimum execution time in milliseconds. If the callback finishes early, `safeTiming` waits for the remaining duration. If it throws, the error is re-thrown after the delay.
+
+The callback receives a `timing` object with a `returnEarly` method to skip the delay. This is useful when you want constant time on failure, but fast responses on success.
+
+The `compose` helper allows you to use TypeScript class mixins with a cleaner API. Following is an example of mixin usage without the `compose` helper.
+
+Following is an example with the `compose` helper.
+
+Utility methods to base64 encode and decode values.
+
+Like the `encode` method, you can use the `urlEncode` to generate a base64 string safe to pass in a URL.
+
+The `urlEncode` method performs the following replacements.
+
+You can use the `decode` and the `urlDecode` methods to decode a previously encoded base64 string.
+
+The `decode` and the `urlDecode` methods return `null` when the input value is an invalid base64 string. You can turn on the `strict` mode to raise an exception instead.
+
+Get a list of all the files from a directory. The method recursively fetches files from the main and the sub-folders. The dotfiles are ignored implicitly.
+
+You can also pass the options along with the directory path as the second argument.
+
+The `fsImportAll` method imports all the files recursively from a given directory and sets the exported value from each module on an object.
+
+The second param is the option to customize the import behavior.
+
+The `StringBuilder` class offers a fluent API to perform transformations on a string value. You may get an instance of string builder using the `string.create` method.
+
+The `MessageBuilder` class offers an API to serialize JavaScript data types with an expiry and purpose. You can either store the serialized output in safe storage like your application database or encrypt it (to avoid tampering) and share it publicly.
+
+In the following example, we serialize an object with the `token` property and set its expiry to be `1 hour`.
+
+Once you have the JSON string with the expiry and the purpose, you can encrypt it (to prevent tampering) and share it with the client.
+
+During the token verification, you can decrypt the previously encrypted value and use the `MessageBuilder` to verify the payload and convert it to a JavaScript object.
+
+The `Secret` class lets you hold sensitive values within your application without accidentally leaking them inside logs and console statements.
+
+For example, the `appKey` value defined inside the `config/app.ts` file is an instance of the `Secret` class. If you try to log this value to the console, you will see `[redacted]` and not the original value.
+
+For demonstration, let's fire up a REPL session and try it.
+
+You can call the `config.appKey.release` method to read the original value. The purpose of the Secret class is not to prevent your code from accessing the original value. Instead, it provides a safety net from exposing sensitive data inside logs.
+
+You can wrap custom values inside the Secret class as follows.
+
+We export the [@sindresorhus/is](https://github.com/sindresorhus/is) module from the `helpers/is` import path, and you may use it to perform the type detection in your apps.
+
+**Examples:**
+
+Example 1 (ts):
+```ts
+import is from '@adonisjs/core/helpers/is'
+import * as helpers from '@adonisjs/core/helpers'
+import string from '@adonisjs/core/helpers/string'
+```
+
+Example 2 (ts):
+```ts
+import string from '@adonisjs/core/helpers/string'
+
+string.escapeHTML('<p> foo © bar </p>')
+// &lt;p&gt; foo © bar &lt;/p&gt;
+```
+
+Example 3 (ts):
+```ts
+import string from '@adonisjs/core/helpers/string'
+
+string.escapeHTML('<p> foo © bar </p>', {
+  encodeSymbols: true,
+})
+// &lt;p&gt; foo &#xA9; bar &lt;/p&gt;
+```
+
+Example 4 (ts):
+```ts
+import string from '@adonisjs/core/helpers/string'
+
+string.encodeSymbols('foo © bar ≠ baz 𝌆 qux')
+// 'foo &#xA9; bar &#x2260; baz &#x1D306; qux'
+```
+
+---
+
+## Types helpers (Root) - AdonisJS Documentation
+
+**URL:** https://docs.adonisjs.com/reference/types-helpers
+
+**Contents:**
+- Types helpers
+- InferRouteParams
+- Prettify
+- Primitive
+- OneOrMore
+- Constructor<T, Arguments>
+- AbstractConstructor<T, Arguments>
+- LazyImport
+- UnWrapLazyImport
+- NormalizeConstructor
+
+Infer params of a route pattern. The params must be defined as per the AdonisJS routing syntax.
+
+Prettifies the complex TypeScript types to a simplified type for a better viewing experience. For example:
+
+Union of primitive types. It includes null | undefined | string | number | boolean | symbol | bigint
+
+Specify a union that accepts either T or T[].
+
+Represent a class constructor. The T refers to the class instance properties, and Arguments refers to the constructor arguments.
+
+Represent a class constructor that could also be abstract. The T refers to the class instance properties, and Arguments refers to the constructor arguments.
+
+Represent a function that lazily imports a module with export default.
+
+Unwrap the default export of a LazyImport function.
+
+Normalizes the constructor arguments of a class for use with mixins. The helper is created to work around TypeScript issue#37142 .
+
+Define an opaque type to distinguish between similar properties.
+
+Unwrap the value from an opaque type.
+
+Extract all the functions from an object. Optionally specify a list of methods to ignore.
+
+You may use the IgnoreList to ignore methods from a known parent class
+
+Check if all the top-level properties of an object are optional.
+
+Extract properties that are undefined or are a union with undefined values.
+
+Extract properties that are not undefined nor is a union with undefined values.
+
+Define a union with the value or a PromiseLike of the value.
+
+**Examples:**
+
+Example 1 (swift):
+```swift
+import type { InferRouteParams } from '@adonisjs/core/helpers/types'
+
+InferRouteParams<'/users'> // {}
+InferRouteParams<'/users/:id'> // { id: string }
+InferRouteParams<'/users/:id?'> // { id?: string }
+InferRouteParams<'/users/:id/:slug?'> // { id: string; slug?: string }
+InferRouteParams<'/users/:id.json'> // { id: string }
+InferRouteParams<'/users/*'> // { '*': string[] }
+InferRouteParams<'/posts/:category/*'> // { 'category': string; '*': string[] }
+```
+
+Example 2 (typescript):
+```typescript
+import type { Prettify } from '@adonisjs/core/helpers/types'
+import type { ExtractDefined, ExtractUndefined } from '@adonisjs/core/helpers/types'
+
+type Values = {
+  username: string | undefined
+  email: string
+  fullName: string | undefined
+  age: number | undefined
+}
+
+// When not using prettify helper
+type WithUndefinedOptional = {
+  [K in ExtractDefined<Values>]: Values[K]
+} & {
+  [K in ExtractUndefined<Values>]: Values[K]
+}
+
+// When using prettify helper
+type WithUndefinedOptionalPrettified = Prettify<
+  {
+    [K in ExtractDefined<Values>]: Values[K]
+  } & {
+    [K in ExtractUndefined<Values>]: Values[K]
+  }
+>
+```
+
+Example 3 (python):
+```python
+import type { Primitive } from '@adonisjs/core/helpers/types'
+
+function serialize(
+  values:
+    | Primitive
+    | Record<string, Primitive | Primitive[]>
+    | Primitive[]
+    | Record<string, Primitive | Primitive[]>[]
+) {}
+```
+
+Example 4 (python):
+```python
+import type { OneOrMore } from '@adonisjs/core/helpers/types'
+import type { Primitive } from '@adonisjs/core/helpers/types'
+
+function serialize(
+  values: OneOrMore<Primitive> | OneOrMore<Record<string, Primitive | Primitive[]>>
+) {}
+```
+
+---
+
+## Events reference
+
+**URL:** https://docs.adonisjs.com/reference/events.md
+
+**Contents:**
+- http\:request_completed
+- http\:server_ready
+- container_binding\:resolved
+- session\:initiated
+- session\:committed
+- session\:migrated
+- i18n\:missing\:translation
+- mail\:sending
+- mail\:sent
+- mail\:queueing
+
+In this guide, we look at the list of events dispatched by the framework core and the official packages. Check out the [emitter](../guides/digging_deeper/emitter.md) documentation to learn more about its usage.
+
+The [`http:request*completed`](https://github.com/adonisjs/http-server/blob/8.x/src/types/server.ts#L65-L81) event is dispatched after an HTTP request is completed. The event contains an instance of the [HttpContext](../guides/basics/http*context.md) and the request duration. The `duration` value is the output of the `process.hrtime` method.
+
+The event is dispatched once the AdonisJS HTTP server is ready to accept incoming requests.
+
+The event is dispatched after the IoC container resolves a binding or constructs a class instance. The `event.binding` property will be a string (binding name) or a class constructor, and the `event.value` property is the resolved value.
+
+The `@adonisjs/session` package emits the event when the session store is initiated during an HTTP request. The `event.session` property is an instance of the [Session class](https://github.com/adonisjs/session/blob/8.x/src/session.ts).
+
+The `@adonisjs/session` package emits the event when the session data is written to the session store during an HTTP request.
+
+The `@adonisjs/session` package emits the event when a new session ID is generated using the `session.regenerate()` method.
+
+The event is dispatched by the `@adonisjs/i18n` package when a translation for a specific key and locale is missing. You may listen to this event to find the missing translations for a given locale.
+
+The `@adonisjs/mail` package emits the event before sending an email. In the case of the `mail.sendLater` method call, the event will be emitted when the mail queue processes the job.
+
+After sending the email, the event is dispatched by the `@adonisjs/mail` package.
+
+The `@adonisjs/mail` package emits the event before queueing the job to send the email.
+
+After the email has been queued, the event is dispatched by the `@adonisjs/mail` package.
+
+The event is dispatched when the [MemoryQueue](https://github.com/adonisjs/mail/blob/10.x/src/messengers/memory_queue.ts) implementation of the `@adonisjs/mail` package is unable to send the email queued using the `mail.sendLater` method.
+
+If you are using a custom queue implementation, you must capture the job errors and emit this event.
+
+The event is dispatched by the [SessionGuard](https://github.com/adonisjs/auth/blob/10.x/modules/session_guard/guard.ts) implementation of the `@adonisjs/auth` package when the `auth.login` method is called either directly or internally by the session guard.
+
+The event is dispatched by the [SessionGuard](https://github.com/adonisjs/auth/blob/10.x/modules/session_guard/guard.ts) implementation of the `@adonisjs/auth` package after a user has been logged in successfully.
+
+You may use this event to track sessions associated with a given user.
+
+The event is dispatched by the `@adonisjs/auth` package when an attempt is made to validate the request session and check for a logged-in user.
+
+The event is dispatched by the `@adonisjs/auth` package after the request session has been validated and the user is logged in. You may access the logged-in user using the `event.user` property.
+
+The event is dispatched by the `@adonisjs/auth` package when the authentication check fails, and the user is not logged in during the current HTTP request.
+
+The event is dispatched by the `@adonisjs/auth` package after the user has been logged out.
+
+The event is dispatched by the `@adonisjs/auth` package when an attempt is made to validate the access token during an HTTP request.
+
+The event is dispatched by the `@adonisjs/auth` package after the access token has been verified. You may access the authenticated user using the `event.user` property.
+
+The event is dispatched by the `@adonisjs/auth` package when the authentication check fails.
+
+The event is dispatched by the `@adonisjs/bouncer` package after the authorization check has been performed. The event payload includes the final response you may inspect to know the status of the check.
+
+The event is dispatched by the `@adonisjs/cache` package after the cache has been cleared using the `cache.clear` method.
+
+The event is dispatched by the `@adonisjs/cache` package after a cache key has been deleted using the `cache.delete` method.
+
+The event is dispatched by the `@adonisjs/cache` package when a cache key is found in the cache store.
+
+The event is dispatched by the `@adonisjs/cache` package when a cache key is not found in the cache store.
+
+The event is dispatched by the `@adonisjs/cache` package after a cache key has been written to the cache store.
+
+**Examples:**
+
+Example 1 (ts):
+```ts
+import emitter from '@adonisjs/core/services/emitter'
+import string from '@adonisjs/core/helpers/string'
+
+emitter.on('http:request_completed', (event) => {
+  const method = event.ctx.request.method()
+  const url = event.ctx.request.url(true)
+  const duration = event.duration
+
+  console.log(`${method} ${url}: ${string.prettyHrTime(duration)}`)
+})
+```
+
+Example 2 (ts):
+```ts
+import emitter from '@adonisjs/core/services/emitter'
+
+emitter.on('http:server_ready', (event) => {
+  console.log(event.host)
+  console.log(event.port)
+
+  /**
+   * Time it took to boot the app and start
+   * the HTTP server.
+   */
+  console.log(event.duration)
+})
+```
+
+Example 3 (ts):
+```ts
+import emitter from '@adonisjs/core/services/emitter'
+
+emitter.on('container_binding:resolved', (event) => {
+  console.log(event.binding)
+  console.log(event.value)
+})
+```
+
+Example 4 (ts):
+```ts
+import emitter from '@adonisjs/core/services/emitter'
+
+emitter.on('session:initiated', (event) => {
+  console.log(`Initiated store for ${event.session.sessionId}`)
+})
+```
+
+---
+
+## AdonisRC file (Root) - AdonisJS Documentation
+
+**URL:** https://docs.adonisjs.com/reference/adonisrc-rcfile
+
+**Contents:**
+- AdonisRC file
+- Overview
+- directories
+- preloads
+- providers
+- commands
+- commandsAliases
+- hooks
+- metaFiles
+- tests
+
+This guide covers the adonisrc.ts configuration file. You will learn how to:
+
+The adonisrc.ts file serves as the central configuration for your AdonisJS workspace. It controls how the framework boots, where scaffolding commands place generated files, which providers to load, and how the build process behaves.
+
+This file is processed by multiple tools beyond your main application, including the Ace CLI, the Assembler (which handles the dev server and production builds), and various code generators. Because of this broad usage, the file must remain environment-agnostic and free of application-specific logic.
+
+The file contains the minimum required configuration to run your application. You can view the complete expanded configuration, including all defaults, by running the node ace inspect:rcfile command.
+
+You can access the parsed RCFile contents programmatically using the app service.
+
+The directories object maps logical directory names to their filesystem paths. Scaffolding commands use these mappings to determine where to place generated files.
+
+If you rename directories in your project structure, update the corresponding paths here so that commands like node ace make:controller continue to work correctly.
+
+The preloads array specifies files to import during application boot. These files are imported immediately after service providers have been registered and booted, making them ideal for setup code that needs access to the container but should run before the application starts handling requests.
+
+You can register a preload file to run in all environments or restrict it to specific ones.
+
+The simplest form registers a file to run in all environments.
+
+To restrict a preload file to specific environments, use the object form with an environment array.
+
+You can create and register a preload file using the node ace make:preload command.
+
+The providers array lists service providers to load during application boot. Providers are loaded in the order they appear in the array, which matters when providers depend on each other.
+
+Like preload files, providers can be registered for all environments or restricted to specific ones using the same environment values: web, console, repl, and test.
+
+To load a provider only in specific environments, use the object form.
+
+See also: Service providers
+
+The commands array registers Ace commands from installed packages. Your application's own commands (in the commands directory) are discovered automatically and do not need to be registered here.
+
+See also: Creating Ace commands
+
+The commandsAliases object creates shortcuts for frequently used commands. This is useful for commands with long names or commands you run often.
+
+You can define multiple aliases pointing to the same command.
+
+See also: Creating command aliases
+
+The hooks object registers callbacks that run at specific points during the Assembler lifecycle. The Assembler is the tool responsible for running the dev server, creating production builds, running tests, and performing code generation.
+
+Hooks can be defined inline or as lazily-imported modules. They run in a separate process from your AdonisJS application and do not have access to the IoC container or framework services.
+
+The indexEntities() hook generates barrel files for controllers, events, and listeners, enabling lazy-loading and type-safe references. Package hooks like @adonisjs/vite/build_hook handle build-time asset compilation.
+
+See also: Assembler hooks for a complete reference of available hooks and how to create custom hooks for code generation.
+
+The metaFiles array specifies non-TypeScript files to copy into the build folder when creating a production build. This includes templates, language files, and other assets your application needs at runtime.
+
+Each entry accepts a glob pattern and an optional reloadServer flag that triggers a dev server restart when matching files change.
+
+The tests object configures the test runner, including global timeout settings and test suite definitions.
+
+See also: Introduction to testing
+
+**Examples:**
+
+Example 1 (unknown):
+```unknown
 node ace inspect:rcfile
 ```
-command. 
 
-```
-node ace inspect:rcfile
-```
-
-You can access the parsed RCFile contents programmatically using the service. 
-app/services/some_service.ts 
-
-```
+Example 2 (python):
+```python
 import app from '@adonisjs/core/services/app'
 
 console.log(app.rcFile)
 ```
 
-directories 
-The object maps logical directory names to their filesystem paths. Scaffolding commands use these mappings to determine where to place generated files. 
-If you rename directories in your project structure, update the corresponding paths here so that commands like 
-```
-node ace make:controller
-```
-continue to work correctly. 
-adonisrc.ts 
-
-```
+Example 3 (json):
+```json
 {
   directories: {
     config: 'config',
@@ -98,19 +1698,8 @@ adonisrc.ts
 }
 ```
 
-preloads 
-The array specifies files to import during application boot. These files are imported immediately after service providers have been registered and booted, making them ideal for setup code that needs access to the container but should run before the application starts handling requests. 
-You can register a preload file to run in all environments or restrict it to specific ones. 
-Environment Description 
-The HTTP server process 
-Ace commands (except ) 
-The interactive REPL session 
-The test runner process 
-
-The simplest form registers a file to run in all environments. 
-adonisrc.ts 
-
-```
+Example 4 (json):
+```json
 {
   preloads: [
     () => import('#start/view')
@@ -118,1898 +1707,243 @@ adonisrc.ts
 }
 ```
 
-To restrict a preload file to specific environments, use the object form with an array. 
-adonisrc.ts 
+---
 
-```
-{
-  preloads: [
-    {
-      file: () => import('#start/view'),
-      environment: ['web', 'console', 'test']
-    },
-  ]
-}
-```
+## AdonisJS docs - Everything you need to get building - AdonisJS Documentation
 
-Note 
-You can create and register a preload file using the 
-```
-node ace make:preload
-```
-command. 
+**URL:** https://docs.adonisjs.com/reference/adonisrc_file.md
 
-providers 
-The array lists  [link:/guides/concepts/service-providers] service providers to load during application boot. Providers are loaded in the order they appear in the array, which matters when providers depend on each other. 
-Like preload files, providers can be registered for all environments or restricted to specific ones using the same environment values: , , , and . 
-adonisrc.ts 
+**Contents:**
+- Everything you need to get building
+- Our sponsors
 
-```
-{
-  providers: [
-    () => import('@adonisjs/core/providers/app_provider'),
-    () => import('@adonisjs/core/providers/http_provider'),
-    () => import('@adonisjs/core/providers/hash_provider'),
-    () => import('./providers/app_provider.js'),
-  ]
-}
-```
+Comprehensive guides, step-by-step tutorials, and complete API reference to help you build, test, and deploy applications with AdonisJS
 
-To load a provider only in specific environments, use the object form. 
-adonisrc.ts 
+Start by preparing your environment, then follow the full hands-on tutorial from scratch
 
-```
-{
-  providers: [
-    () => import('@adonisjs/core/providers/app_provider'),
-    () => import('@adonisjs/core/providers/hash_provider'),
-    {
-      file: () => import('@adonisjs/core/providers/http_provider'),
-      environment: ['web']
-    },
-    {
-      file: () => import('./providers/app_provider.js'),
-      environment: ['web', 'console', 'test']
-    },
-  ]
-}
-```
+Watch practical screencasts and learn AdonisJS through real, guided video lessons
 
-See also:  [link:/guides/concepts/service-providers] Service providers 
-commands 
-The array registers Ace commands from installed packages. Your application's own commands (in the directory) are discovered automatically and do not need to be registered here. 
-adonisrc.ts 
+Production-ready full-stack components, premium packages, and AI tooling that actually understands AdonisJS.
 
-```
-{
-  commands: [
-    () => import('@adonisjs/core/commands'),
-    () => import('@adonisjs/lucid/commands')
-  ]
-}
-```
-
-See also:  [link:/guides/ace/creating-commands] Creating Ace commands 
-commandsAliases 
-The object creates shortcuts for frequently used commands. This is useful for commands with long names or commands you run often. 
-adonisrc.ts 
-
-```
-{
-  commandsAliases: {
-    migrate: 'migration:run'
-  }
-}
-```
-
-You can define multiple aliases pointing to the same command. 
-adonisrc.ts 
-
-```
-{
-  commandsAliases: {
-    migrate: 'migration:run',
-    up: 'migration:run'
-  }
-}
-```
-
-See also:  [link:/guides/ace/introduction#creating-command-aliases] Creating command aliases 
-hooks 
-The object registers callbacks that run at specific points during the Assembler lifecycle. The Assembler is the tool responsible for running the dev server, creating production builds, running tests, and performing code generation. 
-Hooks can be defined inline or as lazily-imported modules. They run in a separate process from your AdonisJS application and do not have access to the IoC container or framework services. 
-adonisrc.ts 
-
-```
-import { defineConfig } from '@adonisjs/core/app'
-import { indexEntities } from '@adonisjs/core/app'
-
-export default defineConfig({
-  hooks: {
-    init: [indexEntities()],
-    buildStarting: [() => import('@adonisjs/vite/build_hook')],
-  },
-})
-```
-
-The hook generates barrel files for controllers, events, and listeners, enabling lazy-loading and type-safe references. Package hooks like 
-```
-@adonisjs/vite/build_hook
-```
-handle build-time asset compilation. 
-See also:  [link:/guides/concepts/assembler-hooks] Assembler hooks for a complete reference of available hooks and how to create custom hooks for code generation. 
-metaFiles 
-The array specifies non-TypeScript files to copy into the folder when creating a production build. This includes templates, language files, and other assets your a
-
-… [truncated — use lookup_docs.py or open the Source URL for full detail]
-
+These companies and individuals keep AdonisJS independent. Their monthly support funds the ongoing work (development, maintenance, releases, and docs) for everyone who builds on it.
 
 ---
 
-### reference/application
-Source: https://docs.adonisjs.com/reference/application
-
-Application (Root) - AdonisJS Documentation 
-
-Reference
-            /
-            Root Application 
-
-Application 
-This guide covers the Application class in AdonisJS. You will learn how to: 
-Access the runtime environment (web, console, repl, test) 
-Check the Node.js environment and application state 
-Listen for process signals and notify parent processes 
-Generate absolute paths to project directories and files 
-Use generators for consistent naming conventions 
-Overview 
-The  [link:https://github.com/adonisjs/application/blob/9.x/src/application.ts] Application class handles the heavy lifting of wiring together an AdonisJS application. It manages the application lifecycle, provides access to environment information, tracks the current state, and offers helper methods for generating paths to various project directories. 
-You access the Application instance through the service, which is available throughout your application. 
-See also:  [link:/guides/concepts/application-lifecycle] Application lifecycle 
-app/services/some_service.ts 
-
-```
-import app from '@adonisjs/core/services/app'
-```
-
-Environment 
-The environment refers to the runtime context in which your application is running. AdonisJS recognizes four distinct environments: 
-Environment Description 
-The process started for the HTTP server 
-Ace commands (except the REPL command) 
-The process started using 
-The process started using 
-
-You can access the current environment using the method. 
-app/services/some_service.ts 
-
-```
-import app from '@adonisjs/core/services/app'
-
-console.log(app.getEnvironment())
-```
-
-Switching the environment 
-You can switch the application environment before it has been booted. This is useful when a command needs to run in a different context than it was started in. For example, the command starts in the environment but switches to before presenting the prompt. 
-commands/my_command.ts 
-
-```
-import app from '@adonisjs/core/services/app'
-
-if (!app.isBooted) {
-  app.setEnvironment('repl')
-}
-```
-
-Node environment 
-The property provides access to the Node.js environment, derived from the environment variable. AdonisJS normalizes common variations to ensure consistency across different deployment configurations. 
-app/services/some_service.ts 
-
-```
-import app from '@adonisjs/core/services/app'
-
-console.log(app.nodeEnvironment)
-```
-
-NODE_ENV Normalized to 
-dev development 
-develop development 
-stage staging 
-prod production 
-testing test 
-
-Shorthand properties 
-Instead of comparing strings, you can use these boolean properties to check the current environment. 
-app/services/some_service.ts 
-
-```
-import app from '@adonisjs/core/services/app'
-
-/**
- * Check if running in production
- */
-app.inProduction
-app.nodeEnvironment === 'production'
-
-/**
- * Check if running in development
- */
-app.inDev
-app.nodeEnvironment === 'development'
-
-/**
- * Check if running tests
- */
-app.inTest
-app.nodeEnvironment === 'test'
-```
-
-State 
-The state represents where the application is in its lifecycle. The features you can access depend on the current state—for example, you cannot access  [link:/guides/concepts/dependency-injection#bindings] container bindings or  [link:/guides/concepts/container-services] container services until the app reaches the state. 
-State Description 
-Default state when Application instance is created 
-Environment variables parsed and processed 
-Service providers registered and booted 
-Application ready to handle requests (meaning varies by environment) 
-Application terminated and process will exit shortly 
-
-app/services/some_service.ts 
-
-```
-import app from '@adonisjs/core/services/app'
-
-console.log(app.getState())
-```
-
-Shorthand properties 
-app/services/some_service.ts 
-
-```
-import app from '@adonisjs/core/services/app'
-
-/**
- * True when state is past 'initiated'
- */
-app.isBooted
-
-/**
- * True when state is 'ready'
- */
-app.isReady
-
-/**
- * True when gracefully attempting to terminate
- */
-app.isTerminating
-
-/**
- * True when state is 'terminated'
- */
-app.isTerminated
-```
-
-Listening for process signals 
-You can listen for  [link:https://man7.org/linux/man-pages/man7/signal.7.html] POSIX signals using the or methods. These register listeners with the Node.js object. 
-start/events.ts 
-
-```
-import app from '@adonisjs/core/services/app'
-
-app.listen('SIGTERM', () => {
-  // Handle SIGTERM
-})
-
-app.listenOnce('SIGTERM', () => {
-  // Handle SIGTERM once
-})
-```
-
-Conditional listeners 
-Use or to register listeners only when a condition is met. The listener is registered only when the first argument is truthy. 
-start/events.ts 
-
-```
-import app from '@adonisjs/core/services/app'
-
-/**
- * Only listen for SIGINT when running under pm2
- */
-app.listenIf(app.managedByPm2, 'SIGINT', () => {
-  // Handle SIGINT in pm2
-})
-
-app.listenOnceIf(app.managedByPm2, 'SIGINT', () => {
-  // Handle SIGINT once in pm2
-})
-```
-
-Notifying parent process 
-When your application runs as a child process, you can send messages to the parent using the method. This wraps the method. 
-start/events.ts 
-
-```
-import app from '@adonisjs/core/services/app'
+## Helpers (Root) - AdonisJS Documentation
 
-app.notify('ready')
+**URL:** https://docs.adonisjs.com/reference/helpers
 
-app.notify({
-  isReady: true,
-  port: 3333,
-  host: 'localhost'
-})
-```
+**Contents:**
+- Helpers reference
+- escapeHTML
+- encodeSymbols
+- prettyHrTime
+- isEmpty
+- truncate
+- excerpt
+- slug
+- interpolate
+- plural
 
-Making paths to project files 
-The Application class provides helper methods that generate absolute paths to files and directories within your project. These helpers respect the directory structure configured in your file, ensuring paths remain correct even if you customize directory locations. 
-makePath 
-Returns an absolute path to a file or directory within the project root. 
-app/services/some_service.ts 
+AdonisJS bundles its utilities into the helpers module and makes them available to your application code. Since these utilities are already installed and used by the framework, the helpers module does not add any additional bloat to your node_modules.
 
-```
-import app from '@adonisjs/core/services/app'
+The helper methods are exported from the following modules.
 
-app.makePath('app/middleware/auth.ts')
-// /project_root/app/middleware/auth.ts
-```
+Escape HTML entities in a string value. Under the hood, we use the he package.
 
-makeURL 
-Returns a file URL to a file or directory within the project root. This is useful when dynamically importing files. 
-app/services/test_runner.ts 
+Optionally, you can encode non-ASCII symbols using the encodeSymbols option.
 
-```
-import app from '@adonisjs/core/services/app'
+You may encode non-ASCII symbols in a string value using the encodeSymbols helper. Under the hood, we use he.encode method.
 
-const files = [
-  './tests/welcome.spec.ts',
-  './tests/maths.spec.ts'
-]
+Pretty print the diff of process.hrtime method.
 
-await Promise.all(files.map((file) => {
-  return import(app.makeURL(file).href)
-}))
-```
+Check if a string value is empty.
 
-tmpPath 
-Returns a path to a file inside the directory within the project root. 
-app/services/some_service.ts 
+Truncate a string at a given number of characters.
 
-```
-app.tmpPath('logs/mail.txt')
-// /project_root/tmp/logs/mail.txt
+By default, the string is truncated exactly at the given index. However, you can instruct the method to wait for the words to complete.
 
-app.tmpPath()
-// /project_root/tmp
-```
+You can customize the suffix using the suffix option.
 
-configPath 
-app/services/some_service.ts 
+The excerpt method is identical to the truncate method. However, it strips the HTML tags from the string.
 
-```
-app.configPath('shield.ts')
-// /project_root/config/shield.ts
+Generate slug for a string value. The method is exported from the slugify package ; therefore, consult its documentation for available options.
 
-app.configPath()
-// /project_root/config
-```
+You can add custom replacements for Unicode values as follows.
 
-publicPath 
-app/services/some_service.ts 
+Interpolate variables inside a string. The variables must be inside double curly braces.
 
-```
-app.publicPath('style.css')
-// /project_root/public/style.css
+Curly braces can be escaped using the \\ prefix.
 
-app.publicPath()
-// /project_root/public
-```
+Convert a word to its plural form. The method is exported from the pluralize package .
 
-viewsPath 
-app/services/some_service.ts 
+Find if a word already is in plural form.
 
-```
-app.viewsPath('welcome.edge')
-// /project_root/resources/views/welcome.edge
+This method combines the singular and the plural methods and uses one or the other based on the count. For example:
 
-app.viewsPath()
-// /project_root/resources/views
-```
+The pluralize property exports additional methods to register custom uncountable, irregular, plural, and singular rules.
 
-languageFilesPath 
-app/services/some_service.ts 
+Convert a word to its singular form. The method is exported from the pluralize package .
 
-```
-app.languageFilesPath('en/messages.json')
-// /project_root/resources/lang/en/messages.json
+Find if a word is already in a singular form.
 
-app.languageFilesPath()
-// /project_root/resources/lang
-```
+Convert a string value to camelcase.
 
-ht
+Following are some of the conversion examples.
 
-… [truncated — use lookup_docs.py or open the Source URL for full detail]
+Convert a string value to a capital case.
 
+Following are some of the conversion examples.
 
----
+Convert a string value to a dash case.
 
-### reference/commands
-Source: https://docs.adonisjs.com/reference/commands
+Optionally, you can capitalize the first letter of each word.
 
-Commands (Root) - AdonisJS Documentation 
+Following are some of the conversion examples.
 
-Reference
-            /
-            Root Commands 
+Convert a string value to a dot case.
 
-Commands reference 
-In this guide, we cover the usage of all the commands shipped with the framework core and the official packages. You may also view the commands help using the command or the 
-```
-node ace <command-name> --help
-```
-command. 
+Optionally, you can convert the first letter of all the words to lowercase.
 
-The output of the help screen is formatted as per the http://docopt.org standard 
+Following are some of the conversion examples.
 
-serve 
-The uses the  [link:https://github.com/adonisjs/assembler?tab=readme-ov-file#dev-server] @adonisjs/assembler package to start the AdonisJS application in development environment. You can optionally watch for file changes and restart the HTTP server on every file change. 
+Remove all sorts of casing from a string value.
 
-The command starts the development server (via the file) as a child process. If you want to pass  [link:https://nodejs.org/api/cli.html#options] node arguments to the child process, you can define them before the command name. 
+Following are some of the conversion examples.
 
-```
-node ace --no-warnings --inspect serve --hmr
-```
+Convert a string value to a Pascal case. Great for generating JavaScript class names.
 
-Following is the list of available options you can pass to the command. Alternatively, use the flag to view the command's help. 
+Following are some of the conversion examples.
 
-Watch the filesystem and reload the server in HMR mode. 
+Convert a value to a sentence.
 
-Watch the filesystem and always restart the process on file change. 
+Following are some of the conversion examples.
 
-Use polling to detect filesystem changes. You might want to use polling when using a Docker container for development. 
+Convert value to snake case.
 
-Clear the terminal after every file change and before displaying the new logs. Use the flag to retain old logs. 
+Following are some of the conversion examples.
 
-build 
-The command uses the  [link:https://github.com/adonisjs/assembler?tab=readme-ov-file#bundler] @adonisjs/assembler package to create the production build of your AdonisJS application. The following steps are performed to generate the build. 
-See also:  [link:/deployment#creating-the-production-build] Creating the production build . 
-
-Following is the list of available options you can pass to the command. Alternatively, use the flag to view the command's help. 
-
-The build command terminates the build process when your project has TypeScript errors. However, you can ignore those errors and finish the build using the flag. 
-
-The build command copies the file alongside the lock file of the package manager your application is using. 
-We detect the package manager using the package. However, you can turn off detection by explicitly providing the package manager's name. 
-
-add 
-The command combines the 
-```
-npm install <package-name>
-```
-and commands. So, instead of running two separate commands, you can install and configure the package in one go using the command. 
-The command will automatically detect the package manager used by your application and use that to install the package. However, you can always opt for a specific package manager using the CLI flag. 
-
-```
-# Install and configure the @adonisjs/lucid package
-node ace add @adonisjs/lucid
-
-# Install the package as a development dependency and configure it
-node ace add my-dev-package --dev
-```
-
-If the package can be configured using flags, you can pass them directly to the command. Every unknown flag will be passed down to the command. 
-
-```
-node ace add @adonisjs/lucid --db=sqlite
-```
-
---verbose 
-Enable verbose mode to display the package installation and configuration logs. 
---force 
-Passed down to the command. Force overwrite files when configuring the package. See the command for more information. 
---package-manager 
-Define the package manager to use for installing the package. The value must be , , or . 
---dev 
-Install the package as a development dependency. 
-configure 
-Configure a package after it has been installed. The command accepts the package name as the first argument. 
-
-```
-node ace configure @adonisjs/lucid
-```
-
---verbose 
-Enable verbose mode to display the package installation logs. 
---force 
-The stubs system of AdonisJS does not overwrite existing files. For example, if you configure the package and your application already has a file, the configure process will not overwrite the existing config file. 
-However, you can force overwrite files using the flag. 
-eject 
-Eject stubs from a given package to your application directory. In the following example, we copy the stubs to our application for modification. 
-See also:  [link:/guides/concepts/scaffolding#ejecting-stubs] Customizing stubs 
-
-```
-# Copy stub from @adonisjs/core package
-node ace eject make/controller
-
-# Copy stub from @adonisjs/bouncer package
-node ace eject make/policy --pkg=@adonisjs/bouncer
-```
-
-generate:key 
-Generate a cryptographically secure random key and write to the file as the environment variable. 
-See also:  [link:/guides/security/encryption] App key 
-
-```
-node ace generate:key
-```
-
---show 
-Display the key on the terminal instead of writing it to the file. By default, the key is written to the env file. 
---force 
-The command does not write the key to the file when running your application in production. However, you can use the flag to override this behavior. 
-make:controller 
-Create a new HTTP controller class. Controllers are created inside the directory and use the following naming conventions. 
-Form: 
-Suffix: 
-Class name example: 
-File name example: 
-
-```
-node ace make:controller users
-```
-
-You also generate a controller with custom action names, as shown in the following example. 
-
-```
-# Generates controller with "index", "show", and "store" methods
-node ace make:controller users index show store
-```
-
---singular 
-Force the controller name to be in singular form. 
---resource 
-Generate a controller with methods to perform CRUD operations on a resource. 
---api 
-The flag is similar to the flag. However, it does not define the and the methods since they are used to display forms. 
-make:middleware 
-Create a new middleware for HTTP requests. Middleware are stored inside the directory and uses the following naming conventions. 
-Form: 
-Suffix: 
-Class name example: 
-File name example: 
-```
-body_parser_middleware.ts
-```
-
-```
-node ace make:middleware bodyparser
-```
-
---stack 
-Skip the  [link:/guides/basics/middleware#middleware-stacks] middleware stack selection prompt by defining the stack explicitly. The value must be , , or . 
-
-```
-node ace make:middleware bodyparser --stack=router
-```
-
-make:event 
-Create a new event class. Events are stored inside the directory and use the following naming conventions. 
-Form: 
-Suffix: 
-Class name example: 
-File name example: 
-Recommendation: You must name your events around the lifecycle of an action. For example: , , , and so on. 
-
-```
-node ace make:event orderShipped
-```
-
-make:validator 
-Create a new VineJS validator file. The validators are stored inside the directory, and each file may export multiple validators. 
-Form: 
-Suffix: 
-File name example: 
-Recommendation: You must create validator files around the resources of your application. 
-
-```
-# A validator for managing a user
-node ace make:validator user
-
-# A validator for managing a post
-node ace make:validator post
-```
-
---resource 
-Create a validator file with pre-defined validators fo
-
-… [truncated — use lookup_docs.py or open the Source URL for full detail]
-
-
----
-
-### reference/edge
-Source: https://docs.adonisjs.com/reference/edge
-
-Edge helpers (Root) - AdonisJS Documentation 
-
-Reference
-            /
-            Root Edge helpers 
-
-Edge helpers and tags 
-In this guide, we will learn about the helpers and the tags contributed to Edge by the AdonisJS official packages. The helpers shipped with Edge are not covered in this guide and must reference  [link:https://edgejs.dev/docs/helpers] Edge documentation for the same. 
-request 
-Reference to the instance of ongoing  [link:/guides/basics/request] HTTP request . The property is only available when a template is rendered using the method. 
-
-```
-{{ request.url() }}
-{{ request.input('signature') }}
-```
-
-route/signedRoute 
-Helper functions to create URL for a route using the  [link:/guides/basics/routing#url-builder] URL builder . Unlike the URL builder, the view helpers do not have a fluent API and accept the following parameters. 
-Position Description 
-1st The route identifier or the route pattern 
-2nd Route params are defined as an array or an object. 
-3rd The options object with the following properties. 
-: Define query string parameters as an object. 
-: Search for routes under a specific domain. 
-: Prefix a URL to the output. 
-: Enable/disable routes lookup. 
-
-```
-<a href="{{ route('posts.show', [post.id]) }}">
-  View post
-</a>
-```
-
-```
-<a href="{{
-  signedRoute('unsubscribe', [user.id], {
-    expiresIn: '3 days',
-    prefixUrl: 'https://blog.adonisjs.com'    
-  })
-}}">
- Unsubscribe
-</a>
-```
-
-app 
-Reference to the  [link:/reference/application] Application instance . 
-
-```
-{{ app.getEnvironment() }}
-```
-
-config 
-A helper function to reference configuration values inside Edge templates. You may use the method to check if the value for a key exists. 
-
-```
-@if(config.has('app.appUrl'))
-  <a href="{{ config('app.appUrl') }}"> Home </a>
-@else
-  <a href="/"> Home </a>
-@end
-```
-
-session 
-A read-only copy of the  [link:/guides/basics/session#reading-and-writing-data] session object . You cannot mutate session data within Edge templates. The property is only available when the template is rendered using the method. 
-
-```
-Post views: {{ session.get(`post.${post.id}.visits`) }}
-```
-
-flashMessages 
-A read-only copy of  [link:/guides/basics/session#flash-messages] session flash messages . The property is only available when the template is rendered using the method. 
-
-```
-@if(flashMessages.has('inputErrorsBag.title'))
-  <p>{{ flashMessages.get('inputErrorsBag.title') }}</p>
-@end
-
-@if(flashMessages.has('notification'))
-  <div class="notification {{ flashMessages.get('notification').type }}">
-    {{ flashMessages.get('notification').message }}
-  </div>
-@end
-```
-
-old 
-The method is a shorthand for the method. 
-
-```
-<input
-  type="text"
-  name="email"
-  value="{{ old('name') || '' }}"
-/>
-```
-
-t 
-The method is contributed by the package to display translations using the  [link:/guides/digging-deeper/i18n#resolving-translations] i18n class . The method accepts the translation key identifier, message data and a fallback message as the parameters. 
-
-```
-<h1> {{ t('messages.greeting') }} </h1>
-```
-
-i18n 
-Reference to an instance of the I18n class configured using the application's default locale. However, the  [link:/guides/digging-deeper/i18n#detecting-user-locale-during-an-http-request] 
-```
-DetectUserLocaleMiddleware
-```
-overrides this property with an instance created for the current HTTP request locale. 
-
-```
-{{ i18n.formatCurrency(200, { currency: 'USD' }) }}
-```
-
-auth 
-Reference to the  [link:/guides/basics/http-context#http-context-properties] ctx.auth property shared by the  [link:https://github.com/adonisjs/auth/blob/10.x/src/middleware/initialize_auth_middleware.ts#L19-L48] InitializeAuthMiddleware . You may use this property to access information about the logged-in user. 
-
-```
-@if(auth.isAuthenticated)
-  <p> {{ auth.user.email }} </p>
-@end
-```
-
-If you are displaying the logged-in user info on a public page (not protected by the auth middleware), then you may want to first silently check if the user is logged-in or not. 
-
-```
-{{-- Check if user is logged-in --}}
-@eval(await auth.use('web').check())
-
-@if(auth.use('web').isAuthenticated)
-  <p> {{ auth.use('web').user.email }} </p>
-@end
-```
-
-asset 
-Resolve the URL of an asset processed by Vite. Learn more about  [link:/guides/frontend/vite#referencing-assets-inside-edge-templates] referencing assets inside Edge templates . 
-
-```
-<img src="{{ asset('resources/images/hero.jpg') }}" />
-```
-
-embedImage / embedImageData 
-The and the helpers are added by the  [link:/guides/digging-deeper/mail#embedding-images] mail package and are only available when rendering a template to send an email. 
-
-```
-<img src="{{
-  embedImage(app.makePath('assets/hero.jpg'))
-}}" />
-```
-
-@flashMessage 
-The tag provides a better DX for reading flash messages for a given key conditionally. 
-Instead of writing conditionals 
-
-```
-@if(flashMessages.has('notification'))
-  <div class="notification {{ flashMessages.get('notification').type }}">
-    {{ flashMessages.get('notification').message }}
-  </div>
-@end
-```
-
-You may prefer using the tag 
-
-```
-@flashMessage('notification')
-  <div class="notification {{ $message.type }}">
-    {{ $message.message }}
-  </div>
-@end
-```
-
-@error 
-The tag provides a better DX for reading error messages stored inside the key in . 
-Instead of writing conditionals 
-
-```
-@if(flashMessages.has('errorsBag.E_BAD_CSRF_TOKEN'))
-  <p>{{ flashMessages.get('errorsBag.E_BAD_CSRF_TOKEN') }}</p>
-@end
-```
-
-You may prefer using the tag 
-
-```
-@error('E_BAD_CSRF_TOKEN')
-  <p>{{ $message }}</p>
-@end
-```
-
-@inputError 
-The tag provides a better DX for reading validation error messages stored inside the key in . 
-Instead of writing conditionals 
-
-```
-@if(flashMessages.has('inputErrorsBag.title'))
-  @each(message in flashMessages.get('inputErrorsBag.title'))
-    <p>{{ message }}</p>
-  @end
-@end
-```
-
-You may prefer using the tag 
-
-```
-@inputError('title')
-  @each(message in $messages)
-    <p>{{ message }}</p>
-  @end
-@end
-```
-
-@vite 
-The tag accepts an array of entry point paths and returns the and the tags for the same. The path you provide to the tag should match exactly the path registered inside the file. 
-
-```
-export default defineConfig({
-  plugins: [
-    adonisjs({
-      // highlight-start
-      entrypoints: ['resources/js/app.js'],
-      // highlight-end
-    }),
-  ]
-})
-```
-
-```
-@vite(['resources/js/app.js'])
-```
-
-You can define the script tag attributes as the 2nd argument. For example: 
-
-```
-@vite(['resources/js/app.js'], {
-  defer: true,
-})
-```
-
-@viteReactRefresh 
-The tag returns a  [link:https://vitejs.dev/guide/backend-integration.html#:~:text=you%27ll%20also%20need%20to%20add%20this%20before%20the%20above%20scripts] script tag to enable React HMR for project using the  [link:https://www.npmjs.com/package/@vitejs/plugin-react] @vitejs/plugin-react package. 
-
-Output HTML 
-
-```
-<script type="module">
-  import RefreshRuntime from 'http://localhost:5173/@react-refresh'
-  RefreshRuntime.injectIntoGlobalHook(window)
-  window.$RefreshReg
-
-… [truncated — use lookup_docs.py or open the Source URL for full detail]
-
-
----
-
-### reference/events
-Source: https://docs.adonisjs.com/reference/events
-
-Events (Root) - AdonisJS Documentation 
-
-Reference
-            /
-            Root Events 
-
-Events reference 
-In this guide, we look at the list of events dispatched by the framework core and the official packages. Check out the  [link:/guides/digging-deeper/emitter] emitter documentation to learn more about its usage. 
-http:request_completed 
-The  [link:https://github.com/adonisjs/http-server/blob/8.x/src/types/server.ts#L65-L81] 
-```
-http:request_completed
-```
-event is dispatched after an HTTP request is completed. The event contains an instance of the  [link:/guides/basics/http-context] HttpContext and the request duration. The value is the output of the method. 
-
-```
-import emitter from '@adonisjs/core/services/emitter'
-import string from '@adonisjs/core/helpers/string'
-
-emitter.on('http:request_completed', (event) => {
-  const method = event.ctx.request.method()
-  const url = event.ctx.request.url(true)
-  const duration = event.duration
-
-  console.log(`${method} ${url}: ${string.prettyHrTime(duration)}`)
-})
-```
-
-http:server_ready 
-The event is dispatched once the AdonisJS HTTP server is ready to accept incoming requests. 
-
-```
-import emitter from '@adonisjs/core/services/emitter'
-
-emitter.on('http:server_ready', (event) => {
-  console.log(event.host)
-  console.log(event.port)
-
-  /**
-   * Time it took to boot the app and start
-   * the HTTP server.
-   */
-  console.log(event.duration)
-})
-```
-
-container_binding:resolved 
-The event is dispatched after the IoC container resolves a binding or constructs a class instance. The property will be a string (binding name) or a class constructor, and the property is the resolved value. 
-
-```
-import emitter from '@adonisjs/core/services/emitter'
-
-emitter.on('container_binding:resolved', (event) => {
-  console.log(event.binding)
-  console.log(event.value)
-})
-```
-
-session:initiated 
-The package emits the event when the session store is initiated during an HTTP request. The property is an instance of the  [link:https://github.com/adonisjs/session/blob/8.x/src/session.ts] Session class . 
-
-```
-import emitter from '@adonisjs/core/services/emitter'
-
-emitter.on('session:initiated', (event) => {
-  console.log(`Initiated store for ${event.session.sessionId}`)
-})
-```
-
-session:committed 
-The package emits the event when the session data is written to the session store during an HTTP request. 
-
-```
-import emitter from '@adonisjs/core/services/emitter'
-
-emitter.on('session:committed', (event) => {
-  console.log(`Persisted data for ${event.session.sessionId}`)
-})
-```
-
-session:migrated 
-The package emits the event when a new session ID is generated using the method. 
-
-```
-import emitter from '@adonisjs/core/services/emitter'
-
-emitter.on('session:migrated', (event) => {
-  console.log(`Migrating data to ${event.toSessionId}`)
-  console.log(`Destroying session ${event.fromSessionId}`)
-})
-```
-
-i18n:missing:translation 
-The event is dispatched by the package when a translation for a specific key and locale is missing. You may listen to this event to find the missing translations for a given locale. 
-
-```
-import emitter from '@adonisjs/core/services/emitter'
-
-emitter.on('i18n:missing:translation', function (event) {
-  console.log(event.identifier)
-  console.log(event.hasFallback)
-  console.log(event.locale)
-})
-```
-
-mail:sending 
-The package emits the event before sending an email. In the case of the method call, the event will be emitted when the mail queue processes the job. 
-
-```
-import emitter from '@adonisjs/core/services/emitter'
-
-emitter.on('mail:sending', (event) => {
-  console.log(event.mailerName)
-  console.log(event.message)
-  console.log(event.views)
-})
-```
-
-mail:sent 
-After sending the email, the event is dispatched by the package. 
-
-```
-import emitter from '@adonisjs/core/services/emitter'
-
-emitter.on('mail:sent', (event) => {
-  console.log(event.response)
-
-  console.log(event.mailerName)
-  console.log(event.message)
-  console.log(event.views)
-})
-```
-
-mail:queueing 
-The package emits the event before queueing the job to send the email. 
-
-```
-import emitter from '@adonisjs/core/services/emitter'
-
-emitter.on('mail:queueing', (event) => {
-  console.log(event.mailerName)
-  console.log(event.message)
-  console.log(event.views)
-})
-```
-
-mail:queued 
-After the email has been queued, the event is dispatched by the package. 
-
-```
-import emitter from '@adonisjs/core/services/emitter'
-
-emitter.on('mail:queued', (event) => {
-  console.log(event.mailerName)
-  console.log(event.message)
-  console.log(event.views)
-})
-```
-
-queued:mail:error 
-The event is dispatched when the  [link:https://github.com/adonisjs/mail/blob/10.x/src/messengers/memory_queue.ts] MemoryQueue implementation of the package is unable to send the email queued using the method. 
-If you are using a custom queue implementation, you must capture the job errors and emit this event. 
-
-```
-import emitter from '@adonisjs/core/services/emitter'
-
-emitter.on('queued:mail:error', (event) => {
-  console.log(event.error)
-  console.log(event.mailerName)
-})
-```
-
-session_auth:login_attempted 
-The event is dispatched by the  [link:https://github.com/adonisjs/auth/blob/10.x/modules/session_guard/guard.ts] SessionGuard implementation of the package when the method is called either directly or internally by the session guard. 
-
-```
-import emitter from '@adonisjs/core/services/emitter'
-
-emitter.on('session_auth:login_attempted', (event) => {
-  console.log(event.guardName)
-  console.log(event.user)
-})
-```
-
-session_auth:login_succeeded 
-The event is dispatched by the  [link:https://github.com/adonisjs/auth/blob/10.x/modules/session_guard/guard.ts] SessionGuard implementation of the package after a user has been logged in successfully. 
-You may use this event to track sessions associated with a given user. 
-
-```
-import emitter from '@adonisjs/core/services/emitter'
-
-emitter.on('session_auth:login_succeeded', (event) => {
-  console.log(event.guardName)
-  console.log(event.sessionId)
-  console.log(event.user)
-  console.log(event.rememberMeToken) // (if created one)
-})
-```
-
-session_auth:authentication_attempted 
-The event is dispatched by the package when an attempt is made to validate the request session and check for a logged-in user. 
-
-```
-import emitter from '@adonisjs/core/services/emitter'
-
-emitter.on('session_auth:authentication_attempted', (event) => {
-  console.log(event.guardName)
-  console.log(event.sessionId)
-})
-```
-
-session_auth:authentication_succeeded 
-The event is dispatched by the package after the request session has been validated and the user is logged in. You may access the logged-in user using the property. 
-
-```
-import emitter from '@adonisjs/core/services/emitter'
-
-emitter.on('session_auth:authentication_succeeded', (event) => {
-  console.log(event.guardName)
-  console.log(event.sessionId)
-
-  console.log(event.user)
-  console.log(event.rememberMeToken) // if authenticated using token
-})
-```
-
-session_auth:authentication_failed 
-The event is dispatched by the package when the authenticati
-
-… [truncated — use lookup_docs.py or open the Source URL for full detail]
-
-
----
-
-### reference/exceptions
-Source: https://docs.adonisjs.com/reference/exceptions
-
-Exceptions (Root) - AdonisJS Documentation 
-
-Reference
-            /
-            Root Exceptions 
-
-Exceptions reference 
-In this guide we will go through the list of known exceptions raised by the framework core and the official packages. Some of the exceptions are marked as self-handled .  [link:/guides/basics/exception-handling#defining-the-handle-method] Self-handled exceptions can convert themselves to an HTTP response. 
-E_ROUTE_NOT_FOUND 
-The exception is raised when the HTTP server receives a request for a non-existing route. By default, the client will get a 404 response, and optionally, you may render an HTML page using  [link:/guides/basics/exception-handling#status-pages] status pages . 
-Status code : 404 
-Self handled : No 
-
-```
-import { errors } from '@adonisjs/core'
-if (error instanceof errors.E_ROUTE_NOT_FOUND) {
-  // handle error
-}
-```
-
-E_ROW_NOT_FOUND 
-The exception is raised when the database query for finding one item fails e.g when using . By default, the client will get a 404 response, and optionally, you may render an HTML page using  [link:/guides/basics/exception-handling#status-pages] status pages . 
-Status code : 404 
-Self handled : No 
-
-```
-import { errors as lucidErrors } from '@adonisjs/lucid'
-if (error instanceof lucidErrors.E_ROW_NOT_FOUND) {
-  // handle error
-  console.log(`${error.model?.name || 'Row'} not found`)
-}
-```
-
-E_AUTHORIZATION_FAILURE 
-The exception is raised when a bouncer authorization check fails. The exception is self-handled and  [link:/guides/auth/authorization#throwing-authorizationexception] uses content-negotiation to return an appropriate error response to the client. 
-Status code : 403 
-Self handled : Yes 
-Translation identifier : 
-```
-errors.E_AUTHORIZATION_FAILURE
-```
-
-```
-import { errors as bouncerErrors } from '@adonisjs/bouncer'
-if (error instanceof bouncerErrors.E_AUTHORIZATION_FAILURE) {
-}
-```
-
-E_TOO_MANY_REQUESTS 
-The exception is raised by the  [link:/guides/security/rate-limiting] @adonisjs/rate-limiter package when a request exhausts all the requests allowed during a given duration. The exception is self-handled and  [link:/guides/security/rate-limiting#handling-throttleexception] uses content-negotiation to return an appropriate error response to the client. 
-Status code : 429 
-Self handled : Yes 
-Translation identifier : 
-```
-errors.E_TOO_MANY_REQUESTS
-```
-
-```
-import { errors as limiterErrors } from '@adonisjs/limiter'
-if (error instanceof limiterErrors.E_TOO_MANY_REQUESTS) {
-}
-```
-
-E_BAD_CSRF_TOKEN 
-The exception is raised when a form using  [link:/guides/security/securing-ssr-applications#csrf-protection] CSRF protection is submitted without the CSRF token, or the CSRF token is invalid. 
-Status code : 403 
-Self handled : Yes 
-Translation identifier : 
-```
-errors.E_BAD_CSRF_TOKEN
-```
-
-```
-import { errors as shieldErrors } from '@adonisjs/shield'
-if (error instanceof shieldErrors.E_BAD_CSRF_TOKEN) {
-}
-```
-
-The exception is  [link:https://github.com/adonisjs/shield/blob/9.x/src/errors.ts#L23-L66] self-handled , and the user will be redirected back to the form, and you can access the error using the flash messages. 
-
-```
-@error('E_BAD_CSRF_TOKEN')
-  <p>
-    {{ message }}
-  </p>
-@end
-```
-
-E_OAUTH_MISSING_CODE 
-The package raises the exception when the OAuth service does not provide the OAuth code during the redirect. 
-You can avoid this exception if you  [link:/guides/auth/social-authentication#handling-callback-response] handle the errors before calling the or methods. 
-Status code : 500 
-Self handled : No 
-
-```
-import { errors as allyErrors } from '@adonisjs/ally'
-if (error instanceof allyErrors.E_OAUTH_MISSING_CODE) {
-}
-```
-
-E_OAUTH_STATE_MISMATCH 
-The package raises the exception when the CSRF state defined during the redirect is missing. 
-You can avoid this exception if you  [link:/guides/auth/social-authentication#handling-callback-response] handle the errors before calling the or methods. 
-Status code : 400 
-Self handled : No 
-
-```
-import { errors as allyErrors } from '@adonisjs/ally'
-if (error instanceof allyErrors.E_OAUTH_STATE_MISMATCH) {
-}
-```
-
-E_UNAUTHORIZED_ACCESS 
-The exception is raised when one of the authentication guards is not able to authenticate the request. The exception is self-handled and uses  [link:/guides/auth/session-guard#handling-authentication-exception] content-negotiation to return an appropriate error response to the client. 
-Status code : 401 
-Self handled : Yes 
-Translation identifier : 
-```
-errors.E_UNAUTHORIZED_ACCESS
-```
-
-```
-import { errors as authErrors } from '@adonisjs/auth'
-if (error instanceof authErrors.E_UNAUTHORIZED_ACCESS) {
-}
-```
-
-E_INVALID_CREDENTIALS 
-The exception is raised when the auth finder is not able to verify the user credentials. The exception is handled and use  [link:/guides/auth/verifying-user-credentials#handling-exceptions] content-negotiation to return an appropriate error response to the client. 
-Status code : 400 
-Self handled : Yes 
-Translation identifier : 
-```
-errors.E_INVALID_CREDENTIALS
-```
-
-```
-import { errors as authErrors } from '@adonisjs/auth'
-if (error instanceof authErrors.E_INVALID_CREDENTIALS) {
-}
-```
-
-E_CANNOT_LOOKUP_ROUTE 
-The exception is raised when you attempt to create a URL for a route using the  [link:/guides/basics/routing#url-builder] URL builder . 
-Status code : 500 
-Self handled : No 
-
-```
-import { errors } from '@adonisjs/core'
-if (error instanceof errors.E_CANNOT_LOOKUP_ROUTE) {
-  // handle error
-}
-```
-
-E_HTTP_EXCEPTION 
-The is a generic exception for throwing errors during an HTTP request. You can use this exception directly or create a custom exception extending it. 
-Status code : Defined at the time of raising the exception 
-Self handled : Yes 
-
-```
-// title: Throw exception
-import { errors } from '@adonisjs/core'
-
-throw errors.E_HTTP_EXCEPTION.invoke(
-  {
-    errors: ['Cannot process request'],
-  },
-  422
-)
-```
-
-```
-// title: Handle exception
-import { errors } from '@adonisjs/core'
-if (error instanceof errors.E_HTTP_EXCEPTION) {
-  // handle error
-}
-```
-
-E_HTTP_REQUEST_ABORTED 
-The 
-```
-E_HTTP_REQUEST_ABORTED
-```
-is a sub-class of the exception. This exception is raised by the  [link:/guides/basics/response#aborting-request-with-an-error] response.abort method. 
-
-```
-import { errors } from '@adonisjs/core'
-if (error instanceof errors.E_HTTP_REQUEST_ABORTED) {
-  // handle error
-}
-```
-
-E_INSECURE_APP_KEY 
-The exception is raised when the length of is smaller than 16 characters. You can use the  [link:/reference/commands#generatekey] generate:key ace command to generate a secure app key. 
-Status code : 500 
-Self handled : No 
-
-```
-import { errors } from '@adonisjs/core'
-if (error instanceof errors.E_INSECURE_APP_KEY) {
-  // handle error
-}
-```
-
-E_MISSING_APP_KEY 
-The exception is raised when the property is not defined inside the file. By default, the value of the is set using the environment variable. 
-Status code : 500 
-Self handled : No 
-
-```
-import { errors } from '@adonisjs/core'
-if (error instanceof error
-
-… [truncated — use lookup_docs.py or open the Source URL for full detail]
-
-
----
-
-### reference/helpers
-Source: https://docs.adonisjs.com/reference/helpers
-
-Helpers (Root) - AdonisJS Documentation 
-
-Reference
-            /
-            Root Helpers 
-
-Helpers reference 
-AdonisJS bundles its utilities into the module and makes them available to your application code. Since these utilities are already installed and used by the framework, the module does not add any additional bloat to your . 
-The helper methods are exported from the following modules. 
-
-```
+Convert a string value to the title case.
+
+Following are some of the conversion examples.
+
+Generate a cryptographically secure random string of a given length. The output value is a URL-safe base64 encoded string.
+
+Convert an array of words to a comma-separated sentence.
+
+You can replace the and with an or by specifying the options.lastSeparator property.
+
+In the following example, the two words are combined using the and separator, not the comma (usually advocated in English). However, you can use a custom separator for a pair of words.
+
+Remove multiple whitespaces from a string to a single whitespace.
+
+Parse a string-based time expression to seconds.
+
+Passing a numeric value to the parse method is returned as it is, assuming the value is already in seconds.
+
+You can format seconds to a pretty string using the format method.
+
+Parse a string-based time expression to milliseconds.
+
+Passing a numeric value to the parse method is returned as it is, assuming the value is already in milliseconds.
+
+Using the format method, you can format milliseconds to a pretty string.
+
+Parse a string-based unit expression to bytes.
+
+Passing a numeric value to the parse method is returned as it is, assuming the value is already in bytes.
+
+Using the format method, you can format bytes to a pretty string. The method is exported directly from the bytes package. Please reference the package README for available options.
+
+Get the ordinal letter for a given number.
+
+Check if two buffer or string values are the same. This method does not leak any timing information and prevents timing attack .
+
+Under the hood, this method uses Node.js crypto.timeSafeEqual method, with support for comparing string values. (crypto.timeSafeEqual does not support string comparison)
+
+Ensure a callback takes at least a minimum amount of time to execute. This prevents timing attacks where an attacker measures response times to infer sensitive information (for example, user enumeration via password reset).
+
+The first argument is the minimum execution time in milliseconds. If the callback finishes early, safeTiming waits for the remaining duration. If it throws, the error is re-thrown after the delay.
+
+The callback receives a timing object with a returnEarly method to skip the delay. This is useful when you want constant time on failure, but fast responses on success.
+
+The compose helper allows you to use TypeScript class mixins with a cleaner API. Following is an example of mixin usage without the compose helper.
+
+Following is an example with the compose helper.
+
+Utility methods to base64 encode and decode values.
+
+Like the encode method, you can use the urlEncode to generate a base64 string safe to pass in a URL.
+
+The urlEncode method performs the following replacements.
+
+You can use the decode and the urlDecode methods to decode a previously encoded base64 string.
+
+The decode and the urlDecode methods return null when the input value is an invalid base64 string. You can turn on the strict mode to raise an exception instead.
+
+Get a list of all the files from a directory. The method recursively fetches files from the main and the sub-folders. The dotfiles are ignored implicitly.
+
+You can also pass the options along with the directory path as the second argument.
+
+The fsImportAll method imports all the files recursively from a given directory and sets the exported value from each module on an object.
+
+The second param is the option to customize the import behavior.
+
+The StringBuilder class offers a fluent API to perform transformations on a string value. You may get an instance of string builder using the string.create method.
+
+The MessageBuilder class offers an API to serialize JavaScript data types with an expiry and purpose. You can either store the serialized output in safe storage like your application database or encrypt it (to avoid tampering) and share it publicly.
+
+In the following example, we serialize an object with the token property and set its expiry to be 1 hour.
+
+Once you have the JSON string with the expiry and the purpose, you can encrypt it (to prevent tampering) and share it with the client.
+
+During the token verification, you can decrypt the previously encrypted value and use the MessageBuilder to verify the payload and convert it to a JavaScript object.
+
+The Secret class lets you hold sensitive values within your application without accidentally leaking them inside logs and console statements.
+
+For example, the appKey value defined inside the config/app.ts file is an instance of the Secret class. If you try to log this value to the console, you will see [redacted] and not the original value.
+
+For demonstration, let's fire up a REPL session and try it.
+
+You can call the config.appKey.release method to read the original value. The purpose of the Secret class is not to prevent your code from accessing the original value. Instead, it provides a safety net from exposing sensitive data inside logs.
+
+You can wrap custom values inside the Secret class as follows.
+
+We export the @sindresorhus/is module from the helpers/is import path, and you may use it to perform the type detection in your apps.
+
+**Examples:**
+
+Example 1 (python):
+```python
 import is from '@adonisjs/core/helpers/is'
 import * as helpers from '@adonisjs/core/helpers'
 import string from '@adonisjs/core/helpers/string'
 ```
 
-escapeHTML 
-Escape HTML entities in a string value. Under the hood, we use the  [link:https://www.npmjs.com/package/he#heescapetext] he package. 
-
-```
+Example 2 (python):
+```python
 import string from '@adonisjs/core/helpers/string'
 
 string.escapeHTML('<p> foo © bar </p>')
-// <p> foo © bar </p>
+// &lt;p&gt; foo © bar &lt;/p&gt;
 ```
 
-Optionally, you can encode non-ASCII symbols using the option. 
-
-```
+Example 3 (python):
+```python
 import string from '@adonisjs/core/helpers/string'
 
 string.escapeHTML('<p> foo © bar </p>', {
   encodeSymbols: true,
 })
-// <p> foo © bar </p>
+// &lt;p&gt; foo &#xA9; bar &lt;/p&gt;
 ```
 
-encodeSymbols 
-You may encode non-ASCII symbols in a string value using the helper. Under the hood, we use  [link:https://www.npmjs.com/package/he#heencodetext-options] he.encode method. 
-
-```
+Example 4 (python):
+```python
 import string from '@adonisjs/core/helpers/string'
 
 string.encodeSymbols('foo © bar ≠ baz 𝌆 qux')
-// 'foo © bar ≠ baz 𝌆 qux'
+// 'foo &#xA9; bar &#x2260; baz &#x1D306; qux'
 ```
-
-prettyHrTime 
-Pretty print the diff of  [link:https://nodejs.org/api/process.html#processhrtimetime] process.hrtime method. 
-
-```
-import { hrtime } from 'node:process'
-import string from '@adonisjs/core/helpers/string'
-
-const startTime = hrtime()
-await someOperation()
-const endTime = hrtime(startTime)
-
-console.log(string.prettyHrTime(endTime))
-```
-
-isEmpty 
-Check if a string value is empty. 
-
-```
-import string from '@adonisjs/core/helpers/string'
-
-string.isEmpty('') // true
-string.isEmpty('      ') // true
-```
-
-truncate 
-Truncate a string at a given number of characters. 
-
-```
-import string from '@adonisjs/core/helpers/string'
-
-string.truncate('This is a very long, maybe not that long title', 12)
-// Output: This is a ve...
-```
-
-By default, the string is truncated exactly at the given index. However, you can instruct the method to wait for the words to complete. 
-
-```
-string.truncate('This is a very long, maybe not that long title', 12, {
-  completeWords: true,
-})
-// Output: This is a very...
-```
-
-You can customize the suffix using the option. 
-
-```
-string.truncate('This is a very long, maybe not that long title', 12, {
-  completeWords: true,
-  suffix: '... <a href="/1"> Read more </a>',
-})
-// Output: This is a very... <a href="/1"> Read more </a>
-```
-
-excerpt 
-The method is identical to the method. However, it strips the HTML tags from the string. 
-
-```
-import string from '@adonisjs/core/helpers/string'
-
-string.excerpt('<p>This is a <strong>very long</strong>, maybe not that long title</p>', 12, {
-  completeWords: true,
-})
-// Output: This is a very...
-```
-
-slug 
-Generate slug for a string value. The method is exported from the  [link:https://www.npmjs.com/package/slugify] slugify package ; therefore, consult its documentation for available options. 
-
-```
-import string from '@adonisjs/core/helpers/string'
-
-console.log(string.slug('hello ♥ world'))
-// hello-love-world
-```
-
-You can add custom replacements for Unicode values as follows. 
-
-```
-string.slug.extend({ '☢': 'radioactive' })
-
-console.log(string.slug('unicode ♥ is ☢'))
-// unicode-love-is-radioactive
-```
-
-interpolate 
-Interpolate variables inside a string. The variables must be inside double curly braces. 
-
-```
-import string from '@adonisjs/core/helpers/string'
-
-string.interpolate('hello {{ user.username }}', {
-  user: {
-    username: 'virk'
-  }
-})
-// hello virk
-```
-
-Curly braces can be escaped using the prefix. 
-
-```
-string.interpolate('hello \\{{ users.0 }}', {})
-// hello {{ users.0 }}
-```
-
-plural 
-Convert a word to its plural form. The method is exported from the  [link:https://www.npmjs.com/package/pluralize] pluralize package . 
-
-```
-import string from '@adonisjs/core/helpers/string'
-
-string.plural('test')
-// tests
-```
-
-isPlural 
-Find if a word already is in plural form. 
-
-```
-import string from '@adonisjs/core/helpers/string'
-
-string.isPlural('tests') // true
-```
-
-pluralize 
-This method combines the and the methods and uses one or the other based on the count. For example: 
-
-```
-import string from '@adonisjs/core/helpers/string'
-
-string.pluralize('box', 1) // box
-string.pluralize('box', 2) // boxes
-string.pluralize('box', 0) // boxes
-
-string.pluralize('boxes', 1) // box
-string.pluralize('boxes', 2) // boxes
-string.pluralize('boxes', 0) // boxes
-```
-
-The property exports  [link:https://www.npmjs.com/package/pluralize] additional methods to register custom uncountable, irregular, plural, and singular rules. 
-
-```
-import string from '@adonisjs/core/helpers/string'
-
-string.pluralize.addUncountableRule('paper')
-string.pluralize.addSingularRule(/singles$/i, 'singular')
-```
-
-singular 
-Convert a word to its singular form. The method is exported from the  [link:https://www.npmjs.com/package/pluralize] pluralize package . 
-
-```
-import string from '@adonisjs/core/helpers/string'
-
-string.singular('tests')
-// test
-```
-
-isSingular 
-Find if a word is already in a singular form. 
-
-```
-import string from '@adonisjs/core/helpers/string'
-
-string.isSingular('test') // true
-```
-
-camelCase 
-Convert a string value to camelcase. 
-
-```
-import string from '@adonisjs/core/helpers/string'
-
-string.camelCase('user_name') // userName
-```
-
-Following are some of the conversion examples. 
-Input Output 
-'test' 'test' 
-'test string' 'testString' 
-'Test String' 'testString' 
-'TestV2' 'testV2' 
-' foo_bar ' 'fooBar' 
-'version 1.2.10' 'version1210' 
-'version 1.21.0' 'version1210' 
-
-capitalCase 
-Convert a string value to a capital case. 
-
-```
-import string from '@adonisjs/core/helpers/string'
-
-string.capitalCase('helloWorld') // Hello World
-```
-
-Following are some of the conversion examples. 
-Input Output 
-'test' 'Test' 
-'test string' 'Test String' 
-'Test String' 'Test String' 
-'TestV2' 'Test V 2' 
-'version 1.2.10' 'Version 1.2.10' 
-'version 1.21.0' 'Version 1.21.0' 
-
-dashCase 
-Convert a string value to a dash case. 
-
-```
-import string from '@adonisjs/core/helpers/string'
-
-string.dashCase('helloWorld') // hello-world
-```
-
-Optionally, you can capitalize the first letter of each word. 
-
-```
-string.dashCase('helloWorld', { capitalize: true }) // Hello-World
-```
-
-Following are some of the conversion examples. 
-Input Output 
-'test' 'test' 
-'test string' 'test-string' 
-'Test String' 'test-string' 
-'Test V2' 'test-v2' 
-'TestV2' 'test-v-2' 
-'version 1.2.10' 'version-1210' 
-'version 1.21.0' 'version-1210' 
-
-dotCase 
-Convert a string value to a dot case. 
-
-```
-import string from '@adonisjs/core/helpers/string'
-
-string.dotCase('helloWorld') // hello.World
-```
-
-Optionally, you can convert the first letter of all the words to lowercase. 
-
-```
-string.dotCase('helloWorld', { lowerCase: true }) // hello.world
-```
-
-Following are s
-
-… [truncated — use lookup_docs.py or open the Source URL for full detail]
-
-
----
-
-### reference/types-helpers
-Source: https://docs.adonisjs.com/reference/types-helpers
-
-Types helpers (Root) - AdonisJS Documentation 
-
-Reference
-            /
-            Root Types helpers 
-
-Types helpers 
-InferRouteParams 
-Infer params of a route pattern. The params must be defined as per the AdonisJS routing syntax. 
-
-```
-import type { InferRouteParams } from '@adonisjs/core/helpers/types'
-
-InferRouteParams<'/users'> // {}
-InferRouteParams<'/users/:id'> // { id: string }
-InferRouteParams<'/users/:id?'> // { id?: string }
-InferRouteParams<'/users/:id/:slug?'> // { id: string; slug?: string }
-InferRouteParams<'/users/:id.json'> // { id: string }
-InferRouteParams<'/users/*'> // { '*': string[] }
-InferRouteParams<'/posts/:category/*'> // { 'category': string; '*': string[] }
-```
-
-Prettify 
-Prettifies the complex TypeScript types to a simplified type for a better viewing experience. For example: 
-
-```
-import type { Prettify } from '@adonisjs/core/helpers/types'
-import type { ExtractDefined, ExtractUndefined } from '@adonisjs/core/helpers/types'
-
-type Values = {
-  username: string | undefined
-  email: string
-  fullName: string | undefined
-  age: number | undefined
-}
-
-// When not using prettify helper
-type WithUndefinedOptional = {
-  [K in ExtractDefined<Values>]: Values[K]
-} & {
-  [K in ExtractUndefined<Values>]: Values[K]
-}
-
-// When using prettify helper
-type WithUndefinedOptionalPrettified = Prettify<
-  {
-    [K in ExtractDefined<Values>]: Values[K]
-  } & {
-    [K in ExtractUndefined<Values>]: Values[K]
-  }
->
-```
-
-Primitive 
-Union of primitive types. It includes 
-```
-null | undefined | string | number | boolean | symbol | bigint
-```
-
-```
-import type { Primitive } from '@adonisjs/core/helpers/types'
-
-function serialize(
-  values:
-    | Primitive
-    | Record<string, Primitive | Primitive[]>
-    | Primitive[]
-    | Record<string, Primitive | Primitive[]>[]
-) {}
-```
-
-OneOrMore 
-Specify a union that accepts either or . 
-
-```
-import type { OneOrMore } from '@adonisjs/core/helpers/types'
-import type { Primitive } from '@adonisjs/core/helpers/types'
-
-function serialize(
-  values: OneOrMore<Primitive> | OneOrMore<Record<string, Primitive | Primitive[]>>
-) {}
-```
-
-Constructor<T, Arguments> 
-Represent a class constructor. The refers to the class instance properties, and refers to the constructor arguments. 
-
-```
-import type { Constructor } from '@adonisjs/core/helpers/types'
-
-function make<Args extends any[]>(Klass: Constructor<any, Args>, ...args: Args) {
-  return new Klass(...args)
-}
-```
-
-AbstractConstructor<T, Arguments> 
-Represent a class constructor that could also be abstract. The refers to the class instance properties, and refers to the constructor arguments. 
-
-```
-import type { AbstractConstructor } from '@adonisjs/core/helpers/types'
-function log<Args extends any[]>(Klass: AbstractConstructor<any, Args>, ...args: Args) {}
-```
-
-LazyImport 
-Represent a function that lazily imports a module with . 
-
-```
-import type { LazyImport, Constructor } from '@adonisjs/core/helpers/types'
-
-function middleware(list: LazyImport<Constructor<{ handle(): any }>>[]) {}
-```
-
-UnWrapLazyImport 
-Unwrap the default export of a function. 
-
-```
-import type { LazyImport, UnWrapLazyImport } from '@adonisjs/core/helpers/types'
-
-type Middleware = LazyImport<Constructor<{ handle(): any }>>
-type MiddlewareClass = UnWrapLazyImport<Middleware>
-```
-
-NormalizeConstructor 
-Normalizes the constructor arguments of a class for use with mixins. The helper is created to work around  [link:https://github.com/microsoft/TypeScript/issues/37142] TypeScript issue#37142 . 
-
-```
-// title: Usage without NormalizeConstructor
-class Base {}
-
-function DatesMixin<TBase extends typeof Base>(superclass: TBase) {
-  // A mixin class must have a constructor with a single rest parameter of type 'any[]'. ts(2545)
-  return class HasDates extends superclass {
-    //          ❌ ^^
-    declare createdAt: Date
-    declare updatedAt: Date
-  }
-}
-
-// Base constructors must all have the same return type.ts(2510)
-class User extends DatesMixin(Base) {}
-//                    ❌ ^^
-```
-
-```
-// title: Using NormalizeConstructor
-import type { NormalizeConstructor } from '@adonisjs/core/helpers/types'
-
-class Base {}
-
-function DatesMixin<TBase extends NormalizeConstructor<typeof Base>>(superclass: TBase) {
-  return class HasDates extends superclass {
-    declare createdAt: Date
-    declare updatedAt: Date
-  }
-}
-
-class User extends DatesMixin(Base) {}
-```
-
-Opaque 
-Define an opaque type to distinguish between similar properties. 
-
-```
-import type { Opaque } from '@adonisjs/core/helpers/types'
-
-type Username = Opaque<string, 'username'>
-type Password = Opaque<string, 'password'>
-
-function checkUser(_: Username) {}
-
-// ❌ Argument of type 'string' is not assignable to parameter of type 'Opaque<string, "username">'.
-checkUser('hello')
-
-// ❌ Argument of type 'Opaque<string, "password">' is not assignable to parameter of type 'Opaque<string, "username">'.
-checkUser('hello' as Password)
-
-checkUser('hello' as Username)
-```
-
-UnwrapOpaque 
-Unwrap the value from an opaque type. 
-
-```
-import type { Opaque, UnwrapOpaque } from '@adonisjs/core/helpers/types'
-
-type Username = Opaque<string, 'username'>
-type Password = Opaque<string, 'password'>
-
-type UsernameValue = UnwrapOpaque<Username> // string
-type PasswordValue = UnwrapOpaque<Password> // string
-```
-
-ExtractFunctions<T, IgnoreList> 
-Extract all the functions from an object. Optionally specify a list of methods to ignore. 
-
-```
-import type { ExtractFunctions } from '@adonisjs/core/helpers/types'
-
-class User {
-  declare id: number
-  declare username: string
-
-  create() {}
-  update(_id: number, __attributes: any) {}
-}
-
-type UserMethods = ExtractFunctions<User> // 'create' | 'update'
-```
-
-You may use the to ignore methods from a known parent class 
-
-```
-import type { ExtractFunctions } from '@adonisjs/core/helpers/types'
-
-class Base {
-  save() {}
-}
-
-class User extends Base {
-  declare id: number
-  declare username: string
-
-  create() {}
-  update(_id: number, __attributes: any) {}
-}
-
-type UserMethods = ExtractFunctions<User> // 'create' | 'update'
-type UserMethodsWithParent = ExtractFunctions<User, ExtractFunctions<Base>> // 'create' | 'update'
-```
-
-AreAllOptional 
-Check if all the top-level properties of an object are optional. 
-
-```
-import type { AreAllOptional } from '@adonisjs/core/helpers/types'
-
-AreAllOptional<{ id: string; name?: string }> // false
-AreAllOptional<{ id?: string; name?: string }> // true
-```
-
-ExtractUndefined 
-Extract properties that are or are a union with values. 
-
-```
-import type { ExtractUndefined } from '@adonisjs/core/helpers/types'
-
-type UndefinedProperties = ExtractUndefined<{ id: string; name: string | undefined }>
-```
-
-ExtractDefined 
-Extract properties that are not nor is a union with values. 
-
-```
-import type { ExtractDefined } from '@adonisjs/core/helpers/types'
-
-type UndefinedProperties = ExtractDefined<{ id: string; name: string | undefined }>
-```
-
-AsyncOrSync 
-Define a union with the value or a of the value. 
-
-```
-import type { AsyncOrSync } from '@adonisjs/core
-
-… [truncated — use lookup_docs.py or open the Source URL for full detail]
-
 
 ---

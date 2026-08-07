@@ -1,25 +1,29 @@
 # agent-skills
 
-A collection of AI Agent Skills for Claude Code.
+A collection of AI Agent Skills (Agent Skills / `SKILL.md` format). Portable across Cursor, Claude Code, and other agents that load skills from a folder containing `SKILL.md`.
 
 ## Skills
 
-### adonisjs-v7
+### adonisjs
 
-AdonisJS v7 skill covering API development, authentication, database operations, validation, and frontend integration (Edge, Inertia, API-only). Includes guides, tutorials, and v6→v7 migration assistance.
+AdonisJS **v7** development skill: official-docs conventions, Ace CLI usage, v6→v7 guards. No generator scaffolding—project CLI is `node ace` inside the app.
 
-- **Reference**: `skills/adonisjs/`
+- **Path**: `skills/adonisjs/`
 - **Docs**: https://docs.adonisjs.com/
-
----
 
 ## Installation
 
 ```bash
-# Global (recommended)
-npx skills add zguiyang/agent-skills -g --all
+# Example: Cursor project skill
+mkdir -p .cursor/skills
+cp -R skills/adonisjs .cursor/skills/adonisjs
 
-# Project-level
-cd your-project
-npx skills add zguiyang/agent-skills --all
+# Example: user-level
+cp -R skills/adonisjs ~/.cursor/skills/adonisjs
+```
+
+Or with a skills installer, if you publish this repo:
+
+```bash
+npx skills add <owner>/<repo> -g --all
 ```
