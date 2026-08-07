@@ -1,0 +1,614 @@
+[
+  {
+    "slug": "introduction",
+    "url": "https://docs.adonisjs.com/introduction.md",
+    "title": "Introduction",
+    "section": "Getting started"
+  },
+  {
+    "slug": "stacks-and-starter-kits",
+    "url": "https://docs.adonisjs.com/stacks-and-starter-kits.md",
+    "title": "Pick your path",
+    "section": "Getting started"
+  },
+  {
+    "slug": "installation",
+    "url": "https://docs.adonisjs.com/installation.md",
+    "title": "Installation",
+    "section": "Getting started"
+  },
+  {
+    "slug": "folder-structure",
+    "url": "https://docs.adonisjs.com/folder-structure.md",
+    "title": "Folder structure",
+    "section": "Getting started"
+  },
+  {
+    "slug": "dev-environment",
+    "url": "https://docs.adonisjs.com/dev-environment.md",
+    "title": "Development environment setup",
+    "section": "Getting started"
+  },
+  {
+    "slug": "configuration",
+    "url": "https://docs.adonisjs.com/configuration.md",
+    "title": "Configuration & Environment",
+    "section": "Getting started"
+  },
+  {
+    "slug": "deployment",
+    "url": "https://docs.adonisjs.com/deployment.md",
+    "title": "Deployment",
+    "section": "Getting started"
+  },
+  {
+    "slug": "faqs",
+    "url": "https://docs.adonisjs.com/faqs.md",
+    "title": "FAQs",
+    "section": "Getting started"
+  },
+  {
+    "slug": "tutorial/hypermedia/overview",
+    "url": "https://docs.adonisjs.com/tutorial/hypermedia/overview.md",
+    "title": "Overview (Hypermedia)",
+    "section": "FullStack tutorial"
+  },
+  {
+    "slug": "tutorial/react/overview",
+    "url": "https://docs.adonisjs.com/tutorial/react/overview.md",
+    "title": "Overview (React)",
+    "section": "FullStack tutorial"
+  },
+  {
+    "slug": "tutorial/hypermedia/cli-and-repl",
+    "url": "https://docs.adonisjs.com/tutorial/hypermedia/cli-and-repl.md",
+    "title": "Commandline and REPL (Hypermedia)",
+    "section": "FullStack tutorial"
+  },
+  {
+    "slug": "tutorial/react/cli-and-repl",
+    "url": "https://docs.adonisjs.com/tutorial/react/cli-and-repl.md",
+    "title": "Commandline and REPL (React)",
+    "section": "FullStack tutorial"
+  },
+  {
+    "slug": "tutorial/hypermedia/database-and-models",
+    "url": "https://docs.adonisjs.com/tutorial/hypermedia/database-and-models.md",
+    "title": "Database and models (Hypermedia)",
+    "section": "FullStack tutorial"
+  },
+  {
+    "slug": "tutorial/react/database-and-models",
+    "url": "https://docs.adonisjs.com/tutorial/react/database-and-models.md",
+    "title": "Database and models (React)",
+    "section": "FullStack tutorial"
+  },
+  {
+    "slug": "tutorial/hypermedia/routes-controller-views",
+    "url": "https://docs.adonisjs.com/tutorial/hypermedia/routes-controller-views.md",
+    "title": "Routes, controllers and views (Hypermedia)",
+    "section": "FullStack tutorial"
+  },
+  {
+    "slug": "tutorial/react/routes-controller-views",
+    "url": "https://docs.adonisjs.com/tutorial/react/routes-controller-views.md",
+    "title": "Routes, controllers and views (React)",
+    "section": "FullStack tutorial"
+  },
+  {
+    "slug": "tutorial/hypermedia/forms-and-validation",
+    "url": "https://docs.adonisjs.com/tutorial/hypermedia/forms-and-validation.md",
+    "title": "Forms and validation (Hypermedia)",
+    "section": "FullStack tutorial"
+  },
+  {
+    "slug": "tutorial/react/forms-and-validation",
+    "url": "https://docs.adonisjs.com/tutorial/react/forms-and-validation.md",
+    "title": "Forms and validation (React)",
+    "section": "FullStack tutorial"
+  },
+  {
+    "slug": "tutorial/hypermedia/styling-and-cleanup",
+    "url": "https://docs.adonisjs.com/tutorial/hypermedia/styling-and-cleanup.md",
+    "title": "Styling and cleanup (Hypermedia)",
+    "section": "FullStack tutorial"
+  },
+  {
+    "slug": "tutorial/react/styling-and-cleanup",
+    "url": "https://docs.adonisjs.com/tutorial/react/styling-and-cleanup.md",
+    "title": "Styling and cleanup (React)",
+    "section": "FullStack tutorial"
+  },
+  {
+    "slug": "tutorial/hypermedia/authorization",
+    "url": "https://docs.adonisjs.com/tutorial/hypermedia/authorization.md",
+    "title": "Authorization (Hypermedia)",
+    "section": "FullStack tutorial"
+  },
+  {
+    "slug": "tutorial/react/authorization",
+    "url": "https://docs.adonisjs.com/tutorial/react/authorization.md",
+    "title": "Authorization (React)",
+    "section": "FullStack tutorial"
+  },
+  {
+    "slug": "contributing",
+    "url": "https://docs.adonisjs.com/contributing.md",
+    "title": "Contributing",
+    "section": "Resources"
+  },
+  {
+    "slug": "releases",
+    "url": "https://docs.adonisjs.com/releases.md",
+    "title": "Releases",
+    "section": "Resources"
+  },
+  {
+    "slug": "governance",
+    "url": "https://docs.adonisjs.com/governance.md",
+    "title": "Governance",
+    "section": "Resources"
+  },
+  {
+    "slug": "v6-to-v7",
+    "url": "https://docs.adonisjs.com/v6-to-v7.md",
+    "title": "Upgrade guide",
+    "section": "Resources"
+  },
+  {
+    "slug": "guides/basics/routing",
+    "url": "https://docs.adonisjs.com/guides/basics/routing.md",
+    "title": "Routing",
+    "section": "Basics"
+  },
+  {
+    "slug": "guides/basics/controllers",
+    "url": "https://docs.adonisjs.com/guides/basics/controllers.md",
+    "title": "Controllers",
+    "section": "Basics"
+  },
+  {
+    "slug": "guides/basics/http-context",
+    "url": "https://docs.adonisjs.com/guides/basics/http-context.md",
+    "title": "HTTP context",
+    "section": "Basics"
+  },
+  {
+    "slug": "guides/basics/middleware",
+    "url": "https://docs.adonisjs.com/guides/basics/middleware.md",
+    "title": "Middleware",
+    "section": "Basics"
+  },
+  {
+    "slug": "guides/basics/request",
+    "url": "https://docs.adonisjs.com/guides/basics/request.md",
+    "title": "Request",
+    "section": "Basics"
+  },
+  {
+    "slug": "guides/basics/response",
+    "url": "https://docs.adonisjs.com/guides/basics/response.md",
+    "title": "Response",
+    "section": "Basics"
+  },
+  {
+    "slug": "guides/basics/body-parser",
+    "url": "https://docs.adonisjs.com/guides/basics/body-parser.md",
+    "title": "Body parser",
+    "section": "Basics"
+  },
+  {
+    "slug": "guides/basics/validation",
+    "url": "https://docs.adonisjs.com/guides/basics/validation.md",
+    "title": "Validation",
+    "section": "Basics"
+  },
+  {
+    "slug": "guides/basics/file-uploads",
+    "url": "https://docs.adonisjs.com/guides/basics/file-uploads.md",
+    "title": "File uploads",
+    "section": "Basics"
+  },
+  {
+    "slug": "guides/basics/session",
+    "url": "https://docs.adonisjs.com/guides/basics/session.md",
+    "title": "Session",
+    "section": "Basics"
+  },
+  {
+    "slug": "guides/basics/url-builder",
+    "url": "https://docs.adonisjs.com/guides/basics/url-builder.md",
+    "title": "URL builder",
+    "section": "Basics"
+  },
+  {
+    "slug": "guides/basics/exception-handling",
+    "url": "https://docs.adonisjs.com/guides/basics/exception-handling.md",
+    "title": "Exception handling",
+    "section": "Basics"
+  },
+  {
+    "slug": "guides/basics/debugging",
+    "url": "https://docs.adonisjs.com/guides/basics/debugging.md",
+    "title": "Debugging",
+    "section": "Basics"
+  },
+  {
+    "slug": "guides/basics/static-file-server",
+    "url": "https://docs.adonisjs.com/guides/basics/static-file-server.md",
+    "title": "Static file server",
+    "section": "Basics"
+  },
+  {
+    "slug": "guides/frontend/edgejs",
+    "url": "https://docs.adonisjs.com/guides/frontend/edgejs.md",
+    "title": "EdgeJS",
+    "section": "Frontend"
+  },
+  {
+    "slug": "guides/frontend/inertia",
+    "url": "https://docs.adonisjs.com/guides/frontend/inertia.md",
+    "title": "Inertia",
+    "section": "Frontend"
+  },
+  {
+    "slug": "guides/frontend/transformers",
+    "url": "https://docs.adonisjs.com/guides/frontend/transformers.md",
+    "title": "Transformers",
+    "section": "Frontend"
+  },
+  {
+    "slug": "guides/frontend/api-client",
+    "url": "https://docs.adonisjs.com/guides/frontend/api-client.md",
+    "title": "Type-safe API Client",
+    "section": "Frontend"
+  },
+  {
+    "slug": "guides/frontend/tanstack-query",
+    "url": "https://docs.adonisjs.com/guides/frontend/tanstack-query.md",
+    "title": "TanStack query",
+    "section": "Frontend"
+  },
+  {
+    "slug": "guides/frontend/vite",
+    "url": "https://docs.adonisjs.com/guides/frontend/vite.md",
+    "title": "Vite",
+    "section": "Frontend"
+  },
+  {
+    "slug": "guides/database/lucid",
+    "url": "https://docs.adonisjs.com/guides/database/lucid.md",
+    "title": "SQL ORM",
+    "section": "Data Layer"
+  },
+  {
+    "slug": "guides/database/redis",
+    "url": "https://docs.adonisjs.com/guides/database/redis.md",
+    "title": "Redis",
+    "section": "Data Layer"
+  },
+  {
+    "slug": "guides/auth/introduction",
+    "url": "https://docs.adonisjs.com/guides/auth/introduction.md",
+    "title": "Introduction",
+    "section": "Auth"
+  },
+  {
+    "slug": "guides/auth/verifying-user-credentials",
+    "url": "https://docs.adonisjs.com/guides/auth/verifying-user-credentials.md",
+    "title": "Verifying user credentials",
+    "section": "Auth"
+  },
+  {
+    "slug": "guides/auth/session-guard",
+    "url": "https://docs.adonisjs.com/guides/auth/session-guard.md",
+    "title": "Session guard",
+    "section": "Auth"
+  },
+  {
+    "slug": "guides/auth/access-tokens-guard",
+    "url": "https://docs.adonisjs.com/guides/auth/access-tokens-guard.md",
+    "title": "Access tokens guard",
+    "section": "Auth"
+  },
+  {
+    "slug": "guides/auth/basic-auth-guard",
+    "url": "https://docs.adonisjs.com/guides/auth/basic-auth-guard.md",
+    "title": "Basic auth guard",
+    "section": "Auth"
+  },
+  {
+    "slug": "guides/auth/custom-auth-guard",
+    "url": "https://docs.adonisjs.com/guides/auth/custom-auth-guard.md",
+    "title": "Custom auth guard",
+    "section": "Auth"
+  },
+  {
+    "slug": "guides/auth/social-authentication",
+    "url": "https://docs.adonisjs.com/guides/auth/social-authentication.md",
+    "title": "Social authentication",
+    "section": "Auth"
+  },
+  {
+    "slug": "guides/auth/authorization",
+    "url": "https://docs.adonisjs.com/guides/auth/authorization.md",
+    "title": "Authorization",
+    "section": "Auth"
+  },
+  {
+    "slug": "guides/security/hashing",
+    "url": "https://docs.adonisjs.com/guides/security/hashing.md",
+    "title": "Hashing",
+    "section": "Security"
+  },
+  {
+    "slug": "guides/security/encryption",
+    "url": "https://docs.adonisjs.com/guides/security/encryption.md",
+    "title": "Encryption",
+    "section": "Security"
+  },
+  {
+    "slug": "guides/security/cors",
+    "url": "https://docs.adonisjs.com/guides/security/cors.md",
+    "title": "CORS",
+    "section": "Security"
+  },
+  {
+    "slug": "guides/security/securing-ssr-applications",
+    "url": "https://docs.adonisjs.com/guides/security/securing-ssr-applications.md",
+    "title": "Securing SSR apps",
+    "section": "Security"
+  },
+  {
+    "slug": "guides/security/rate-limiting",
+    "url": "https://docs.adonisjs.com/guides/security/rate-limiting.md",
+    "title": "Rate limiting",
+    "section": "Security"
+  },
+  {
+    "slug": "guides/concepts/application-lifecycle",
+    "url": "https://docs.adonisjs.com/guides/concepts/application-lifecycle.md",
+    "title": "Application lifecycle",
+    "section": "Core Concepts"
+  },
+  {
+    "slug": "guides/concepts/dependency-injection",
+    "url": "https://docs.adonisjs.com/guides/concepts/dependency-injection.md",
+    "title": "Dependency injection",
+    "section": "Core Concepts"
+  },
+  {
+    "slug": "guides/concepts/service-providers",
+    "url": "https://docs.adonisjs.com/guides/concepts/service-providers.md",
+    "title": "Service providers",
+    "section": "Core Concepts"
+  },
+  {
+    "slug": "guides/concepts/container-services",
+    "url": "https://docs.adonisjs.com/guides/concepts/container-services.md",
+    "title": "Container services",
+    "section": "Core Concepts"
+  },
+  {
+    "slug": "guides/concepts/barrel-files",
+    "url": "https://docs.adonisjs.com/guides/concepts/barrel-files.md",
+    "title": "Barrel files",
+    "section": "Core Concepts"
+  },
+  {
+    "slug": "guides/concepts/assembler-hooks",
+    "url": "https://docs.adonisjs.com/guides/concepts/assembler-hooks.md",
+    "title": "Assembler hooks",
+    "section": "Core Concepts"
+  },
+  {
+    "slug": "guides/concepts/scaffolding",
+    "url": "https://docs.adonisjs.com/guides/concepts/scaffolding.md",
+    "title": "Scaffolding and codemods",
+    "section": "Core Concepts"
+  },
+  {
+    "slug": "guides/concepts/extending-adonisjs",
+    "url": "https://docs.adonisjs.com/guides/concepts/extending-adonisjs.md",
+    "title": "Extending AdonisJS",
+    "section": "Core Concepts"
+  },
+  {
+    "slug": "guides/digging-deeper/cache",
+    "url": "https://docs.adonisjs.com/guides/digging-deeper/cache.md",
+    "title": "Cache",
+    "section": "Digging Deeper"
+  },
+  {
+    "slug": "guides/digging-deeper/drive",
+    "url": "https://docs.adonisjs.com/guides/digging-deeper/drive.md",
+    "title": "Drive",
+    "section": "Digging Deeper"
+  },
+  {
+    "slug": "guides/digging-deeper/emitter",
+    "url": "https://docs.adonisjs.com/guides/digging-deeper/emitter.md",
+    "title": "Emitter",
+    "section": "Digging Deeper"
+  },
+  {
+    "slug": "guides/digging-deeper/health-checks",
+    "url": "https://docs.adonisjs.com/guides/digging-deeper/health-checks.md",
+    "title": "Health checks",
+    "section": "Digging Deeper"
+  },
+  {
+    "slug": "guides/digging-deeper/i18n",
+    "url": "https://docs.adonisjs.com/guides/digging-deeper/i18n.md",
+    "title": "I18n",
+    "section": "Digging Deeper"
+  },
+  {
+    "slug": "guides/digging-deeper/locks",
+    "url": "https://docs.adonisjs.com/guides/digging-deeper/locks.md",
+    "title": "Atomic locks",
+    "section": "Digging Deeper"
+  },
+  {
+    "slug": "guides/digging-deeper/logger",
+    "url": "https://docs.adonisjs.com/guides/digging-deeper/logger.md",
+    "title": "Logger",
+    "section": "Digging Deeper"
+  },
+  {
+    "slug": "guides/digging-deeper/mail",
+    "url": "https://docs.adonisjs.com/guides/digging-deeper/mail.md",
+    "title": "Mail",
+    "section": "Digging Deeper"
+  },
+  {
+    "slug": "guides/digging-deeper/queues",
+    "url": "https://docs.adonisjs.com/guides/digging-deeper/queues.md",
+    "title": "Queues",
+    "section": "Digging Deeper"
+  },
+  {
+    "slug": "guides/digging-deeper/server-sent-events",
+    "url": "https://docs.adonisjs.com/guides/digging-deeper/server-sent-events.md",
+    "title": "Server-Sent Events",
+    "section": "Digging Deeper"
+  },
+  {
+    "slug": "guides/digging-deeper/opentelemetry",
+    "url": "https://docs.adonisjs.com/guides/digging-deeper/opentelemetry.md",
+    "title": "OpenTelemetry",
+    "section": "Digging Deeper"
+  },
+  {
+    "slug": "guides/ace/introduction",
+    "url": "https://docs.adonisjs.com/guides/ace/introduction.md",
+    "title": "Introduction",
+    "section": "Command line"
+  },
+  {
+    "slug": "guides/ace/creating-commands",
+    "url": "https://docs.adonisjs.com/guides/ace/creating-commands.md",
+    "title": "Creating commands",
+    "section": "Command line"
+  },
+  {
+    "slug": "guides/ace/arguments",
+    "url": "https://docs.adonisjs.com/guides/ace/arguments.md",
+    "title": "Command arguments",
+    "section": "Command line"
+  },
+  {
+    "slug": "guides/ace/flags",
+    "url": "https://docs.adonisjs.com/guides/ace/flags.md",
+    "title": "Command flags",
+    "section": "Command line"
+  },
+  {
+    "slug": "guides/ace/prompts",
+    "url": "https://docs.adonisjs.com/guides/ace/prompts.md",
+    "title": "Prompts",
+    "section": "Command line"
+  },
+  {
+    "slug": "guides/ace/terminal-ui",
+    "url": "https://docs.adonisjs.com/guides/ace/terminal-ui.md",
+    "title": "Terminal UI",
+    "section": "Command line"
+  },
+  {
+    "slug": "guides/ace/repl",
+    "url": "https://docs.adonisjs.com/guides/ace/repl.md",
+    "title": "Repl",
+    "section": "Command line"
+  },
+  {
+    "slug": "guides/testing/introduction",
+    "url": "https://docs.adonisjs.com/guides/testing/introduction.md",
+    "title": "Introduction",
+    "section": "Testing"
+  },
+  {
+    "slug": "guides/testing/api-tests",
+    "url": "https://docs.adonisjs.com/guides/testing/api-tests.md",
+    "title": "API tests",
+    "section": "Testing"
+  },
+  {
+    "slug": "guides/testing/browser-tests",
+    "url": "https://docs.adonisjs.com/guides/testing/browser-tests.md",
+    "title": "Browser tests",
+    "section": "Testing"
+  },
+  {
+    "slug": "guides/testing/console-tests",
+    "url": "https://docs.adonisjs.com/guides/testing/console-tests.md",
+    "title": "Console tests",
+    "section": "Testing"
+  },
+  {
+    "slug": "guides/testing/resetting-state-between-tests",
+    "url": "https://docs.adonisjs.com/guides/testing/resetting-state-between-tests.md",
+    "title": "Resetting state between tests",
+    "section": "Testing"
+  },
+  {
+    "slug": "guides/testing/database-assertions",
+    "url": "https://docs.adonisjs.com/guides/testing/database-assertions.md",
+    "title": "Database assertions",
+    "section": "Testing"
+  },
+  {
+    "slug": "guides/testing/test-doubles",
+    "url": "https://docs.adonisjs.com/guides/testing/test-doubles.md",
+    "title": "Test doubles",
+    "section": "Testing"
+  },
+  {
+    "slug": "reference/application",
+    "url": "https://docs.adonisjs.com/reference/application.md",
+    "title": "Application",
+    "section": "Reference"
+  },
+  {
+    "slug": "reference/adonisrc-rcfile",
+    "url": "https://docs.adonisjs.com/reference/adonisrc-rcfile.md",
+    "title": "AdonisRC file",
+    "section": "Reference"
+  },
+  {
+    "slug": "reference/commands",
+    "url": "https://docs.adonisjs.com/reference/commands.md",
+    "title": "Commands",
+    "section": "Reference"
+  },
+  {
+    "slug": "reference/edge",
+    "url": "https://docs.adonisjs.com/reference/edge.md",
+    "title": "Edge helpers",
+    "section": "Reference"
+  },
+  {
+    "slug": "reference/events",
+    "url": "https://docs.adonisjs.com/reference/events.md",
+    "title": "Events",
+    "section": "Reference"
+  },
+  {
+    "slug": "reference/exceptions",
+    "url": "https://docs.adonisjs.com/reference/exceptions.md",
+    "title": "Exceptions",
+    "section": "Reference"
+  },
+  {
+    "slug": "reference/helpers",
+    "url": "https://docs.adonisjs.com/reference/helpers.md",
+    "title": "Helpers",
+    "section": "Reference"
+  },
+  {
+    "slug": "reference/types-helpers",
+    "url": "https://docs.adonisjs.com/reference/types-helpers.md",
+    "title": "Types helpers",
+    "section": "Reference"
+  }
+]

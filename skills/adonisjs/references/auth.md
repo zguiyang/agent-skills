@@ -1,105 +1,64 @@
-# Adonisjs - Auth
+# Auth — AdonisJS v7
 
-**Pages:** 5
+Official: https://docs.adonisjs.com/guides/auth/introduction.md  
+Lookup: `python3 scripts/lookup_docs.py --fetch guides/auth/session-guard`
 
----
+## Official pages
 
-## AdonisJS docs - Everything you need to get building - AdonisJS Documentation
+- [Introduction](https://docs.adonisjs.com/guides/auth/introduction.md)
+- [Verifying credentials](https://docs.adonisjs.com/guides/auth/verifying-user-credentials.md)
+- [Session guard](https://docs.adonisjs.com/guides/auth/session-guard.md) — web apps
+- [Access tokens guard](https://docs.adonisjs.com/guides/auth/access-tokens-guard.md) — APIs / mobile
+- [Basic auth](https://docs.adonisjs.com/guides/auth/basic-auth-guard.md)
+- [Custom guard](https://docs.adonisjs.com/guides/auth/custom-auth-guard.md)
+- [Social (Ally)](https://docs.adonisjs.com/guides/auth/social-authentication.md)
+- [Authorization (Bouncer)](https://docs.adonisjs.com/guides/auth/authorization.md)
 
-**URL:** https://docs.adonisjs.com/auth/social_authentication.md
+## Choose a guard
 
-**Contents:**
-- Everything you need to get building
-- Our sponsors
+| Need | Guard |
+|------|--------|
+| Cookie sessions (SSR / Inertia) | **Session** |
+| Bearer tokens (SPA on other domain, mobile) | **Access tokens** (opaque `oat_…`, not JWT by default) |
+| Simple internal tools over HTTPS | Basic auth |
 
-Comprehensive guides, step-by-step tutorials, and complete API reference to help you build, test, and deploy applications with AdonisJS
+```bash
+node ace add @adonisjs/auth   # usually already in starter kits
+node ace add @adonisjs/bouncer
+node ace add @adonisjs/ally    # social
+```
 
-Start by preparing your environment, then follow the full hands-on tutorial from scratch
+## Credentials
 
-Watch practical screencasts and learn AdonisJS through real, guided video lessons
+User models typically use AuthFinder (`withAuthFinder`) and `User.verifyCredentials(email, password)`.
 
-Production-ready full-stack components, premium packages, and AI tooling that actually understands AdonisJS.
+## Session guard (web)
 
-These companies and individuals keep AdonisJS independent. Their monthly support funds the ongoing work (development, maintenance, releases, and docs) for everyone who builds on it.
+```ts
+await auth.use('web').login(user)
+await auth.use('web').logout()
+const user = auth.user // after middleware.auth()
+```
 
----
+Protect routes with `middleware.auth()` from `#start/kernel`.
 
-## AdonisJS docs - Everything you need to get building - AdonisJS Documentation
+## Access tokens (API)
 
-**URL:** https://docs.adonisjs.com/authorization.md
+Configure tokens provider on the User model. Issue / revoke tokens via the provider API; send `Authorization: Bearer …`. Prefer official docs examples over inventing JWT.
 
-**Contents:**
-- Everything you need to get building
-- Our sponsors
+## Authorization (Bouncer)
 
-Comprehensive guides, step-by-step tutorials, and complete API reference to help you build, test, and deploy applications with AdonisJS
+```bash
+node ace make:policy post
+```
 
-Start by preparing your environment, then follow the full hands-on tutorial from scratch
+```ts
+// abilities / policies — check with bouncer
+await bouncer.with('PostPolicy').authorize('edit', post)
+```
 
-Watch practical screencasts and learn AdonisJS through real, guided video lessons
+## Do not
 
-Production-ready full-stack components, premium packages, and AI tooling that actually understands AdonisJS.
-
-These companies and individuals keep AdonisJS independent. Their monthly support funds the ongoing work (development, maintenance, releases, and docs) for everyone who builds on it.
-
----
-
-## AdonisJS docs - Everything you need to get building - AdonisJS Documentation
-
-**URL:** https://docs.adonisjs.com/social_authentication.md
-
-**Contents:**
-- Everything you need to get building
-- Our sponsors
-
-Comprehensive guides, step-by-step tutorials, and complete API reference to help you build, test, and deploy applications with AdonisJS
-
-Start by preparing your environment, then follow the full hands-on tutorial from scratch
-
-Watch practical screencasts and learn AdonisJS through real, guided video lessons
-
-Production-ready full-stack components, premium packages, and AI tooling that actually understands AdonisJS.
-
-These companies and individuals keep AdonisJS independent. Their monthly support funds the ongoing work (development, maintenance, releases, and docs) for everyone who builds on it.
-
----
-
-## AdonisJS docs - Everything you need to get building - AdonisJS Documentation
-
-**URL:** https://docs.adonisjs.com/auth/session_guard.md
-
-**Contents:**
-- Everything you need to get building
-- Our sponsors
-
-Comprehensive guides, step-by-step tutorials, and complete API reference to help you build, test, and deploy applications with AdonisJS
-
-Start by preparing your environment, then follow the full hands-on tutorial from scratch
-
-Watch practical screencasts and learn AdonisJS through real, guided video lessons
-
-Production-ready full-stack components, premium packages, and AI tooling that actually understands AdonisJS.
-
-These companies and individuals keep AdonisJS independent. Their monthly support funds the ongoing work (development, maintenance, releases, and docs) for everyone who builds on it.
-
----
-
-## AdonisJS docs - Everything you need to get building - AdonisJS Documentation
-
-**URL:** https://docs.adonisjs.com/basic_auth_guard.md
-
-**Contents:**
-- Everything you need to get building
-- Our sponsors
-
-Comprehensive guides, step-by-step tutorials, and complete API reference to help you build, test, and deploy applications with AdonisJS
-
-Start by preparing your environment, then follow the full hands-on tutorial from scratch
-
-Watch practical screencasts and learn AdonisJS through real, guided video lessons
-
-Production-ready full-stack components, premium packages, and AI tooling that actually understands AdonisJS.
-
-These companies and individuals keep AdonisJS independent. Their monthly support funds the ongoing work (development, maintenance, releases, and docs) for everyone who builds on it.
-
----
+- Invent Passport-style stacks by default.
+- Assume JWT is the Adonis default for APIs (opaque access tokens are).
+- Skip HTTPS for basic auth in production.

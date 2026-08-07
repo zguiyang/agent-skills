@@ -1,164 +1,124 @@
 ---
 name: adonisjs
-description: Use when working with adonisjs
-doc_version: 
+description: >-
+  Develop AdonisJS v7 apps using official docs conventions only. Use when working
+  with AdonisJS, Adonis, Lucid ORM, VineJS, Edge, Inertia on Adonis, Ace CLI, Japa
+  tests, controllers, routes, middleware, auth, sessions, or upgrading Adonis v6
+  to v7. Prevents outdated v5/v6 APIs and invented helpers.
 ---
 
-# Adonisjs Skill
+# AdonisJS (v7)
 
-Use when working with adonisjs, generated from official documentation.
+Build and modify **AdonisJS v7** apps per https://docs.adonisjs.com only.
+Do not invent APIs or copy Express/Nest/Laravel patterns without labeling them as non-Adonis.
 
-## When to Use This Skill
+## Pinned version
 
-This skill should be triggered when:
-- Working with adonisjs
-- Asking about adonisjs features or APIs
-- Implementing adonisjs solutions
-- Debugging adonisjs code
-- Learning adonisjs best practices
+| Item | Value |
+|------|--------|
+| Framework | **AdonisJS v7** |
+| Docs | https://docs.adonisjs.com |
+| Legacy v6 | https://v6-docs.adonisjs.com |
+| Node.js | **≥ 24** |
+| Module system | TypeScript + **ESM** |
 
-## Quick Reference
-
-### Common Patterns
-
-**Pattern 1:** Start / Resources Contributing Start Guides Reference Roadmap Getting started Introduction Pick your path Installation Folder structure Development...
-
-```
-git clone <REPO_URL>
+```bash
+python3 scripts/detect_version.py
+# or: package.json → @adonisjs/core major
 ```
 
-**Pattern 2:** Start / FullStack tutorial Routes, controllers and views Start Guides Reference Roadmap Getting started Introduction Pick your path Installation Fo...
+- **v7 / new app** → this skill + docs.adonisjs.com
+- **v6** → v6-docs only; do not apply v7-only APIs unless upgrading
+- **Upgrade** → [upgrade-v6-to-v7.md](references/upgrade-v6-to-v7.md) + https://docs.adonisjs.com/v6-to-v7.md
+- **Unclear** → ask once; default to v7
+
+## Non-negotiable rules
+
+1. Only use APIs from official docs, this skill’s references, or `lookup_docs.py --fetch`.
+2. Read [anti-patterns.md](references/anti-patterns.md) before suggesting older APIs.
+3. Match official import paths, `snake_case` filenames (`posts_controller.ts`), and Ace generators.
+4. When unsure → look up, then code:
+   ```bash
+   python3 scripts/lookup_docs.py routing
+   python3 scripts/lookup_docs.py --fetch validation
+   python3 scripts/lookup_docs.py --fetch guides/testing/api-tests
+   ```
+5. Cite the docs URL for non-obvious APIs.
+6. Tests use **Japa** (`@japa/plugin-adonisjs`), not Jest/Vitest, unless the project already does otherwise (warn if so).
+
+## Agent loop
 
 ```
-node ace serve --hmr
+1. detect_version.py → pin v6 vs v7
+2. Map task → topic table below
+3. Read the matching references/*.md (short cheat-sheet)
+4. If thin/stale: lookup_docs.py --fetch <slug>
+5. Implement with Ace make:* + official patterns
+6. Add/adjust Japa tests; cite docs for non-trivial choices
 ```
 
-**Pattern 3:** When you use a controller in your route definition, AdonisJS automatically generates a route name based on the controller and method names
+## Topic → reference map
 
-```
-[controllers.Posts, 'index']
-```
+| Task | Read first | Official docs |
+|------|------------|---------------|
+| New app / kits / folders | [getting-started.md](references/getting-started.md) | `/installation.md`, `/stacks-and-starter-kits.md` |
+| Routes, HTTP, VineJS, uploads | [http-basics.md](references/http-basics.md) | `/guides/basics/*` |
+| Edge, Inertia, Vite, Tuyau | [frontend.md](references/frontend.md) | `/guides/frontend/*` |
+| Lucid, Redis | [database.md](references/database.md) | `/guides/database/*` |
+| Auth / Bouncer | [auth.md](references/auth.md) | `/guides/auth/*` |
+| Hash, encrypt, CORS, limiter | [security.md](references/security.md) | `/guides/security/*` |
+| DI, providers, barrels, codemods | [concepts.md](references/concepts.md) | `/guides/concepts/*` |
+| Cache, Drive, Mail, Queues… | [digging-deeper.md](references/digging-deeper.md) | `/guides/digging-deeper/*` |
+| Ace CLI / REPL | [ace-cli.md](references/ace-cli.md) | `/guides/ace/*` |
+| Japa tests | [testing.md](references/testing.md) | `/guides/testing/*` |
+| API / helpers reference | [reference.md](references/reference.md) | `/reference/*` |
+| Hands-on tutorial | [tutorial.md](references/tutorial.md) | `/tutorial/*` |
+| Full URL catalog | [docs-index.md](references/docs-index.md) | [llms.md](references/llms.md) |
+| Avoid outdated APIs | [anti-patterns.md](references/anti-patterns.md) | — |
 
-**Pattern 4:** Guides / Command line Repl Start Guides Reference Roadmap Basics Routing Controllers HTTP context Middleware Request Response Body parser Validatio...
+Official pages also expose Markdown: append `.md` to any docs URL (e.g. `…/guides/basics/routing.md`).
 
-```
-node ace repl
-```
+## v7 conventions (quick)
 
-**Pattern 5:** Start / Resources Upgrade guide Start Guides Reference Roadmap Getting started Introduction Pick your path Installation Folder structure Developmen...
-
-```
-node -v
-```
-
-**Pattern 6:** # AdonisJS v6 → v7 Upgrade Agent You are an upgrade agent
-
-```
-@adonisjs/*
-```
-
-**Pattern 7:** Guides / Core Concepts Scaffolding and codemods Start Guides Reference Roadmap Basics Routing Controllers HTTP context Middleware Request Response ...
-
-```
-node ace configure @adonisjs/lucid
-```
-
-**Pattern 8:** await codemods
-
-```
-await codemods.defineEnvVariables({
-  API_KEY: 'secret-key-here',
-}, {
-  omitFromExample: ['API_KEY']
-})
+```bash
+npm create adonisjs@latest my-app          # kits: hypermedia | react | vue | api
+node ace serve --hmr                       # API kit: npm run dev from monorepo root
+node ace list:routes
+node ace make:controller posts
+node ace make:validator post
+node ace make:model post -m
+node ace test
 ```
 
-### Example Code Patterns
-
-**Example 1** (sh):
-```sh
-node ace list
-```
-
-**Example 2** (sh):
-```sh
-node ace serve --hmr
-```
-
-**Example 3** (ts):
 ```ts
-import { errors } from '@adonisjs/core'
-if (error instanceof errors.E_ROUTE_NOT_FOUND) {
-  // handle error
+import router from '@adonisjs/core/services/router'
+import { controllers } from '#generated/controllers'
+
+router.get('/posts', [controllers.Posts, 'index'])
+router.resource('posts', controllers.Posts)
+```
+
+```ts
+import type { HttpContext } from '@adonisjs/core/http'
+import { createPostValidator } from '#validators/post'
+
+export default class PostsController {
+  async store({ request, response }: HttpContext) {
+    const payload = await request.validateUsing(createPostValidator)
+    // …
+    return response.redirect().toRoute('posts.index')
+  }
 }
 ```
 
-**Example 4** (ts):
-```ts
-import { errors as lucidErrors } from '@adonisjs/lucid'
-if (error instanceof lucidErrors.E_ROW_NOT_FOUND) {
-  // handle error
-  console.log(`${error.model?.name || 'Row'} not found`)
-}
-```
+- URLs: `urlFor` from `@adonisjs/core/services/url_builder` — **not** `router.makeUrl`.
+- Subpaths: `#controllers/*`, `#models/*`, `#validators/*`, `#generated/*`.
+- Validation errors: let the global exception handler negotiate HTML / Inertia / JSON — avoid unnecessary try/catch around `validateUsing`.
 
-**Example 5** (elixir):
-```elixir
-node ace add @adonisjs/bouncer
-```
+## Anti-goals
 
-## Reference Files
-
-This skill includes comprehensive documentation in `references/`:
-
-- **ace.md** - Ace documentation
-- **api.md** - Api documentation
-- **auth.md** - Auth documentation
-- **basics.md** - Basics documentation
-- **concepts.md** - Concepts documentation
-- **guides.md** - Guides documentation
-- **index.html.md.md** - Index.Html.Md documentation
-- **other.md** - Other documentation
-- **reference.md** - Reference documentation
-- **tutorial.md** - Tutorial documentation
-
-Use `view` to read specific reference files when detailed information is needed.
-
-## Working with This Skill
-
-### For Beginners
-Start with the getting_started or tutorials reference files for foundational concepts.
-
-### For Specific Features
-Use the appropriate category reference file (api, guides, etc.) for detailed information.
-
-### For Code Examples
-The quick reference section above contains common patterns extracted from the official docs.
-
-## Resources
-
-### references/
-Organized documentation extracted from official sources. These files contain:
-- Detailed explanations
-- Code examples with language annotations
-- Links to original documentation
-- Table of contents for quick navigation
-
-### scripts/
-Add helper scripts here for common automation tasks.
-
-### assets/
-Add templates, boilerplate, or example projects here.
-
-## Notes
-
-- This skill was automatically generated from official documentation
-- Reference files preserve the structure and examples from source docs
-- Code examples include language detection for better syntax highlighting
-- Quick reference patterns are extracted from common usage examples in the docs
-
-## Updating
-
-To refresh this skill with updated documentation:
-1. Re-run the scraper with the same configuration
-2. The skill will be rebuilt with the latest information
+- No Express-style `app.get` apps inside Adonis.
+- No `ts-node` as v7 JIT (use `@poppinss/ts-exec`).
+- No v6 lazy `() => import('#controllers/...')` walls when `#generated/controllers` exists.
+- No inventing Passport/JWT “because APIs usually have it” — use official guards (session / access tokens / basic / custom).
+- Do not load entire doc dumps into context; use the topic map + `--fetch`.

@@ -1,85 +1,34 @@
-# Adonisjs - Concepts
+# Core concepts — AdonisJS v7
 
-**Pages:** 4
+Official: https://docs.adonisjs.com/guides/concepts/application-lifecycle.md  
+Lookup: `python3 scripts/lookup_docs.py --fetch guides/concepts/dependency-injection`
 
----
+## Official pages
 
-## AdonisJS docs - Everything you need to get building - AdonisJS Documentation
+- [Application lifecycle](https://docs.adonisjs.com/guides/concepts/application-lifecycle.md)
+- [Dependency injection](https://docs.adonisjs.com/guides/concepts/dependency-injection.md)
+- [Service providers](https://docs.adonisjs.com/guides/concepts/service-providers.md)
+- [Container services](https://docs.adonisjs.com/guides/concepts/container-services.md)
+- [Barrel files](https://docs.adonisjs.com/guides/concepts/barrel-files.md)
+- [Assembler hooks](https://docs.adonisjs.com/guides/concepts/assembler-hooks.md)
+- [Scaffolding and codemods](https://docs.adonisjs.com/guides/concepts/scaffolding.md)
+- [Extending AdonisJS](https://docs.adonisjs.com/guides/concepts/extending-adonisjs.md)
 
-**URL:** https://docs.adonisjs.com/concepts/extending_adonisjs.md
+## Practical rules
 
-**Contents:**
-- Everything you need to get building
-- Our sponsors
+- Prefer **container services** via ESM imports (`import router from '@adonisjs/core/services/router'`) over inventing service locators.
+- **Providers** register bindings and boot hooks — keep `adonisrc.ts` free of app business logic.
+- **Barrels** (`#generated/*`) reduce lazy-import walls; regenerate via Ace / assembler — don’t hand-edit generated barrels casually.
+- **Assembler hooks** (v7 names): `buildStarting`, `devServerStarted`, `fileChanged`, `buildFinished`, … — not old `onBuildStarting` names.
+- Package `configure` hooks use stubs + codemods (`node ace configure <pkg>`).
 
-Comprehensive guides, step-by-step tutorials, and complete API reference to help you build, test, and deploy applications with AdonisJS
+## Scaffolding
 
-Start by preparing your environment, then follow the full hands-on tutorial from scratch
+```bash
+node ace make:controller posts
+node ace make:middleware force_json
+node ace make:provider cache
+node ace make:command greet
+```
 
-Watch practical screencasts and learn AdonisJS through real, guided video lessons
-
-Production-ready full-stack components, premium packages, and AI tooling that actually understands AdonisJS.
-
-These companies and individuals keep AdonisJS independent. Their monthly support funds the ongoing work (development, maintenance, releases, and docs) for everyone who builds on it.
-
----
-
-## AdonisJS docs - Everything you need to get building - AdonisJS Documentation
-
-**URL:** https://docs.adonisjs.com/concepts/barrel_files.md
-
-**Contents:**
-- Everything you need to get building
-- Our sponsors
-
-Comprehensive guides, step-by-step tutorials, and complete API reference to help you build, test, and deploy applications with AdonisJS
-
-Start by preparing your environment, then follow the full hands-on tutorial from scratch
-
-Watch practical screencasts and learn AdonisJS through real, guided video lessons
-
-Production-ready full-stack components, premium packages, and AI tooling that actually understands AdonisJS.
-
-These companies and individuals keep AdonisJS independent. Their monthly support funds the ongoing work (development, maintenance, releases, and docs) for everyone who builds on it.
-
----
-
-## AdonisJS docs - Everything you need to get building - AdonisJS Documentation
-
-**URL:** https://docs.adonisjs.com/concepts/assembler_hooks.md
-
-**Contents:**
-- Everything you need to get building
-- Our sponsors
-
-Comprehensive guides, step-by-step tutorials, and complete API reference to help you build, test, and deploy applications with AdonisJS
-
-Start by preparing your environment, then follow the full hands-on tutorial from scratch
-
-Watch practical screencasts and learn AdonisJS through real, guided video lessons
-
-Production-ready full-stack components, premium packages, and AI tooling that actually understands AdonisJS.
-
-These companies and individuals keep AdonisJS independent. Their monthly support funds the ongoing work (development, maintenance, releases, and docs) for everyone who builds on it.
-
----
-
-## AdonisJS docs - Everything you need to get building - AdonisJS Documentation
-
-**URL:** https://docs.adonisjs.com/concepts/dependency_injection.md
-
-**Contents:**
-- Everything you need to get building
-- Our sponsors
-
-Comprehensive guides, step-by-step tutorials, and complete API reference to help you build, test, and deploy applications with AdonisJS
-
-Start by preparing your environment, then follow the full hands-on tutorial from scratch
-
-Watch practical screencasts and learn AdonisJS through real, guided video lessons
-
-Production-ready full-stack components, premium packages, and AI tooling that actually understands AdonisJS.
-
-These companies and individuals keep AdonisJS independent. Their monthly support funds the ongoing work (development, maintenance, releases, and docs) for everyone who builds on it.
-
----
+When writing package configure hooks, follow the scaffolding guide for `codemods.defineEnvVariables`, stubs, and RC updates.

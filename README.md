@@ -6,7 +6,7 @@ A collection of AI Agent Skills (Agent Skills / `SKILL.md` format). Portable acr
 
 ### adonisjs
 
-AdonisJS **v7** development skill: official-docs conventions, Ace CLI usage, v6→v7 guards. No generator scaffolding—project CLI is `node ace` inside the app.
+AdonisJS **v7** development skill: official-docs conventions, slim topic cheat-sheets, Ace CLI usage, v6→v7 anti-patterns, and `lookup_docs.py` for live `.md` pages. App CLI is `node ace` inside the project (`npm create adonisjs@latest` to scaffold).
 
 - **Path**: `skills/adonisjs/`
 - **Docs**: https://docs.adonisjs.com/
