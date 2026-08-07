@@ -1,467 +1,177 @@
 ---
 name: adonisjs
-description: Use when working with AdonisJS v7, including migration guidance for v6 projects
-doc_version: adonisjs
+description: >-
+  Develop AdonisJS v7 apps using official docs conventions only. Activates when
+  working with AdonisJS, Adonis, Lucid ORM, VineJS validation, Edge templates,
+  Inertia on Adonis, Ace CLI, Japa tests in an Adonis project, writing controllers
+  routes middleware auth sessions, or upgrading Adonis v6 to v7. Prevents outdated
+  v5/v6 APIs and inventing non-existent helpers. Use for scaffolding features,
+  fixing bugs, writing tests, and looking up official AdonisJS APIs.
+license: MIT
+activation: /adonisjs
+metadata:
+  author: agent-skill-creator
+  version: 1.0.0
+  framework: AdonisJS
+  framework_version: "7"
+  docs_base: https://docs.adonisjs.com
+  docs_pages_indexed: "103"
+  created: 2026-08-07
+  last_reviewed: 2026-08-07
+  review_interval_days: 60
+  dependencies:
+    - name: AdonisJS Official Docs (v7)
+      url: https://docs.adonisjs.com
+    - name: AdonisJS Legacy Docs (v6)
+      url: https://v6-docs.adonisjs.com
+    - name: Jina Reader (optional live doc fetch)
+      url: https://r.jina.ai
+    - name: Lucid ORM docs
+      url: https://lucid.adonisjs.com
+    - name: VineJS docs
+      url: https://vinejs.dev
+    - name: Japa docs
+      url: https://japa.dev
 ---
 
-# AdonisJS Skill
+# /adonisjs
 
-Use when working with AdonisJS v7, a modern TypeScript backend framework. This skill combines knowledge from the official documentation to provide comprehensive guidance for building server-side applications.
+Build and modify **AdonisJS v7** applications strictly according to the official
+documentation at https://docs.adonisjs.com. This skill indexes the full public
+docs sitemap (103 pages) and ships condensed topic references plus a live docs
+lookup script.
 
-## When to Use This Skill
+## Pinned version (mandatory)
 
-This skill should be triggered when working with:
+| Item | Value |
+|------|--------|
+| **Framework** | AdonisJS **v7** |
+| **Docs** | https://docs.adonisjs.com |
+| **Legacy v6 docs** | https://v6-docs.adonisjs.com (read-only during upgrades) |
+| **Node.js** | **≥ 24** for v7 |
+| **Language** | TypeScript + **ESM** |
 
-### Core Framework Usage
-- **AdonisJS v7 Development**: Building any backend application with AdonisJS
-- **Project Initialization**: Creating new AdonisJS projects from starter kits
-- **TypeScript Development**: Using TypeScript for type-safe backend code
-
-### Feature-Specific Triggers
-- **API Development**: Building REST APIs, JSON backends, or GraphQL
-- **Authentication**: Implementing user auth with @adonisjs/auth (session, JWT, basic auth)
-- **Database Operations**: Using Lucid ORM for database interactions, migrations, seeds
-- **Validation**: Using VineJS for request validation
-- **File Handling**: Uploading files, serving static assets
-- **Caching**: Implementing cache with @adonisjs/cache
-- **Sessions**: Managing user sessions with @adonisjs/session
-
-### Frontend Integration
-- **Edge Templates**: Server-rendered HTML with Edge template engine
-- **Inertia**: Using React/Vue components with server-side routing
-- **API-Only**: Building JSON API for separate frontend apps
-
-### Operational
-- **Debugging**: Troubleshooting AdonisJS applications
-- **Deployment**: Deploying to production (Docker, Node.js, serverless)
-- **Testing**: Writing tests with Japa
-
-## Version Scope
-
-- **Target version**: AdonisJS v7
-- **Runtime baseline**: Node.js 24 or newer (per official v7 docs)
-- **Upgrade path**: For legacy projects, use `references/other.md` and follow the "Upgrade guide - AdonisJS" (`https://docs.adonisjs.com/v6-to-v7`)
-
-## Key Concepts
-
-### Architecture Philosophy
-
-AdonisJS is **deeply opinionated about the backend** but **flexible about the frontend**:
-
-- Built-in: Authentication, Authorization, Validation, Database tooling, Caching
-- Your choice: Template engine, frontend framework, or API-only
-
-### Three Application Stacks
-
-1. **Hypermedia (Server-Rendered)**: Edge templates + Alpine.js/HTMX
-   - Server generates HTML, browser displays it
-   - Minimal JavaScript, simple deployment
-   - Best for: Content sites, dashboards, SEO-critical pages
-
-2. **Inertia (React/Vue)**: React/Vue as views + server routing
-   - Components render on server, hydration on client
-   - SPA experience with monolithic deployment
-   - Best for: Modern UX + fast development
-
-3. **API-Only**: JSON backend + separate frontend
-   - Clear separation of concerns
-   - Multiple clients (web, mobile, external)
-   - Best for: Mobile apps, SPAs, public APIs
-
-### Core Components
-
-| Component | Purpose | Location |
-|-----------|---------|----------|
-| **Routes** | Define URL endpoints | `routes/*.ts` |
-| **Controllers** | Handle HTTP requests | `app/controllers/*.ts` |
-| **Middleware** | Process requests/responses | `app/middleware/*.ts` |
-| **Models** | Database entities (Lucid) | `app/models/*.ts` |
-| **Services** | Business logic | `app/services/*.ts` |
-| **Migrations** | Database schema | `database/migrations/*.ts` |
-| **Validators** | Request validation | `app/validators/*.ts` |
-
-### Important Distinctions
-
-- **public vs resources directories**:
-  - `public/`: Files served as-is (favicons, uploads)
-  - `resources/`: Processed by Vite bundler (CSS, JS, images)
-
-- **No file-based routing**: Explicit route definitions in `routes/*.ts`
-
-- **No "use server/client"**: Clear server/client code separation
-
-## Quick Reference
-
-### Project Setup
+Before writing code, detect the project version:
 
 ```bash
-# Clone starter kit
-git clone <REPO_URL>
-cd <project-name>
-npm install
-
-# Add official packages
-node ace add @adonisjs/static
-node ace add @adonisjs/cache
-
-# Configure packages
-node ace configure @adonisjs/lucid
-node ace configure @adonisjs/auth
+python3 scripts/detect_version.py
+# or inspect package.json: @adonisjs/core major version
 ```
 
-### Environment Variables
+- If the project is **v7** (or new): follow this skill and docs.adonisjs.com.
+- If the project is **v6**: say so explicitly, prefer v6-docs.adonisjs.com, and
+  do **not** apply v7-only APIs (barrel `#generated/*`, `urlFor`, new hooks, etc.)
+  unless the user asked to upgrade — then follow `references/upgrade-v6-to-v7.md`
+  and https://docs.adonisjs.com/v6-to-v7.
+- If version is unclear: ask once, default to **v7 + official docs**.
 
-```typescript
-import { codemods } from '@adonisjs/core'
+## Non-negotiable rules
 
-await codemods.defineEnvVariables({
-  API_KEY: 'secret-key-here',
-}, {
-  omitFromExample: ['API_KEY']
-})
+1. **Do not invent APIs.** Only use APIs/methods shown in official docs, this
+   skill’s references, or the live page returned by `lookup_docs.py`.
+2. **Do not use outdated patterns** from Adonis v5 / blog posts / memory when
+   they conflict with v7 docs. See `references/anti-patterns.md`.
+3. **Prefer official examples.** Match import paths, folder layout, Ace commands,
+   and naming (`snake_case` files like `posts_controller.ts`).
+4. **When unsure → look it up**, then code:
+   ```bash
+   python3 scripts/lookup_docs.py routing
+   python3 scripts/lookup_docs.py --fetch validation
+   python3 scripts/lookup_docs.py https://docs.adonisjs.com/guides/testing/api-tests
+   ```
+5. **Cite the docs URL** in your reply when introducing a non-obvious API.
+6. **Tests use Japa** (`@japa/runner`, `@japa/plugin-adonisjs`), not Jest/Vitest
+   unless the project already did otherwise (still warn).
+
+## Activation
+
+Use for: AdonisJS feature work, controllers/routes/middleware, Lucid, Auth,
+VineJS, Edge/Inertia, Ace commands, Japa tests, deployment/config, v6→v7 upgrade.
+
+Do **not** treat generic Node/Express advice as Adonis defaults.
+
+## How to work (agent loop)
+
+```
+1. detect_version.py  → pin v6 vs v7
+2. Map task → topic in references/docs-index.md
+3. Read the matching references/<section>.md (and fetch live if thin/stale)
+4. Implement using official patterns + Ace generators when available
+5. Add/adjust tests per references/testing.md
+6. Cite docs links for non-trivial choices
 ```
 
-### Routes and Controllers
+### Topic → reference map
 
-```typescript
-// routes/web.ts
-import router from '@adonisjs/core/services/router'
-const UsersController = () => import('#controllers/users_controller')
+| Task | Read first | Docs |
+|------|------------|------|
+| New app / kit / folders | `getting-started.md` | /installation, /stacks-and-starter-kits, /folder-structure |
+| Routes, HTTP, validation, uploads | `http-basics.md` | /guides/basics/* |
+| Edge, Inertia, Vite, Tuyau | `frontend.md` | /guides/frontend/* |
+| Lucid, Redis | `database.md` | /guides/database/* |
+| Auth / Bouncer | `auth.md` | /guides/auth/* |
+| Hash, encrypt, CORS, rate limit | `security.md` | /guides/security/* |
+| Providers, DI, barrels, scaffolding | `concepts.md` | /guides/concepts/* |
+| Cache, Drive, Mail, Queues, OTel… | `digging-deeper.md` | /guides/digging-deeper/* |
+| Ace CLI / REPL | `ace-cli.md` | /guides/ace/* |
+| Writing & wiring tests | `testing.md` | /guides/testing/* |
+| API / helpers reference | `reference.md` | /reference/* |
+| Hands-on walkthrough | `tutorial.md` | /tutorial/* |
+| Upgrade | `upgrade-v6-to-v7.md` | /v6-to-v7 |
+| Full URL catalog | `docs-index.md` | sitemap (103 pages) |
 
-router.get('/users', [UsersController, 'index'])
-router.post('/users', [UsersController, 'store'])
-router.get('/users/:id', [UsersController, 'show']).param('id')
-```
+## v7 conventions cheat-sheet
 
-```typescript
-// app/controllers/users_controller.ts
-import type { HttpContext } from '@adonisjs/core/http'
+- Routes live in `start/routes.ts`; import `router` from `@adonisjs/core/services/router`.
+- Prefer controllers via barrel: `import { controllers } from '#generated/controllers'` then
+  `router.get('/posts', [controllers.Posts, 'index'])`.
+- Generate with Ace: `node ace make:controller posts`, `make:validator`, `make:middleware`,
+  `make:model`, `make:test`, etc.
+- Validation: VineJS + `request.validateUsing(validator)` — do **not** wrap in try/catch
+  unless custom handling is required (global exception handler + content negotiation).
+- Dev server: `node ace serve --hmr` (or kit’s `npm run dev`).
+- List routes: `node ace list:routes`.
+- URL generation: `urlFor` from `@adonisjs/core/services/url_builder` — **not**
+  `router.makeUrl` (removed/deprecated in v7).
+- Subpath imports: `#controllers/*`, `#models/*`, `#validators/*`, `#generated/*`, etc.
+- Starter kits (v7): opinionated; Lucid + Auth included; kits include Hypermedia, API,
+  React, Vue (see stacks docs).
 
-export default class UsersController {
-  async index({ request, response }: HttpContext) {
-    const page = request.input('page', 1)
-    // ... fetch users
-    return response.json({ data: [] })
-  }
+## Testing (must follow docs)
 
-  async show({ params, response }: HttpContext) {
-    return response.json({ id: params.id })
-  }
-}
-```
+- Framework: **Japa** with `@japa/plugin-adonisjs`.
+- Suites configured in `adonisrc.ts`; plugins in `tests/bootstrap.ts`.
+- Create: `node ace make:test posts/index --suite=unit` (or `browser` / functional).
+- Run: `node ace test` (filter by suite/file/tags per docs).
+- API tests: Japa API client + `client.visit('route.name')` / `.json()`; auth via
+  `authApiClient`; sessions via `sessionApiClient`; `.env.test` often uses
+  `SESSION_DRIVER=memory`.
+- DB isolation: `testUtils.db().truncate()` (or migrate/seed helpers) in group hooks.
+- Details: `references/testing.md` + https://docs.adonisjs.com/guides/testing/introduction
 
-### Database with Lucid
+## When information is missing
 
-```typescript
-// app/models/user.ts
-import { UsersSchema } from '#database/schema'
-import { column } from '@adonisjs/lucid/orm'
+1. Search `references/docs-index.md` for the slug.
+2. Run `python3 scripts/lookup_docs.py --fetch <topic>` to pull the latest page.
+3. If still missing (package-specific Lucid deep dive, VineJS core, etc.), open the
+   linked ecosystem docs (e.g. https://lucid.adonisjs.com, https://vinejs.dev) and
+   state that you consulted them.
+4. Never fill gaps with Express/Nest/Laravel-translated guesses without labeling them
+   as **non-Adonis** suggestions.
 
-export default class User extends UsersSchema {
-  // Override serialization behavior in model layer when needed.
-  @column({ serializeAs: null })
-  declare password: string
-}
-```
+## Anti-goals
 
-```typescript
-// Querying (schema classes are auto-generated from migrations)
-const users = await User.query().where('active', true).paginate(1, 10)
-const user = await User.findOrFail(params.id)
-await user.related('posts').create({ title: 'Hello' })
-```
+- Do not scaffold Express-style `app.get` apps inside Adonis.
+- Do not recommend `ts-node` as the v7 JIT (v7 uses `@poppinss/ts-exec`).
+- Do not use v6 lazy `() => import('#controllers/...')` walls when `#generated/controllers`
+  barrels are available on v7.
+- Do not claim coverage of private/unpublished APIs.
+
+## Scripts
 
 ```bash
-# v7 workflow: create model + migration, then run migrations
-node ace make:model User -m
-node ace migration:run
+python3 scripts/detect_version.py [--path /path/to/project]
+python3 scripts/lookup_docs.py <query>           # resolve topic → official URL + local excerpt
+python3 scripts/lookup_docs.py --fetch <query>   # also download latest page text
+python3 scripts/run_evals.py --validate
 ```
-
-```text
-Important: Never edit database/schema.ts manually.
-It is generated from migrations after migration:run.
-```
-
-### Authentication
-
-```bash
-# Install hashers
-npm i argon2  # Recommended for new apps
-# or
-npm i bcrypt
-```
-
-```typescript
-// Basic auth setup with @adonisjs/auth
-import router from '@adonisjs/core/services/router'
-const AuthController = () => import('#controllers/auth_controller')
-
-router.post('/login', [AuthController, 'login'])
-router.post('/register', [AuthController, 'register'])
-```
-
-### Validation with VineJS
-
-```typescript
-// app/validators/create_user.ts
-import vine from '@vinejs/vine'
-
-export const createUserValidator = vine.create({
-  email: vine.string().email(),
-  password: vine.string().minLength(8).confirmed(),
-  name: vine.string().minLength(2),
-})
-
-// Usage in controller
-export default class UsersController {
-  async store({ request, response }: HttpContext) {
-    const data = await request.validateUsing(createUserValidator)
-    // ... create user
-  }
-}
-```
-
-### Request Extensions
-
-```typescript
-// src/extensions/request.ts
-import type { Request } from '@adonisjs/core/http'
-
-Request.macro('hasRole', function (this: Request, role: string) {
-  const user = this.ctx.auth.user
-  return user?.role === role
-})
-
-// Usage: if (request.hasRole('admin')) { ... }
-```
-
-### Static Files Configuration
-
-```typescript
-// config/static.ts
-{
-  enabled: true,
-  etag: true,
-  lastModified: true,
-  dotFiles: 'ignore',  // Security: don't expose .env, .git
-  acceptRanges: true,
-  cacheControl: {
-    maxAge: '1 year',
-    immutable: true  // For versioned/hashed filenames
-  }
-}
-```
-
-### Event System
-
-```typescript
-import emitter from '@adonisjs/core/services/emitter'
-
-// HTTP request completed - for logging/monitoring
-emitter.on('http:request_completed', (event) => {
-  const { method, url } = event.ctx.request
-  const duration = event.duration
-  console.log(`${method} ${url}: ${duration}ms`)
-})
-
-// Server ready
-emitter.on('http:server_ready', (event) => {
-  console.log(`Server running on ${event.host}:${event.port}`)
-})
-```
-
-### Type Helpers
-
-```typescript
-import type { InferRouteParams } from '@adonisjs/core/helpers/types'
-
-// Type-safe route parameters
-type UserParams = InferRouteParams<'/users/:id'>
-// Result: { id: string }
-```
-
-### Helpers
-
-```typescript
-import string from '@adonisjs/core/helpers/string'
-import is from '@adonisjs/core/helpers/is'
-
-string.camelCase('hello_world')  // 'helloWorld'
-string.slug('Hello World')        // 'hello-world'
-string.capitalize('hello')        // 'Hello'
-
-is.email('test@example.com')      // true
-is.url('https://example.com')     // true
-```
-
-## Reference Files
-
-This skill combines documentation from multiple sources:
-
-| File | Description | Pages | Confidence |
-|------|-------------|-------|------------|
-| **api.md** | API reference documentation | 1 | Medium |
-| **guides.md** | Core feature guides | 71 | Medium |
-| **other.md** | Stacks, starter kits, path selection | 11 | Medium |
-| **reference.md** | Events, helpers, types | 8 | Medium |
-| **index.md** | Documentation index | 1 | Medium |
-
-### Source Analysis
-
-**Primary Source**: Official AdonisJS Documentation (docs.adonisjs.com)
-
-All content is derived from the official documentation with medium confidence. The documentation covers:
-
-- Guides: Static files, routing, controllers, middleware, authentication
-- Reference: Events, helpers, type utilities
-- Starter kits: Web, API, Inertia templates
-
-### Multi-Source Synthesis
-
-This skill uses a single source type (official documentation), so synthesis is straightforward:
-
-1. **Official Documentation** (docs.adonisjs.com) - Primary source
-   - Guides, reference, tutorials
-   - Code examples with TypeScript
-   - Configuration options
-
-No conflicts detected between sources - all content is from the official AdonisJS documentation.
-
-## Working with This Skill
-
-### For Beginners
-
-1. Start with `references/other.md` to understand the three application stacks
-2. Read `references/tutorial.md` for step-by-step learning
-3. Use Quick Reference above for your first project setup
-4. Check `references/guides.md` for specific feature implementations
-
-### For Intermediate Users
-
-1. Study `references/reference.md` for events, helpers, and type utilities
-2. Use Quick Reference for common patterns
-3. Explore `references/guides.md` for detailed configuration
-4. Implement custom Request/Response macros
-
-### For Advanced Users
-
-1. Use event system for application monitoring and logging
-2. Implement advanced static file caching strategies
-3. Configure custom authentication guards
-4. Build reusable service providers
-
-### Navigating Reference Files
-
-| Need | File to Check |
-|------|---------------|
-| Quick answer | Quick Reference section above |
-| Detailed explanation | `references/guides.md` |
-| API method signatures | `references/api.md` |
-| Events and listeners | `references/reference.md` |
-| Choosing frontend stack | `references/other.md` |
-| Step-by-step tutorial | `references/tutorial.md` |
-
-## Common Patterns
-
-### Route Groups with Middleware
-
-```typescript
-router.group(() => {
-  router.get('/dashboard', [DashboardController, 'index'])
-  router.get('/profile', [ProfileController, 'show'])
-}).use(middleware.auth())
-```
-
-### Error Handling
-
-```typescript
-import errors from '@adonisjs/core/errors'
-
-// In your controller
-try {
-  const user = await User.findOrFail(params.id)
-} catch (error) {
-  if (error.code === 'E_ROW_NOT_FOUND') {
-    return response.notFound({ message: 'User not found' })
-  }
-  throw error
-}
-```
-
-### Database Transactions
-
-```typescript
-import db from '@adonisjs/lucid/services/db'
-
-await db.transaction(async (trx) => {
-  const user = await User.create({ email: 'test@example.com' }, { client: trx })
-  await user.related('profile').create({ bio: 'Hello' }, { client: trx })
-})
-```
-
-### File Uploads
-
-```typescript
-import { extname } from 'node:path'
-
-async store({ request, response }: HttpContext) {
-  const coverImage = request.file('cover_image')
-
-  if (coverImage) {
-    const fileName = `${Date.now()}${extname(coverImage.fileName)}`
-    await coverImage.moveToDisk(`./${fileName}`)
-  }
-
-  return response.created({ message: 'Uploaded' })
-}
-```
-
-## Known Discrepancies
-
-No major discrepancies detected. All content is synthesized from the official AdonisJS documentation with medium confidence. The documentation is well-maintained and consistent.
-
-**Note**: This skill targets AdonisJS v7. For older applications, validate compatibility before applying patterns from this skill.
-
-## Resources
-
-### references/
-Organized documentation extracted from official sources:
-- Detailed explanations of all features
-- Code examples with TypeScript/JavaScript annotations
-- Links to original documentation
-- Table of contents for quick navigation
-
-### scripts/
-Add helper scripts here for common automation tasks:
-- Database seeding scripts
-- Deployment scripts
-- Development utilities
-
-### assets/
-Add templates, boilerplate, or example projects here:
-- Sample controller patterns
-- Middleware templates
-- Service provider examples
-
-## Notes
-
-- This skill was generated from the official AdonisJS documentation
-- Reference files preserve the structure and examples from source docs
-- Code examples primarily use TypeScript (AdonisJS's default)
-- Quick reference patterns are extracted from common usage examples
-- AdonisJS v7 is the current major version for this skill
-- All examples assume the use of official starter kits
-
-## Updating
-
-To refresh this skill with updated documentation:
-1. Re-run the documentation scraper with the same configuration
-2. The skill will be rebuilt with the latest information from docs.adonisjs.com
-
-## Official Links
-
-- **Documentation**: https://docs.adonisjs.com/
-- **Upgrade guide (v6 -> v7)**: https://docs.adonisjs.com/v6-to-v7
-- **GitHub**: https://github.com/adonisjs/core
-- **Official Packages**: https://github.com/adonisjs
-- **Discord**: https://discord.gg/vzc5sWh
