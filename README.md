@@ -2,26 +2,33 @@
 
 [English](README.md) | [中文](README.zh-CN.md)
 
-**Curated AI Agent Skills for AdonisJS** — official-docs conventions in `SKILL.md` format, ready for Cursor, Claude Code, and other agents that load skills from a folder.
+**A personal Agent Skills vault for real developer work** — skills drawn from day-to-day coding scenarios, kept in `SKILL.md` format for Cursor, Claude Code, and other agents that load skills from a folder.
 
-## Why this project
+## What this repo is
 
-AI coding agents often invent Express / Nest / Laravel / Prisma patterns when working on AdonisJS. This repo packages **docs-grounded skills** so agents follow current official APIs, Ace generators, and production layering — instead of outdated v5/v6 habits or framework mix-ups.
+This is not a framework-specific marketplace, and not a one-shot dump of prompts.
+
+It is a **personal, continuously growing collection of Agent Skills** for situations I actually hit while building software — especially when official or built-in skills do not cover the stack, conventions, or workflow well enough. Each skill is written from a working developer’s angle: what to do, what to avoid, and how an agent should behave in that scenario.
+
+New skills will keep landing here as new work scenarios show up.
 
 ## Features
 
-- **Official-docs first** — conventions distilled from [docs.adonisjs.com](https://docs.adonisjs.com/) and [lucid.adonisjs.com](https://lucid.adonisjs.com/)
-- **Progressive disclosure** — short `SKILL.md` entry points, deep `references/` cheat-sheets, end-to-end `examples/`
-- **Live docs lookup** — scripts to resolve topics and optionally `--fetch` the latest official Markdown
-- **Anti-pattern guards** — explicit “do not invent” rules for legacy Adonis and foreign ORM APIs
+- **Work-scenario driven** — skills come from personal development practice, not abstract demos
+- **Fill the gaps** — for stacks and habits that official skills do not cover well
+- **Continuously expanding** — more skills will be added over time from ongoing work
+- **`SKILL.md` standard** — drop-in folders that compatible agents can load
+- **Progressive disclosure** — short entry points, deeper `references/`, concrete `examples/` when needed
 - **Easy install** — `npx skills` globally or per project, or copy into `.cursor/skills`
 
 ## Skills
 
-| Skill | Description | Path | Docs |
-| --- | --- | --- | --- |
-| **adonisjs** | AdonisJS **v7** development: Controllers + injected Services, Vine validation, Auth/Bouncer, Ace CLI, stack kits, v6→v7 anti-patterns, and live docs lookup. | [`skills/adonisjs/`](skills/adonisjs/) | [docs.adonisjs.com](https://docs.adonisjs.com/) |
-| **lucid** | AdonisJS **Lucid** SQL/ORM: models, migrations, relationships, query builders, seeders/factories, schema generation. Prefer over inventing Prisma/Eloquent patterns. | [`skills/lucid/`](skills/lucid/) | [lucid.adonisjs.com](https://lucid.adonisjs.com/docs/introduction) |
+Current skills (more will be added from future work scenarios):
+
+| Skill | Description | Path |
+| --- | --- | --- |
+| **adonisjs** | AdonisJS **v7** development: Controllers + injected Services, Vine validation, Auth/Bouncer, Ace CLI, stack kits, v6→v7 anti-patterns, and live docs lookup. | [`skills/adonisjs/`](skills/adonisjs/) |
+| **lucid** | AdonisJS **Lucid** SQL/ORM: models, migrations, relationships, query builders, seeders/factories, schema generation. Prefer over inventing Prisma/Eloquent patterns. | [`skills/lucid/`](skills/lucid/) |
 
 ## Installation
 
@@ -59,24 +66,23 @@ Each skill is a self-contained folder:
 ```text
 skills/<name>/
 ├── SKILL.md           # Agent entry: when to use, hard rules, topic map
-├── references/        # Topic cheat-sheets + anti-patterns
-├── examples/          # Vertical slices (e.g. CRUD resource)
-├── scripts/           # detect_version.py, lookup_docs.py, …
-└── assets/            # Doc URL index for lookup
+├── references/        # Topic cheat-sheets + anti-patterns (optional)
+├── examples/          # Vertical slices (optional)
+├── scripts/           # Helper scripts (optional)
+└── assets/            # Indexes / static data (optional)
 ```
 
-Typical agent loop:
+Typical loop:
 
-1. Detect framework / package version
-2. Map the task → matching `references/*.md`
-3. If thin or stale → `lookup_docs.py --fetch <slug>`
-4. Implement with Ace `make:*` / official patterns
-5. Cite docs for non-obvious APIs
+1. Hit a real work scenario that needs better agent guidance
+2. Capture it as a skill in this repo (or improve an existing one)
+3. Install / reload the skill in the agent
+4. Reuse it the next time the same kind of work appears
 
 ## Requirements
 
 - Agents that load skills from a directory containing `SKILL.md` (e.g. Cursor, Claude Code)
-- Python 3 (optional, for version detect / docs lookup scripts inside each skill)
+- Python 3 (optional, only for skills that ship helper scripts)
 
 ## License
 

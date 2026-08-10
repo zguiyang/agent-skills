@@ -2,26 +2,33 @@
 
 [English](README.md) | [中文](README.zh-CN.md)
 
-**面向 AdonisJS 的 AI Agent Skills 合集** — 基于官方文档约定的 `SKILL.md` 技能包，适用于 Cursor、Claude Code 等从目录加载 skill 的 Agent。
+**面向真实开发工作的个人 Agent Skills 仓库** — 从日常编码场景中沉淀技能，以 `SKILL.md` 格式整理，适用于 Cursor、Claude Code 等从目录加载 skill 的 Agent。
 
-## 为什么需要这个项目
+## 这是什么
 
-在 AdonisJS 项目上，AI 编码 Agent 容易套用 Express / Nest / Laravel / Prisma 等外来模式，或沿用过时的 v5/v6 API。本仓库将**以官方文档为准的约定**打包成 Skill，让 Agent 优先使用当前官方 API、Ace 生成器与生产级分层，而不是臆造辅助函数或混用其他框架习惯。
+这不是某个框架的官方技能市场，也不是一次性堆满的提示词合集。
+
+这是一份**持续增长的个人 Agent Skills 记录库**：技能来自我作为开发者在实际工作里碰到的场景——尤其是官方或内置技能覆盖不到、或不够贴合技术栈 / 约定 / 工作流的时候。每份 skill 都从个人开发者的使用角度出发：该怎么做、不该怎么做、Agent 在该场景下应如何表现。
+
+后续会随着新的工作场景，**持续新增**更多技能。
 
 ## 特性
 
-- **官方文档优先** — 约定提炼自 [docs.adonisjs.com](https://docs.adonisjs.com/) 与 [lucid.adonisjs.com](https://lucid.adonisjs.com/)
-- **渐进披露** — 精简的 `SKILL.md` 入口、深入的 `references/` 速查、完整的 `examples/` 垂直示例
-- **在线文档检索** — 内置脚本按主题定位，并可 `--fetch` 拉取最新官方 Markdown
-- **反模式约束** — 明确禁止过时 Adonis API 与外来 ORM 写法
+- **工作场景驱动** — 来自个人开发实践，而非抽象演示
+- **补齐缺口** — 面向官方技能覆盖不足的技术栈与习惯
+- **持续扩充** — 会随日常工作不断加入新技能
+- **遵循 `SKILL.md` 约定** — 可直接放入兼容 Agent 的 skills 目录
+- **渐进披露** — 精简入口；需要时再展开 `references/` 与 `examples/`
 - **安装简单** — 支持 `npx skills` 全局/项目安装，或手动复制到 `.cursor/skills`
 
 ## 技能列表
 
-| 技能 | 说明 | 路径 | 文档 |
-| --- | --- | --- | --- |
-| **adonisjs** | AdonisJS **v7** 开发：Controller + 注入式 Service、Vine 校验、Auth/Bouncer、Ace CLI、Starter Kit、v6→v7 反模式，以及在线文档查找。 | [`skills/adonisjs/`](skills/adonisjs/) | [docs.adonisjs.com](https://docs.adonisjs.com/) |
-| **lucid** | AdonisJS **Lucid** SQL/ORM：模型、迁移、关联、查询构建器、Seeder/Factory、Schema 生成。优先于臆造 Prisma/Eloquent 模式。 | [`skills/lucid/`](skills/lucid/) | [lucid.adonisjs.com](https://lucid.adonisjs.com/docs/introduction) |
+当前已收录的技能（后续会从新的工作场景中继续补充）：
+
+| 技能 | 说明 | 路径 |
+| --- | --- | --- |
+| **adonisjs** | AdonisJS **v7** 开发：Controller + 注入式 Service、Vine 校验、Auth/Bouncer、Ace CLI、Starter Kit、v6→v7 反模式，以及在线文档查找。 | [`skills/adonisjs/`](skills/adonisjs/) |
+| **lucid** | AdonisJS **Lucid** SQL/ORM：模型、迁移、关联、查询构建器、Seeder/Factory、Schema 生成。优先于臆造 Prisma/Eloquent 模式。 | [`skills/lucid/`](skills/lucid/) |
 
 ## 安装
 
@@ -59,24 +66,23 @@ cp -R skills/lucid ~/.cursor/skills/lucid
 ```text
 skills/<name>/
 ├── SKILL.md           # Agent 入口：何时启用、硬性约定、主题索引
-├── references/        # 主题速查 + 反模式
-├── examples/          # 垂直切片示例（如 CRUD 资源）
-├── scripts/           # detect_version.py、lookup_docs.py 等
-└── assets/            # 文档 URL 索引（供 lookup 使用）
+├── references/        # 主题速查 + 反模式（可选）
+├── examples/          # 垂直切片示例（可选）
+├── scripts/           # 辅助脚本（可选）
+└── assets/            # 索引 / 静态数据（可选）
 ```
 
-典型 Agent 流程：
+典型循环：
 
-1. 检测框架 / 包版本
-2. 将任务映射到对应的 `references/*.md`
-3. 若内容偏薄或可能过时 → `lookup_docs.py --fetch <slug>`
-4. 使用 Ace `make:*` / 官方模式实现
-5. 对非显而易见的 API 引用官方文档
+1. 在真实工作中碰到需要更好 Agent 引导的场景
+2. 在本仓库沉淀为新 skill（或改进已有 skill）
+3. 在 Agent 中安装 / 重新加载
+4. 下次同类工作时直接复用
 
 ## 使用要求
 
 - 支持从包含 `SKILL.md` 的目录加载技能的 Agent（如 Cursor、Claude Code）
-- Python 3（可选，用于各技能内的版本检测 / 文档查找脚本）
+- Python 3（可选，仅部分技能附带辅助脚本时需要）
 
 ## 许可证
 
