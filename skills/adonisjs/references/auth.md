@@ -27,7 +27,9 @@ node ace add @adonisjs/bouncer
 
 Use **AuthFinder** — do not hand-roll `findBy` + `hash.verify` (timing attacks).
 
-Official auth pages often show `compose(BaseModel, AuthFinder)`. For **v7 schema-codegen** apps, compose the same mixin with generated `UserSchema` instead of re-declaring `@column`s:
+**SSOT samples in auth docs** often use `compose(BaseModel, AuthFinder)` with columns on the model.
+
+For **v7 schema-codegen** apps (columns on generated `UserSchema`), the practical adaptation is to compose AuthFinder with `UserSchema` instead of re-declaring columns — this is a **Skill synthesis** for the schema-codegen path, not a verbatim docs block. Prefer `--fetch guides/auth/verifying-user-credentials` if unsure.
 
 ```ts
 import { compose } from '@adonisjs/core/helpers'

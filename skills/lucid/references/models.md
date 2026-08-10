@@ -52,20 +52,28 @@ static active = scope((query) => query.where('active', true))
 
 Recommended path: AdonisJS `BaseTransformer` (see also Adonis transformers guide). Lucid-specific patterns:
 
+Relation names must match the model (`user` in the Skill vertical — official Lucid serializing docs may use `author` as an illustration).
+
 ```ts
 import { BaseTransformer } from '@adonisjs/core/transformers'
+import type { HttpContext } from '@adonisjs/core/http'
+import type Post from '#models/post'
+import UserTransformer from '#transformers/user_transformer'
 
-export default class PostTransformer extends BaseTransformer {
+export default class PostTransformer extends BaseTransformer<Post> {
   toObject() {
     return {
       ...this.pick(this.resource, ['id', 'title', 'createdAt']),
-      author: UserTransformer.transform(this.whenLoaded(this.resource.author)),
+      user: UserTransformer.transform(this.whenLoaded(this.resource.user)),
     }
   }
 }
 
-// HTTP JSON
-return serialize(PostTransformer.transform(posts))
+// HTTP JSON (serialize from HttpContext helpers — see Adonis transformers / Lucid serializing docs)
+async index({ serialize }: HttpContext) {
+  const posts = await Post.query().preload('user')
+  return serialize(PostTransformer.transform(posts))
+}
 
 // Paginate
 const page = await Post.query().orderBy('id', 'desc').paginate(1, 20)

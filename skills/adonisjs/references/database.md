@@ -19,7 +19,9 @@ node ace db:seed
 
 Config: `config/database.ts`.
 
-## Preferred model workflow (current tutorials)
+## Preferred model workflow (schema-codegen)
+
+Current AdonisJS docs/tutorials document migrations → generated `database/schema.ts` → models extend `*Schema`. Prefer that for new apps (tutorial tracks teach it; production Skills should still keep writes out of fat controllers — see Controllers DI / services).
 
 1. Define columns in **migrations** (`up` / `down`).
 2. Run migrations → auto-generate `database/schema.ts` (`PostSchema`, …). Use **generated** names; do not hardcode `Post` vs `Posts` guesses.

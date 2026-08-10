@@ -73,8 +73,9 @@ python3 scripts/detect_version.py
 | Ace CLI / REPL | [ace-cli.md](references/ace-cli.md) | `/guides/ace/*` |
 | Japa tests | [testing.md](references/testing.md) | `/guides/testing/*` |
 | API / helpers reference | [reference.md](references/reference.md) | `/reference/*` |
-| Hands-on / CRUD vertical | [tutorial.md](references/tutorial.md), [examples/crud-resource.md](examples/crud-resource.md) | `/tutorial/*` |
-| Full URL catalog | [docs-index.md](references/docs-index.md) | `llms.txt` |
+| Production CRUD layering (Controller + Service) | [examples/crud-resource.md](examples/crud-resource.md), [concepts.md](references/concepts.md) | `/guides/basics/controllers` (DI), `/guides/concepts/dependency-injection`, Ace `make:service` |
+| Tutorial get-started only | [tutorial.md](references/tutorial.md) | `/tutorial/*` (teaching stubs — not production defaults) |
+| Packages / Ace add | [packages-map.md](references/packages-map.md) | package READMEs / dig deeper guides |
 | Avoid outdated APIs | [anti-patterns.md](references/anti-patterns.md) | — |
 
 Official pages also expose Markdown: append `.md` to any docs URL.
@@ -82,13 +83,15 @@ Official pages also expose Markdown: append `.md` to any docs URL.
 ## Hard conventions (distilled)
 
 1. Prefer controllers + `#generated/controllers` over fat route closures; keep HMR server on when scaffolding.
-2. Validate at controller with Vine (`request.validateUsing`); then trust the payload.
-3. Auth ≠ authorization: guards authenticate; **Bouncer** authorizes (`authorize` on server always).
-4. Lucid: columns in **migrations**; models extend generated `*Schema`; add relations on the model; `preload` before reading relations. Do not hand-edit `database/schema.ts`.
-5. URLs: `urlFor` — **not** `router.makeUrl` / deprecated Edge `route`.
-6. Inertia: transformers for props; permission flags via `allows` → `can.*`; **never** import policies into React.
-7. Pick stack early (Hypermedia / Inertia / API); same backend, different returns — see [stacks.md](references/stacks.md).
-8. Deep Lucid/Queues APIs: integration only here → `--fetch` official guide (Queues package is **experimental** — pin version).
+2. **Business logic in services**: Prefer `node ace make:service …` + `@inject()` when Controllers DI / Ace `make:service` docs apply. Do **not** treat tutorial fat-controller stubs as production defaults; do **not** `new XxxService()`.  
+   Note: some official Controllers DI samples still call `Model.create` inside a controller while injecting a helper service — **this Skill’s default** still keeps domain writes in the service (see `examples/crud-resource.md` + `example-ssot.md`). When `--fetch` conflicts, follow Skill hard conventions + example SSOT for app code.
+3. Validate at controller with Vine (`request.validateUsing`); then trust the payload and pass it to the service.
+4. Auth ≠ authorization: guards authenticate; **Bouncer** authorizes (`authorize` on server always).
+5. Lucid: columns in **migrations**; models extend generated `*Schema`; add relations on the model; `preload` before reading relations. Do not hand-edit `database/schema.ts`.
+6. URLs: `urlFor` — **not** `router.makeUrl` / deprecated Edge `route`.
+7. Inertia/API: transformers for props/JSON; permission flags via `allows` → `can.*`; **never** import policies into React; do not return raw ORM models as the default public shape.
+8. Pick stack early (Hypermedia / Inertia / API); same backend, different returns — see [stacks.md](references/stacks.md).
+9. Deep Lucid/Queues APIs: integration only here → `--fetch` official guide (Queues package is **experimental** — pin version).
 
 ## v7 conventions (quick)
 
@@ -97,6 +100,7 @@ npm create adonisjs@latest my-app          # kits: hypermedia | react | vue | ap
 node ace serve --hmr                       # API kit: npm run dev from monorepo root
 node ace list:routes
 node ace make:controller posts
+node ace make:service post
 node ace make:validator post
 node ace make:model post -m
 node ace test
@@ -111,18 +115,26 @@ router.resource('posts', controllers.Posts)
 ```
 
 ```ts
+import { inject } from '@adonisjs/core'
 import type { HttpContext } from '@adonisjs/core/http'
 import { createPostValidator } from '#validators/post'
+import PostService from '#services/post_service'
 
+@inject()
 export default class PostsController {
-  async store({ request, response }: HttpContext) {
+  constructor(protected posts: PostService) {}
+
+  async store({ request, response, auth }: HttpContext) {
     const payload = await request.validateUsing(createPostValidator)
+    await this.posts.createForUser(auth.getUserOrFail(), payload)
     return response.redirect().toRoute('posts.index')
   }
 }
 ```
 
-- Subpaths: `#controllers/*`, `#models/*`, `#validators/*`, `#generated/*`, `#transformers/*`
+SSOT: Controllers DI + `make:service` — full vertical in [examples/crud-resource.md](examples/crud-resource.md).
+
+- Subpaths: `#controllers/*`, `#services/*`, `#models/*`, `#validators/*`, `#generated/*`, `#transformers/*`
 - Validation errors: global exception handler negotiates HTML / Inertia / JSON; after v7 use `inputErrorsBag` not flash `errors`
 
 ## Anti-goals

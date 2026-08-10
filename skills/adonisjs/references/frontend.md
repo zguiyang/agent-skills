@@ -9,12 +9,22 @@ EdgeJS · Inertia · Transformers · Tuyau API client · TanStack Query · Vite
 
 ## Same controller, three returns
 
+Prefer the same service/query result; branch only on presentation:
+
 ```ts
-return view.render('posts/index', { posts })           // Hypermedia
-return inertia.render('posts/index', { posts: ... }) // Inertia
-return response.json(...)                              // API
+// Hypermedia
+return view.render('posts/index', { posts })
+
+// Inertia — transform first (do not pass raw Lucid models as default props)
+return inertia.render('posts/index', {
+  posts: PostTransformer.transform(posts),
+})
+
+// API — transformer / serialize (not raw models as the default public shape)
+return serialize(PostTransformer.transform(posts))
 ```
 
+Teaching-only shortcut (avoid as production default): `inertia.render('posts/index', { posts })` with raw models.
 ## Transformers (Inertia / API)
 
 ```bash

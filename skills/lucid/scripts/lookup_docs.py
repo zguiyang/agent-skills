@@ -20,6 +20,8 @@ URLS_PATH = ROOT / "assets" / "doc-urls.txt"
 REFS = ROOT / "references"
 
 # --- skill-specific config (edit when copying into a skill) ---
+# DOCS_BASE: origin only. Slugs like docs/introduction → {DOCS_BASE}/docs/introduction.md
+# --fetch tries .md, then jina, then HTML. Use --probe to sample host support.
 DOCS_BASE = os.environ.get("SKILL_DOCS_BASE", "https://lucid.adonisjs.com")
 DOCS_LABEL = os.environ.get("SKILL_DOCS_LABEL", "Lucid docs")
 USER_AGENT = "knowledge-to-skill-lookup/1.0"
@@ -175,13 +177,61 @@ def fetch_url(url: str, timeout: int = 45) -> str:
     raise RuntimeError(f"Failed to fetch {url}; tried={errors}")
 
 
+def probe_md(sample: int = 3, timeout: int = 20) -> dict:
+    """Check whether index .md URLs respond with usable text (HEAD/GET short)."""
+    items = load_index()[: max(1, sample)]
+    results = []
+    for item in items:
+        url = to_md_url(str(item.get("url", "")))
+        entry = {"url": url, "ok": False, "status": None, "error": None, "via": None}
+        for target, via in ((url, "md"), (f"https://r.jina.ai/{url}", "jina")):
+            try:
+                req = urllib.request.Request(target, headers={"User-Agent": USER_AGENT})
+                with urllib.request.urlopen(req, timeout=timeout) as resp:
+                    raw = resp.read(800).decode("utf-8", errors="replace")
+                    entry["status"] = getattr(resp, "status", 200)
+                if len(raw.strip()) > 80:
+                    entry["ok"] = True
+                    entry["via"] = via
+                    break
+            except Exception as exc:  # noqa: BLE001
+                entry["error"] = str(exc)
+        results.append(entry)
+    ok_n = sum(1 for r in results if r["ok"])
+    return {
+        "docs_base": DOCS_BASE,
+        "sampled": len(results),
+        "ok": ok_n,
+        "md_direct_ok": sum(1 for r in results if r.get("via") == "md"),
+        "note": (
+            "Prefer local references + corpus; --fetch uses md then jina then HTML."
+            if ok_n < len(results)
+            else "Sampled .md (or jina) fetches look usable."
+        ),
+        "results": results,
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=f"Look up {DOCS_LABEL}")
-    parser.add_argument("query", help="topic keywords, slug, or full docs URL")
+    parser.add_argument("query", nargs="?", help="topic keywords, slug, or full docs URL")
     parser.add_argument("--fetch", action="store_true", help="download latest official Markdown")
+    parser.add_argument(
+        "--probe",
+        action="store_true",
+        help="sample whether index .md URLs fetch (no topic query required)",
+    )
+    parser.add_argument("--probe-sample", type=int, default=3)
     parser.add_argument("--limit", type=int, default=8)
     parser.add_argument("--max-chars", type=int, default=6000)
     args = parser.parse_args()
+
+    if args.probe:
+        print(json.dumps(probe_md(sample=args.probe_sample), indent=2))
+        return 0
+
+    if not args.query:
+        parser.error("query is required unless --probe")
 
     hits = resolve(args.query, limit=args.limit)
     if not hits:
@@ -208,9 +258,15 @@ def main() -> int:
             print(text)
         except Exception as exc:  # noqa: BLE001
             print(f"Live fetch failed: {exc}", file=sys.stderr)
+            print(
+                "Note: host may not serve raw .md; rely on local references "
+                "or re-run after network/jina is available.",
+                file=sys.stderr,
+            )
             return 1
     else:
-        print("\nTip: re-run with --fetch to pull the latest official .md page.")
+        print("\nTip: re-run with --fetch to pull the latest official page.")
+        print("     Use --probe to sample whether .md URLs work for this docs host.")
     return 0
 
 

@@ -5,6 +5,7 @@ Lookup: `python3 scripts/lookup_docs.py --fetch guides/ace/introduction`
 ```bash
 node ace list:routes
 node ace make:controller posts
+node ace make:service post          # extract app business logic → app/services
 node ace make:validator post
 node ace make:model Post -m
 node ace make:middleware …

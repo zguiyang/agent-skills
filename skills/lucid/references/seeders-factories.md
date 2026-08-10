@@ -23,9 +23,18 @@ node ace make:factory Post
 
 ```ts
 import { Factory } from '@adonisjs/lucid/factories'
+import Post from '#models/post'
+import { UserFactory } from '#database/factories/user_factory'
+
 export const PostFactory = Factory.define(Post, ({ faker }) => ({
   title: faker.lorem.sentence(),
-})).build()
+  status: 'draft',
+}))
+  .relation('user', () => UserFactory)
+  .build()
+
+// Satisfy required FKs when creating a child:
+await PostFactory.with('user').create()
 ```
 
 | Mode | Behavior |

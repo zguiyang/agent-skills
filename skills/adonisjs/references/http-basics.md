@@ -23,10 +23,13 @@ router.group(() => {
 
 ```bash
 node ace make:controller posts
+node ace make:service post
 node ace list:routes
 ```
 
 Keep `node ace serve --hmr` running so `#generated/controllers` regenerates.
+
+Controllers: validate / authorize / call **injected** services / return — see [concepts.md](concepts.md) and Controllers DI. Do not elevate tutorial fat-controller stubs to production.
 
 ## Middleware stacks
 
