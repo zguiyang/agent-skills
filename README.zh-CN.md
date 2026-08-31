@@ -29,6 +29,7 @@
 | --- | --- | --- |
 | **adonisjs** | AdonisJS **v7** 开发：Controller + 注入式 Service、Vine 校验、Auth/Bouncer、Ace CLI、Starter Kit、v6→v7 反模式，以及在线文档查找。 | [`skills/adonisjs/`](skills/adonisjs/) |
 | **lucid** | AdonisJS **Lucid** SQL/ORM：模型、迁移、关联、查询构建器、Seeder/Factory、Schema 生成。优先于臆造 Prisma/Eloquent 模式。 | [`skills/lucid/`](skills/lucid/) |
+| **codebase-guardrails** | 跨项目 AI 行为护栏：先读项目规则、基于证据行动、最小正确修改、边界处 Stop & Ask、完成前验证。 | [`skills/codebase-guardrails/`](skills/codebase-guardrails/) |
 
 ## 安装
 
@@ -52,11 +53,13 @@ npx skills add zguiyang/agent-skills --skill lucid
 mkdir -p .cursor/skills
 cp -R skills/adonisjs .cursor/skills/adonisjs
 cp -R skills/lucid .cursor/skills/lucid
+cp -R skills/codebase-guardrails .cursor/skills/codebase-guardrails
 
 # Cursor — 用户级
 mkdir -p ~/.cursor/skills
 cp -R skills/adonisjs ~/.cursor/skills/adonisjs
 cp -R skills/lucid ~/.cursor/skills/lucid
+cp -R skills/codebase-guardrails ~/.cursor/skills/codebase-guardrails
 ```
 
 ## 工作原理

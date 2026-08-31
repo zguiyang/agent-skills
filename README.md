@@ -29,6 +29,7 @@ Current skills (more will be added from future work scenarios):
 | --- | --- | --- |
 | **adonisjs** | AdonisJS **v7** development: Controllers + injected Services, Vine validation, Auth/Bouncer, Ace CLI, stack kits, v6→v7 anti-patterns, and live docs lookup. | [`skills/adonisjs/`](skills/adonisjs/) |
 | **lucid** | AdonisJS **Lucid** SQL/ORM: models, migrations, relationships, query builders, seeders/factories, schema generation. Prefer over inventing Prisma/Eloquent patterns. | [`skills/lucid/`](skills/lucid/) |
+| **codebase-guardrails** | Cross-project AI behavior guardrails: read project rules first, act on evidence, minimum correct changes, Stop & Ask at boundaries, verify before claiming done. | [`skills/codebase-guardrails/`](skills/codebase-guardrails/) |
 
 ## Installation
 
@@ -52,11 +53,13 @@ npx skills add zguiyang/agent-skills --skill lucid
 mkdir -p .cursor/skills
 cp -R skills/adonisjs .cursor/skills/adonisjs
 cp -R skills/lucid .cursor/skills/lucid
+cp -R skills/codebase-guardrails .cursor/skills/codebase-guardrails
 
 # Cursor — user-level
 mkdir -p ~/.cursor/skills
 cp -R skills/adonisjs ~/.cursor/skills/adonisjs
 cp -R skills/lucid ~/.cursor/skills/lucid
+cp -R skills/codebase-guardrails ~/.cursor/skills/codebase-guardrails
 ```
 
 ## How it works
