@@ -8,9 +8,10 @@ description: >-
   architecture changes, resolving rule-vs-code conflicts, or when the user wants
   cross-project guardrails against scope drift, assumption drift, and unverified
   completion claims.
-short_description: Cross-project AI behavior guardrails for working in any codebase.
-version: 1
-updated: 2026-08-31T00:00:00Z
+metadata:
+  short-description: Cross-project AI behavior guardrails for working in any codebase.
+  version: "1"
+  updated: "2026-09-05"
 ---
 
 # Codebase Guardrails
