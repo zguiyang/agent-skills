@@ -30,7 +30,7 @@
 | **adonisjs** | AdonisJS **v7** 开发：Controller + 注入式 Service、Vine 校验、Auth/Bouncer、Ace CLI、Starter Kit、v6→v7 反模式，以及在线文档查找。 | [`skills/adonisjs/`](skills/adonisjs/) |
 | **lucid** | AdonisJS **Lucid** SQL/ORM：模型、迁移、关联、查询构建器、Seeder/Factory、Schema 生成。优先于臆造 Prisma/Eloquent 模式。 | [`skills/lucid/`](skills/lucid/) |
 | **codebase-guardrails** | 跨项目 AI 行为护栏：先读项目规则、基于证据行动、最小正确修改、边界处 Stop & Ask、完成前验证。 | [`skills/codebase-guardrails/`](skills/codebase-guardrails/) |
-| **repository-structure** | 以真实所有权与使用方证据安全调整目录和模块，避免预防性抽象与重复事实来源。 | [`skills/repository-structure/`](skills/repository-structure/) |
+| **repository-structure** | 按所有权、变更边界与真实使用方放置和演进代码；避免巨型单元、预防性抽象与重复事实来源。 | [`skills/repository-structure/`](skills/repository-structure/) |
 | **test-database-workflow** | 为集成和功能测试安全使用明确隔离的测试数据库。 | [`skills/test-database-workflow/`](skills/test-database-workflow/) |
 | **infrastructure-operations** | 从配置优先地诊断部署、容器、环境变量与运行时状态问题。 | [`skills/infrastructure-operations/`](skills/infrastructure-operations/) |
 

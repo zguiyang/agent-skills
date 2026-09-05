@@ -74,7 +74,10 @@ Full model: [decision-priority.md](references/decision-priority.md).
 
 **P7 Verify & Report (Hard)** — Discover and run the project's own verification commands. Report the actual result. Never claim a check that was not run.
 
-**P8 Simplify by Default (Heuristic)** — Prefer the simple solution. Abstraction must have 2+ consumers; no preventive abstraction.
+**P8 Simplify by Default (Heuristic)** — Prefer the simple solution; do not add
+preventive abstraction. For a decision about code ownership, sharing, splitting,
+or placement, follow the project's structure rule or a dedicated structure Skill
+when one is available.
 
 ## Workflow
 

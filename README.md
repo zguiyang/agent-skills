@@ -30,7 +30,7 @@ Current skills (more will be added from future work scenarios):
 | **adonisjs** | AdonisJS **v7** development: Controllers + injected Services, Vine validation, Auth/Bouncer, Ace CLI, stack kits, v6→v7 anti-patterns, and live docs lookup. | [`skills/adonisjs/`](skills/adonisjs/) |
 | **lucid** | AdonisJS **Lucid** SQL/ORM: models, migrations, relationships, query builders, seeders/factories, schema generation. Prefer over inventing Prisma/Eloquent patterns. | [`skills/lucid/`](skills/lucid/) |
 | **codebase-guardrails** | Cross-project AI behavior guardrails: read project rules first, act on evidence, minimum correct changes, Stop & Ask at boundaries, verify before claiming done. | [`skills/codebase-guardrails/`](skills/codebase-guardrails/) |
-| **repository-structure** | Make safe structural changes from real ownership and consumer evidence; avoid speculative abstractions and parallel sources of truth. | [`skills/repository-structure/`](skills/repository-structure/) |
+| **repository-structure** | Place and evolve code by ownership, change boundaries, and real consumers; avoid overloaded units, speculative abstractions, and parallel sources of truth. | [`skills/repository-structure/`](skills/repository-structure/) |
 | **test-database-workflow** | Safely use an explicitly isolated test database for integration and functional tests. | [`skills/test-database-workflow/`](skills/test-database-workflow/) |
 | **infrastructure-operations** | Diagnose deployment, container, environment, and runtime-state questions from configuration first. | [`skills/infrastructure-operations/`](skills/infrastructure-operations/) |
 
