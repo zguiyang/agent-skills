@@ -33,6 +33,7 @@
 | **repository-structure** | 按所有权、变更边界与真实使用方放置和演进代码；避免巨型单元、预防性抽象与重复事实来源。 | [`skills/repository-structure/`](skills/repository-structure/) |
 | **test-database-workflow** | 为集成和功能测试安全使用明确隔离的测试数据库。 | [`skills/test-database-workflow/`](skills/test-database-workflow/) |
 | **infrastructure-operations** | 从配置优先地诊断部署、容器、环境变量与运行时状态问题。 | [`skills/infrastructure-operations/`](skills/infrastructure-operations/) |
+| **cursor-delegate** | 让 Codex 或其他 Agent 通过本机 Shell，将原子化的实现、调研或修复任务委派给用户本机的 Cursor CLI；默认使用当前工作目录，动态发现当前 CLI 接口，并由调用方 Agent 负责设计、授权与最终验收。 | [`skills/cursor-delegate/`](skills/cursor-delegate/) |
 
 ## 安装
 

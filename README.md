@@ -33,6 +33,7 @@ Current skills (more will be added from future work scenarios):
 | **repository-structure** | Place and evolve code by ownership, change boundaries, and real consumers; avoid overloaded units, speculative abstractions, and parallel sources of truth. | [`skills/repository-structure/`](skills/repository-structure/) |
 | **test-database-workflow** | Safely use an explicitly isolated test database for integration and functional tests. | [`skills/test-database-workflow/`](skills/test-database-workflow/) |
 | **infrastructure-operations** | Diagnose deployment, container, environment, and runtime-state questions from configuration first. | [`skills/infrastructure-operations/`](skills/infrastructure-operations/) |
+| **cursor-delegate** | Delegate atomic implementation or read-only tasks from Codex or another Agent to the Cursor CLI running on the user's machine. Uses the current local working directory by default, discovers the installed CLI's current interface, and leaves design, authorization, and final acceptance to the calling Agent. | [`skills/cursor-delegate/`](skills/cursor-delegate/) |
 
 ## Installation
 
