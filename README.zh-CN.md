@@ -33,7 +33,7 @@
 | **repository-structure** | 按所有权、变更边界与真实使用方放置和演进代码；避免巨型单元、预防性抽象与重复事实来源。 | [`skills/repository-structure/`](skills/repository-structure/) |
 | **test-database-workflow** | 为集成和功能测试安全使用明确隔离的测试数据库。 | [`skills/test-database-workflow/`](skills/test-database-workflow/) |
 | **infrastructure-operations** | 从配置优先地诊断部署、容器、环境变量与运行时状态问题。 | [`skills/infrastructure-operations/`](skills/infrastructure-operations/) |
-| **cursor-delegate** | 让 Codex 或其他 Agent 通过本机 Shell，将原子化的实现、调研或修复任务委派给用户本机的 Cursor CLI；默认使用当前工作目录，动态发现当前 CLI 接口，并由调用方 Agent 负责设计、授权与最终验收。 | [`skills/cursor-delegate/`](skills/cursor-delegate/) |
+| **cursor-delegate** | 当范围和方案明确、结果可验证且执行工作达到非琐碎（non-trivial）程度时，优先让 Codex 或其他 Agent 通过本机 Shell 将确定性执行阶段委派给用户本机的 Cursor CLI，即使用户没有要求使用 Cursor；默认使用当前工作目录，动态发现当前 CLI 接口，并由调用方 Agent 保留推理、决策、授权与最终验收。 | [`skills/cursor-delegate/`](skills/cursor-delegate/) |
 
 ## 安装
 
@@ -58,12 +58,14 @@ mkdir -p .cursor/skills
 cp -R skills/adonisjs .cursor/skills/adonisjs
 cp -R skills/lucid .cursor/skills/lucid
 cp -R skills/codebase-guardrails .cursor/skills/codebase-guardrails
+cp -R skills/cursor-delegate .cursor/skills/cursor-delegate
 
 # Cursor — 用户级
 mkdir -p ~/.cursor/skills
 cp -R skills/adonisjs ~/.cursor/skills/adonisjs
 cp -R skills/lucid ~/.cursor/skills/lucid
 cp -R skills/codebase-guardrails ~/.cursor/skills/codebase-guardrails
+cp -R skills/cursor-delegate ~/.cursor/skills/cursor-delegate
 ```
 
 ## 工作原理
