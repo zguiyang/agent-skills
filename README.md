@@ -33,7 +33,7 @@ Current skills (more will be added from future work scenarios):
 | **repository-structure** | Place and evolve code by ownership, change boundaries, and real consumers; avoid overloaded units, speculative abstractions, and parallel sources of truth. | [`skills/repository-structure/`](skills/repository-structure/) |
 | **test-database-workflow** | Safely use an explicitly isolated test database for integration and functional tests. | [`skills/test-database-workflow/`](skills/test-database-workflow/) |
 | **infrastructure-operations** | Diagnose deployment, container, environment, and runtime-state questions from configuration first. | [`skills/infrastructure-operations/`](skills/infrastructure-operations/) |
-| **cursor-delegate** | Prefer delegating non-trivial deterministic execution work from Codex or another Agent to the Cursor CLI on the user's machine when the scope and approach are clear and the work is verifiable, even when the user does not request Cursor. Uses the current local working directory by default, discovers the installed CLI's current interface, and leaves reasoning, decisions, authorization, and final verification to the calling Agent. | [`skills/cursor-delegate/`](skills/cursor-delegate/) |
+| **cursor-delegate** | Prefer delegating bounded, non-trivial execution to the user's local Cursor CLI. Uses this user's verified minimal invocation where applicable, checks CLI help only when needed, and leaves scope, authorization, and final verification with the calling Agent. | [`skills/cursor-delegate/`](skills/cursor-delegate/) |
 
 ## Installation
 
