@@ -51,6 +51,20 @@ npx skills add zguiyang/agent-skills --all
 npx skills add zguiyang/agent-skills --skill lucid
 ```
 
+### 为 Codex 安装 `pi-delegate`
+
+在希望 Codex 使用此 Skill 的项目根目录执行：
+
+```bash
+npx skills add zguiyang/agent-skills --skill pi-delegate -a codex -y
+```
+
+此命令仅在项目级安装 `pi-delegate`，且只安装给 Codex。`-y` 会跳过确认提示。当前 `skills` CLI 会将 Codex 项目级 Skill 安装到 `.agents/skills/`。若要交互式确认选项，可省略 `-y`。
+
+前置条件：安装 Pi Coding Agent，并确保可以通过 `pi` 命令调用；至少配置一个可用的 Pi Provider 和 Model；并安装 Node.js 以运行 `.mjs` runner。Provider 和 Model 可按任务选择（例如可以使用 DeepSeek）。Runner 只使用 Node.js 内置模块；不需要 `jq`、额外的 npm runtime dependency、Pi Spawner、Herdsman 或 subagent 插件。
+
+`pi-delegate` 让 Codex 或其他 Supervisor 可以将任务委派给本机 Pi Worker，指定 Provider / Model / thinking，继续稳定的 Session，实时查看结构化 streaming 进度，在写任务中使用隔离 Worktree，并在 Review 后由同一 Worker 继续。详细说明见 [Skill 文档](skills/pi-delegate/SKILL.md) 和 [Worker 契约](skills/pi-delegate/references/worker-contract.md)。
+
 ### 手动复制
 
 ```bash

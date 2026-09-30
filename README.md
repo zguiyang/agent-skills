@@ -51,6 +51,20 @@ npx skills add zguiyang/agent-skills --all
 npx skills add zguiyang/agent-skills --skill lucid
 ```
 
+### Install `pi-delegate` for Codex
+
+Run this from the root of the project where Codex should use the skill:
+
+```bash
+npx skills add zguiyang/agent-skills --skill pi-delegate -a codex -y
+```
+
+This installs only `pi-delegate`, only for Codex, at project scope. `-y` skips the confirmation prompt. The current `skills` CLI installs project skills for Codex under `.agents/skills/`. To review the choices interactively, omit `-y`.
+
+Prerequisites: install the Pi Coding Agent and make it available as `pi`; configure at least one usable Pi provider and model; and have Node.js available to run the `.mjs` runner. Provider and model are selected for the task (DeepSeek is one possible example). The runner uses Node.js built-ins: `jq`, extra npm runtime dependencies, and Pi Spawner, Herdsman, or subagent plugins are not required.
+
+`pi-delegate` lets Codex or another supervisor delegate work to a local Pi worker, choose its provider/model/thinking, continue a stable session, follow structured streaming progress, use an isolated worktree for writing tasks, and continue with the same worker after review. See the [Skill instructions](skills/pi-delegate/SKILL.md) and [worker contract](skills/pi-delegate/references/worker-contract.md) for details.
+
 ### Manual copy
 
 ```bash
