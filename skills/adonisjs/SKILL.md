@@ -1,10 +1,9 @@
 ---
 name: adonisjs
 description: >-
-  Develop AdonisJS v7 apps using official docs conventions only. Use when working
-  with AdonisJS, Adonis, Lucid ORM, VineJS, Edge, Inertia on Adonis, Ace CLI, Japa
-  tests, controllers, routes, middleware, auth, Bouncer, queues, or upgrading
-  Adonis v6 to v7. Prevents outdated v5/v6 APIs and invented helpers.
+  Develop AdonisJS v7 applications using official framework conventions. Use for
+  framework features and v6-to-v7 upgrades; use the Lucid Skill for ORM and
+  database work.
 ---
 
 # AdonisJS (v7)

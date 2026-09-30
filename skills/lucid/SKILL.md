@@ -1,12 +1,9 @@
 ---
 name: lucid
 description: >-
-  AdonisJS Lucid SQL/ORM skill (Knex query builder, Active Record models,
-  migrations, generated schema classes). Use when writing or reviewing Lucid
-  models, migrations, relationships, query builders, seeders, factories, or
-  transactions in an AdonisJS app — or when the user mentions @adonisjs/lucid,
-  BaseSchema, schema:generate, preload, or database/schema.ts. Prefer this over
-  inventing Prisma/Eloquent/TypeORM patterns.
+  Work with AdonisJS Lucid SQL/ORM models, migrations, relationships, query
+  builders, seeders, factories, transactions, and schema generation. Use when
+  developing or reviewing database code that uses @adonisjs/lucid.
 ---
 
 # Lucid (AdonisJS SQL)

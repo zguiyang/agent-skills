@@ -1,13 +1,9 @@
 ---
 name: codebase-guardrails
 description: >-
-  Constrains AI behavior when working in any codebase: read project rules first,
-  act on evidence, reuse existing infrastructure, make minimum correct changes,
-  stop and ask at boundaries, and verify before claiming done. Use when modifying
-  code in unfamiliar or existing repositories, evaluating new dependencies or
-  architecture changes, resolving rule-vs-code conflicts, or when the user wants
-  cross-project guardrails against scope drift, assumption drift, and unverified
-  completion claims.
+  Apply evidence-led, scope-bounded guardrails to work in unfamiliar or existing
+  codebases. Use when modifying code, evaluating dependencies or architecture, or
+  resolving conflicts between project rules and implementation.
 metadata:
   short-description: Cross-project AI behavior guardrails for working in any codebase.
   version: "1"
