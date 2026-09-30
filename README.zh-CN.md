@@ -34,6 +34,7 @@
 | **test-database-workflow** | 为集成和功能测试安全使用明确隔离的测试数据库。 | [`skills/test-database-workflow/`](skills/test-database-workflow/) |
 | **infrastructure-operations** | 从配置优先地诊断部署、容器、环境变量与运行时状态问题。 | [`skills/infrastructure-operations/`](skills/infrastructure-operations/) |
 | **cursor-delegate** | 当任务边界明确且执行量非琐碎时，优先委派给用户本机的 Cursor CLI；适用时优先使用用户验证过的最简调用，仅在需要时检查 CLI 帮助，并由调用方 Agent 保留范围、授权和最终验收。 | [`skills/cursor-delegate/`](skills/cursor-delegate/) |
+| **pi-delegate** | 将一个边界明确的编码或调查任务委派给本机 Pi Worker，支持指定 Provider / Model / thinking、Session continuation、结构化进度和安全任务边界。 | [`skills/pi-delegate/`](skills/pi-delegate/) |
 
 ## 安装
 
@@ -59,6 +60,7 @@ cp -R skills/adonisjs .cursor/skills/adonisjs
 cp -R skills/lucid .cursor/skills/lucid
 cp -R skills/codebase-guardrails .cursor/skills/codebase-guardrails
 cp -R skills/cursor-delegate .cursor/skills/cursor-delegate
+cp -R skills/pi-delegate .cursor/skills/pi-delegate
 
 # Cursor — 用户级
 mkdir -p ~/.cursor/skills
@@ -66,6 +68,7 @@ cp -R skills/adonisjs ~/.cursor/skills/adonisjs
 cp -R skills/lucid ~/.cursor/skills/lucid
 cp -R skills/codebase-guardrails ~/.cursor/skills/codebase-guardrails
 cp -R skills/cursor-delegate ~/.cursor/skills/cursor-delegate
+cp -R skills/pi-delegate ~/.cursor/skills/pi-delegate
 ```
 
 ## 工作原理

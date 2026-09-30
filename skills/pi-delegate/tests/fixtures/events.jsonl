@@ -1,0 +1,6 @@
+{"type":"agent_start","sessionId":"task-fixture"}
+{"type":"message_update","assistantMessageEvent":{"type":"text_delta","delta":"准备修改 `src/a.ts`\n"}}
+{"type":"tool_execution_start","toolName":"grep","args":{"pattern":"needle"}}
+{"type":"tool_execution_end","isError":false}
+{"type":"message_end","message":{"role":"assistant","content":[{"type":"text","text":"完成。"}],"usage":{"input":12,"output":7,"cacheRead":3,"cacheWrite":1,"cost":{"total":0.004}}}}
+{"type":"agent_end","messages":[{"role":"assistant","content":[{"type":"text","text":"完成。"}],"usage":{"input":12,"output":7,"cacheRead":3,"cacheWrite":1,"cost":{"total":0.004}}}]}

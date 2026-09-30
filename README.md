@@ -34,6 +34,7 @@ Current skills (more will be added from future work scenarios):
 | **test-database-workflow** | Safely use an explicitly isolated test database for integration and functional tests. | [`skills/test-database-workflow/`](skills/test-database-workflow/) |
 | **infrastructure-operations** | Diagnose deployment, container, environment, and runtime-state questions from configuration first. | [`skills/infrastructure-operations/`](skills/infrastructure-operations/) |
 | **cursor-delegate** | Prefer delegating bounded, non-trivial execution to the user's local Cursor CLI. Uses this user's verified minimal invocation where applicable, checks CLI help only when needed, and leaves scope, authorization, and final verification with the calling Agent. | [`skills/cursor-delegate/`](skills/cursor-delegate/) |
+| **pi-delegate** | Delegate one bounded coding or investigation task to a local Pi worker with explicit provider/model/thinking, session continuation, structured progress, and safe task boundaries. | [`skills/pi-delegate/`](skills/pi-delegate/) |
 
 ## Installation
 
@@ -59,6 +60,7 @@ cp -R skills/adonisjs .cursor/skills/adonisjs
 cp -R skills/lucid .cursor/skills/lucid
 cp -R skills/codebase-guardrails .cursor/skills/codebase-guardrails
 cp -R skills/cursor-delegate .cursor/skills/cursor-delegate
+cp -R skills/pi-delegate .cursor/skills/pi-delegate
 
 # Cursor — user-level
 mkdir -p ~/.cursor/skills
@@ -66,6 +68,7 @@ cp -R skills/adonisjs ~/.cursor/skills/adonisjs
 cp -R skills/lucid ~/.cursor/skills/lucid
 cp -R skills/codebase-guardrails ~/.cursor/skills/codebase-guardrails
 cp -R skills/cursor-delegate ~/.cursor/skills/cursor-delegate
+cp -R skills/pi-delegate ~/.cursor/skills/pi-delegate
 ```
 
 ## How it works
