@@ -26,13 +26,13 @@ import {
   runRequest,
   spawnOnce,
   validateRequest,
-} from '../scripts/pi-worker.mjs';
+} from '../../skills/pi-delegate/scripts/pi-worker.mjs';
 
 const fixturePath = fileURLToPath(new URL('./fixtures/events.jsonl', import.meta.url));
 const flashSessionFile = fileURLToPath(new URL('./fixtures/session-flash.jsonl', import.meta.url));
 const proSessionFile = fileURLToPath(new URL('./fixtures/session-pro.jsonl', import.meta.url));
 const unknownSessionFile = fileURLToPath(new URL('./fixtures/session-unknown.jsonl', import.meta.url));
-const cwd = path.resolve(path.dirname(fixturePath), '../..');
+const cwd = path.resolve(path.dirname(fixturePath), '../../..');
 const REPORT_START = '---PI_TASK_REPORT---';
 const REPORT_END = '---END_PI_TASK_REPORT---';
 
@@ -471,7 +471,7 @@ test('a NEEDS_DECISION report becomes a blocked result', async () => {
 });
 
 test('runner stays stateless and never executes Git worktree or cleanup commands', async () => {
-  const source = await readFile(new URL('../scripts/pi-worker.mjs', import.meta.url), 'utf8');
+  const source = await readFile(new URL('../../skills/pi-delegate/scripts/pi-worker.mjs', import.meta.url), 'utf8');
   assert.doesNotMatch(source, /spawn\(\s*['"]git['"]/);
   assert.doesNotMatch(source, /execFile\(\s*['"]git['"]/);
   assert.doesNotMatch(source, /git\s+(?:worktree\s+(?:add|remove)|reset|stash|clean)\s+["'`]/);
