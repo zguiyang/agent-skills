@@ -34,7 +34,7 @@ Current skills (more will be added from future work scenarios):
 | **test-database-workflow** | Safely use an explicitly isolated test database for integration and functional tests. | [`skills/test-database-workflow/`](skills/test-database-workflow/) |
 | **infrastructure-operations** | Diagnose deployment, container, environment, and runtime-state questions from configuration first. | [`skills/infrastructure-operations/`](skills/infrastructure-operations/) |
 | **cursor-delegate** | Prefer delegating bounded, non-trivial execution to the user's local Cursor CLI. Uses this user's verified minimal invocation where applicable, checks CLI help only when needed, and leaves scope, authorization, and final verification with the calling Agent. | [`skills/cursor-delegate/`](skills/cursor-delegate/) |
-| **pi-delegate** | Delegate one bounded coding or investigation task to a local Pi worker with explicit provider/model/thinking, session continuation, structured progress, and safe task boundaries. | [`skills/pi-delegate/`](skills/pi-delegate/) |
+| **pi-delegate** | Delegate one supervisor-defined atomic task to a local Pi worker: structured objective/scope/acceptance contract, direct-or-isolated write policy, DeepSeek Flash default with no automatic Pro escalation, exact-session continuation, and structured JSON results. | [`skills/pi-delegate/`](skills/pi-delegate/) |
 
 ## Installation
 
@@ -61,9 +61,9 @@ npx skills add zguiyang/agent-skills --skill pi-delegate -a codex -y
 
 This installs only `pi-delegate`, only for Codex, at project scope. `-y` skips the confirmation prompt. The current `skills` CLI installs project skills for Codex under `.agents/skills/`. To review the choices interactively, omit `-y`.
 
-Prerequisites: install the Pi Coding Agent and make it available as `pi`; configure at least one usable Pi provider and model; and have Node.js available to run the `.mjs` runner. Provider and model are selected for the task (DeepSeek is one possible example). The runner uses Node.js built-ins: `jq`, extra npm runtime dependencies, and Pi Spawner, Herdsman, or subagent plugins are not required.
+Prerequisites: install the Pi Coding Agent and make it available as `pi`; configure at least one usable Pi provider and model; and have Node.js available to run the `.mjs` runner. The runner resolves an absent provider/model to `deepseek`/`deepseek-flash` and reports the effective values; an explicit Pro or clearly expensive model is not launched without the `allowProModel` authorization signal. The runner uses Node.js built-ins: `jq`, extra npm runtime dependencies, and Pi Spawner, Herdsman, or subagent plugins are not required.
 
-`pi-delegate` lets Codex or another supervisor delegate work to a local Pi worker, choose its provider/model/thinking, continue a stable session, follow structured streaming progress, use an isolated worktree for writing tasks, and continue with the same worker after review. See the [Skill instructions](skills/pi-delegate/SKILL.md) and [worker contract](skills/pi-delegate/references/worker-contract.md) for details.
+`pi-delegate` lets Codex or another Supervisor delegate one atomic task to a local Pi worker. The Supervisor supplies a structured task (objective, cwd, scope, constraints, acceptance criteria); writes additionally declare `writeMode: "direct" | "isolated"` and an `allowedWriteScope`, with direct writes also requiring known workspace state and authorization. Pi must not create or clean worktrees, and it reports out-of-scope findings without changing them. Provider/model default to `deepseek`/`deepseek-flash`, thinking is caller-selectable, and Pro/expensive models require explicit authorization. Continuation uses the original `cwd` plus the exact `sessionFile` and refuses to launch on a session-model mismatch. Results are one JSON object with a structured task report (`summary`, `changedFiles`, `validation`, `remainingIssue`, `decisionNeeded`, `writeScope`, `scopeExceeded`, `outOfScopeFindings`). See the [Skill instructions](skills/pi-delegate/SKILL.md) and [worker contract](skills/pi-delegate/references/worker-contract.md) for details.
 
 ### Manual copy
 

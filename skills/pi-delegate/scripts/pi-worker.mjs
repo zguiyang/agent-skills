@@ -1,15 +1,25 @@
 #!/usr/bin/env node
 import { spawn } from 'node:child_process';
-import { readFile, readdir, stat } from 'node:fs/promises';
-import { delimiter, dirname, extname, isAbsolute, join, resolve } from 'node:path';
+import { open, readFile, readdir, stat } from 'node:fs/promises';
+import { dirname, extname, isAbsolute, join, resolve, win32 } from 'node:path';
 import { homedir } from 'node:os';
 import { TextDecoder } from 'node:util';
 import { pathToFileURL } from 'node:url';
 
 const THINKING_LEVELS = new Set(['off', 'minimal', 'low', 'medium', 'high', 'xhigh', 'max']);
 const PROFILES = new Set(['readonly', 'implementation', 'verification']);
+const WRITE_MODES = new Set(['direct', 'isolated']);
 const READ_TOOLS = 'read,grep,find,ls';
 const VERIFICATION_TOOLS = 'read,grep,find,ls,bash';
+const DEFAULT_PROVIDER = 'deepseek';
+const DEFAULT_MODEL = 'deepseek-flash';
+// Conservative Pro/expensive-tier detection. The runner never upgrades to these on its own.
+const EXPENSIVE_MODEL_PATTERN = /(^|[-_/])(pro|opus|ultra)([-_/]|$)/i;
+const WRITE_INTENT_PATTERN = /\b(implement|add|create|write|edit|modify|refactor|fix|migrate|rename|delete|remove|update|upgrade|apply|patch)\b/i;
+const OBVIOUSLY_BROAD_PATTERN = /\b(entire|whole|all|every)\s+(?:the\s+)?(?:project|repo|repository|codebase|application|system|architecture|module)\b|\b(?:refactor|restructure|optimize|improve)\s+(?:the\s+)?(?:entire|whole|all)\s+(?:project|repo|repository|codebase|architecture)\b|整个(?:项目|仓库|代码库|系统|模块)|全局(?:重构|优化)|整体(?:重构|优化|架构改造)/i;
+const REPORT_START = '---PI_TASK_REPORT---';
+const REPORT_END = '---END_PI_TASK_REPORT---';
+const SESSION_METADATA_BYTES = 256 * 1024;
 
 function writeResult(result) {
   process.stdout.write(`${JSON.stringify(result)}\n`);
@@ -23,17 +33,133 @@ function redactSensitive(value) {
     .replace(/\b(sk-[A-Za-z0-9_-]{12,}|xox[baprs]-[A-Za-z0-9-]{12,}|gh[pousr]_[A-Za-z0-9]{20,})\b/g, '[redacted]');
 }
 
+function emptyReportFields() {
+  return {
+    summary: null,
+    changedFiles: null,
+    validation: null,
+    remainingIssue: null,
+    decisionNeeded: null,
+    writeScope: null,
+    scopeExceeded: null,
+    outOfScopeFindings: [],
+    reportParsed: false,
+  };
+}
+
 function fail(code, message, fields = {}) {
-  return { status: 'failed', requiresHumanAction: true, error: { code, message }, ...fields };
+  return { status: 'failed', requiresHumanAction: true, error: { code, message }, ...emptyReportFields(), ...fields };
+}
+
+function nonEmptyString(value) {
+  return typeof value === 'string' && value.trim() ? value.trim() : null;
+}
+
+function isStringArray(value) {
+  return Array.isArray(value) && value.every((item) => typeof item === 'string');
+}
+
+function isStringOrStringArray(value) {
+  return typeof value === 'string' || isStringArray(value);
+}
+
+function normalizeStringList(value) {
+  if (value === undefined || value === null) return [];
+  if (typeof value === 'string') return value.trim() ? [value.trim()] : [];
+  if (Array.isArray(value)) return value.filter((item) => typeof item === 'string' && item.trim()).map((item) => item.trim());
+  return [];
+}
+
+function resolveModel(request) {
+  const provider = nonEmptyString(request.provider);
+  const model = nonEmptyString(request.model);
+  if (!provider && !model) return { provider: DEFAULT_PROVIDER, model: DEFAULT_MODEL, defaulted: true };
+  if (provider && !model) {
+    if (provider === DEFAULT_PROVIDER) return { provider, model: DEFAULT_MODEL, defaulted: true };
+    return { provider, model: null, defaulted: true, unresolved: `model must be provided explicitly for provider "${provider}"` };
+  }
+  if (!provider && model) {
+    const inferred = model.includes('/') ? model.split('/')[0] : model.startsWith('deepseek') ? DEFAULT_PROVIDER : null;
+    if (!inferred) return { provider: null, model, defaulted: false, unresolved: 'provider must be provided explicitly for a model outside the deepseek namespace' };
+    return { provider: inferred, model: model.includes('/') ? model.slice(model.indexOf('/') + 1) : model, defaulted: true, providerDefaulted: true };
+  }
+  return { provider, model, defaulted: false };
+}
+
+function isExpensiveModel(model) {
+  return typeof model === 'string' && EXPENSIVE_MODEL_PATTERN.test(model);
+}
+
+function looksVague(text) {
+  const value = typeof text === 'string' ? text.trim() : '';
+  if (!value) return true;
+  if (value.length < 12) return true;
+  if (OBVIOUSLY_BROAD_PATTERN.test(value)) return true;
+  if (/^(please\s+)?(fix|do|handle|improve|work on|look into|clean up|update|change|help|refactor|implement|add|make)\s+(it|this|that|stuff|things|the (code|thing|stuff|project|repo|repository)|everything|something)\.?$/i.test(value)) return true;
+  if (/^(please\s+)?(fix|change|update|improve|refactor)\s+(some|the)?\s*(code|stuff|things|bugs?)\.?$/i.test(value)) return true;
+  return false;
+}
+
+function decision(type, reason, extra = {}) {
+  return { type, reason, ...extra };
+}
+
+// Rejects requests that are not supervisor-defined atomic tasks before any Pi process starts.
+function assessAtomicTask(request) {
+  const objective = nonEmptyString(request.objective) ?? nonEmptyString(request.prompt);
+  const structuredV2 = nonEmptyString(request.objective) !== null;
+  if (request.action === 'continue') {
+    if (!objective) return decision('needs_decision', 'A continuation request needs an objective or concrete review instruction.');
+    if (looksVague(objective)) return decision('needs_decision', 'The continuation instruction is too vague/non-atomic.');
+    if (structuredV2 && normalizeStringList(request.scope).length === 0) return decision('needs_decision', 'A non-empty scope is required (files, modules, or areas in play).');
+    if (structuredV2 && !Array.isArray(request.constraints)) return decision('needs_decision', 'constraints must be supplied as an array, even if empty.');
+    if (structuredV2 && normalizeStringList(request.acceptance).length === 0) return decision('needs_decision', 'At least one acceptance criterion is required.');
+  } else {
+    if (!objective) return decision('needs_decision', 'A structured objective is required; a free-form vague request is not accepted.');
+    if (looksVague(objective)) return decision('needs_decision', 'The objective is too vague/non-atomic. State one concrete, bounded outcome.');
+    if (normalizeStringList(request.scope).length === 0) return decision('needs_decision', 'A non-empty scope is required (files, modules, or areas in play).');
+    if (!Array.isArray(request.constraints)) return decision('needs_decision', 'constraints must be supplied as an array, even if empty.');
+    if (normalizeStringList(request.acceptance).length === 0) return decision('needs_decision', 'At least one acceptance criterion is required.');
+  }
+  if (request.writeMode) {
+    if (normalizeStringList(request.allowedWriteScope).length === 0) return decision('needs_decision', 'writeMode requires a non-empty allowedWriteScope.');
+    if (request.writeMode === 'direct') {
+      if (request.workspaceStateKnown !== true) return decision('needs_decision', 'Direct writes require workspaceStateKnown: true from the supervisor.');
+      if (request.writeAuthorization !== true) return decision('needs_decision', 'Direct writes require writeAuthorization: true from the supervisor.');
+    }
+  } else if (request.profile !== 'readonly' && request.workspaceMode !== 'delegated'
+    && (structuredV2 || WRITE_INTENT_PATTERN.test(objective))) {
+    return decision('needs_decision', 'Declare writeMode "direct" or "isolated" with allowedWriteScope, or use profile "readonly" for a pure read.');
+  }
+  return null;
 }
 
 function validateRequest(value) {
   if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error('Request must be a JSON object.');
   if (!['delegate', 'continue'].includes(value.action)) throw new Error('action must be "delegate" or "continue".');
-  for (const key of ['taskId', 'cwd', 'prompt']) {
+  for (const key of ['taskId', 'cwd']) {
     if (typeof value[key] !== 'string' || value[key].trim() === '') throw new Error(`${key} must be a non-empty string.`);
   }
   if (!isAbsolutePath(value.cwd)) throw new Error('cwd must be an absolute path.');
+  if (value.objective !== undefined && (typeof value.objective !== 'string' || value.objective.trim() === '')) {
+    throw new Error('objective must be a non-empty string when provided.');
+  }
+  if (value.prompt !== undefined && (typeof value.prompt !== 'string' || value.prompt.trim() === '')) {
+    throw new Error('prompt must be a non-empty string when provided.');
+  }
+  if (!nonEmptyString(value.objective) && !nonEmptyString(value.prompt)) throw new Error('objective or prompt must be provided.');
+  for (const key of ['scope', 'allowedWriteScope']) {
+    if (value[key] !== undefined && !isStringOrStringArray(value[key])) throw new Error(`${key} must be a string or an array of strings.`);
+  }
+  if (value.constraints !== undefined && !isStringArray(value.constraints)) throw new Error('constraints must be an array of strings.');
+  if (value.acceptance !== undefined && !isStringArray(value.acceptance)) throw new Error('acceptance must be an array of strings.');
+  if (value.writeMode !== undefined && !WRITE_MODES.has(value.writeMode)) throw new Error('writeMode must be "direct" or "isolated".');
+  if (value.writeMode && value.profile === 'readonly') throw new Error('writeMode cannot be combined with profile "readonly".');
+  if (value.writeMode && value.workspaceMode === 'delegated') throw new Error('V2 writeMode uses a supervisor-supplied cwd; workspaceMode "delegated" is not allowed together with writeMode.');
+  for (const key of ['workspaceStateKnown', 'writeAuthorization', 'allowProModel']) {
+    if (value[key] !== undefined && typeof value[key] !== 'boolean') throw new Error(`${key} must be a boolean when provided.`);
+  }
+  if (value.workspaceState !== undefined && typeof value.workspaceState !== 'string') throw new Error('workspaceState must be a string when provided.');
   if (value.sessionId !== undefined && (typeof value.sessionId !== 'string' || value.sessionId.length === 0)) {
     throw new Error('sessionId must be a non-empty string when provided.');
   }
@@ -56,9 +182,6 @@ function validateRequest(value) {
   }
   if (value.action === 'continue' && value.workspaceMode === 'delegated' && !value.sessionFile) {
     throw new Error('sessionFile from the prior delegated result is required to continue the same Pi session across cwd changes.');
-  }
-  if (value.acceptance !== undefined && (!Array.isArray(value.acceptance) || value.acceptance.some((item) => typeof item !== 'string'))) {
-    throw new Error('acceptance must be an array of strings.');
   }
   if (value.timeoutMs !== undefined && (!Number.isFinite(value.timeoutMs) || value.timeoutMs <= 0)) {
     throw new Error('timeoutMs must be a positive finite number.');
@@ -95,16 +218,17 @@ async function findSessionFile(sessionDir, sessionId) {
   return null;
 }
 
-function buildPrompt(request) {
-  const acceptance = request.acceptance?.length
-    ? `\n\nAcceptance criteria:\n${request.acceptance.map((item) => `- ${item}`).join('\n')}`
-    : '';
-  return `${buildWorkspacePolicy(request)}\n\nTask:\n${request.prompt}${acceptance}`;
-}
-
 function buildWorkspacePolicy(request) {
+  const cwd = request.cwd;
+  const allowedWriteScope = normalizeStringList(request.allowedWriteScope);
+  if (request.writeMode === 'direct') {
+    return `Workspace mode: direct write. Work only in the supervisor-supplied cwd (${cwd}); the supervisor declares its workspace state known. Write only within: ${allowedWriteScope.join(', ')}. Do not create, switch, or clean worktrees or checkouts; do not reset, stash, clean, checkout over user state, commit, push, or merge. If a needed change is outside the allowed write scope, do not change it: report it as an out-of-scope finding and return [NEEDS_DECISION]. The Supervisor serializes overlapping writes in this cwd; if concurrency makes safety uncertain, stop and request a decision.`;
+  }
+  if (request.writeMode === 'isolated') {
+    return `Workspace mode: isolated write. The supervisor supplied the isolated worktree (${cwd}) and owns its lifecycle. Write only within: ${allowedWriteScope.join(', ')}. Do not create, switch, or clean worktrees or checkouts; do not reset, stash, clean, checkout over user state, commit, push, or merge. Report any out-of-scope finding without changing it. The Supervisor ensures concurrently running write workers use disjoint worktrees and scopes.`;
+  }
   if (request.workspaceMode === 'existing') {
-    return `Workspace mode: existing. Work only in the supplied cwd (${request.cwd}). Do not create or switch worktrees or checkouts. Do not alter any other workspace.`;
+    return `Workspace mode: existing. Work only in the supplied cwd (${cwd}). Do not create or switch worktrees or checkouts. Do not alter any other workspace.`;
   }
   if (request.action === 'continue') {
     return `Workspace mode: delegated continuation. The supplied cwd (${request.cwd}) must be the actual worktree path reported by the prior turn. Continue in this exact workspace and existing session; do not create or select another worktree. If the prior workspace path was not supplied, stop and return [NEEDS_DECISION].`;
@@ -115,12 +239,53 @@ function buildWorkspacePolicy(request) {
   return `Workspace mode: delegated. The supplied cwd (${request.cwd}) is the target repository root. Before any write, read its AGENTS.md and inspect relevant project Skills/rules for worktree management. If a project worktree Skill/rule exists, follow it to create an isolated worktree and perform every write and test there. If no such safe rule exists, or worktree creation fails, stop and return [NEEDS_DECISION]; do not edit this checkout or invent a fallback. Report the exact worktree path in the final response. Do not reset, stash, clean, overwrite branches, commit, push, or merge.`;
 }
 
+function buildReportInstruction() {
+  return [
+    'Final report format: end your final message with exactly one JSON object between the markers below.',
+    'Use null or [] for anything you did not observe, and never claim file changes or validation you did not perform.',
+    'List any out-of-scope finding in outOfScopeFindings without changing it.',
+    REPORT_START,
+    '{"summary":"...","changedFiles":[],"validation":[],"remainingIssue":null,"decisionNeeded":null,"writeScope":[],"scopeExceeded":false,"outOfScopeFindings":[]}',
+    REPORT_END,
+  ].join('\n');
+}
+
+function buildModelPolicy(request) {
+  const resolved = resolveModel(request);
+  const model = `${resolved.provider ?? 'unknown'}/${resolved.model ?? 'unknown'}`;
+  if (isExpensiveModel(resolved.model)) {
+    return `Model policy: the Supervisor explicitly authorized ${model} for this task. Stay on this exact provider/model; do not switch to another model. If it still cannot complete the bounded task, stop and report a decisionNeeded object with reason, current_model, suggested_model, and why_upgrade_is_needed.`;
+  }
+  return `Model policy: use only the explicitly selected effective model ${model}. Do not switch to a Pro or more expensive model, start another session, or retry on a different model. If this model is insufficient, stop and report a decisionNeeded object with reason, current_model, suggested_model, and why_upgrade_is_needed; wait for the Supervisor's authorization.`;
+}
+
+function buildPrompt(request) {
+  const objective = request.objective ?? request.prompt ?? '';
+  const scope = normalizeStringList(request.scope);
+  const constraints = Array.isArray(request.constraints) ? request.constraints.filter((item) => typeof item === 'string') : [];
+  const acceptance = normalizeStringList(request.acceptance);
+  const lines = [buildModelPolicy(request), '', 'Task:', objective];
+  if (scope.length) lines.push('', 'Scope:', ...scope.map((item) => `- ${item}`));
+  if (constraints.length) lines.push('', 'Constraints:', ...constraints.map((item) => `- ${item}`));
+  if (acceptance.length) lines.push('', 'Acceptance criteria:', ...acceptance.map((item) => `- ${item}`));
+  if (request.prompt && request.objective && request.prompt !== request.objective) {
+    lines.push('', 'Additional context:', request.prompt);
+  }
+  const allowedWriteScope = normalizeStringList(request.allowedWriteScope);
+  if (request.writeMode && allowedWriteScope.length) lines.push('', `Allowed write scope: ${allowedWriteScope.join(', ')}`);
+  lines.push('', buildReportInstruction());
+  return `${buildWorkspacePolicy(request)}\n\n${lines.join('\n')}`;
+}
+
 function buildArgs(request, streaming = true, promptTransport = 'stdin') {
   const args = [];
-  if (request.provider) args.push('--provider', request.provider);
-  if (request.model) args.push('--model', request.model);
+  const resolved = resolveModel(request);
+  if (resolved.provider) args.push('--provider', resolved.provider);
+  if (resolved.model) args.push('--model', resolved.model);
   if (request.thinking) args.push('--thinking', request.thinking);
-  if (request.workspaceMode === 'delegated') args.push('--session-dir', getDelegatedSessionDir(request));
+  if (request.workspaceMode === 'delegated' || (request.action === 'delegate' && nonEmptyString(request.objective))) {
+    args.push('--session-dir', getDelegatedSessionDir(request));
+  }
   if (request.sessionFile) args.push('--session', request.sessionFile);
   else args.push('--session-id', request.sessionId);
   if (request.profile === 'readonly') args.push('--tools', READ_TOOLS);
@@ -227,20 +392,27 @@ function makeProgressHandler(state) {
   };
 }
 
-async function resolveWindowsNpmShim(executable, args) {
-  if (process.platform !== 'win32') return { executable, args };
+async function resolveWindowsNpmShim(executable, args, options = {}) {
+  const platform = options.platform ?? process.platform;
+  const env = options.env ?? process.env;
+  const readFileImpl = options.readFileImpl ?? readFile;
+  if (platform !== 'win32') return { executable, args };
+  const pathApi = win32;
   const candidates = [];
   if (extname(executable)) candidates.push(executable);
-  else for (const directory of (process.env.PATH ?? '').split(delimiter)) candidates.push(join(directory, `${executable}.cmd`));
+  else for (const directory of (env.PATH ?? '').split(';')) candidates.push(pathApi.join(directory, `${executable}.cmd`));
   for (const candidate of candidates) {
     let content;
-    try { content = await readFile(candidate, 'utf8'); } catch { continue; }
+    try { content = await readFileImpl(candidate, 'utf8'); } catch { continue; }
     const match = content.match(/["']?((?:%~dp0|%dp0%)[^"'\r\n]*?\.js)["']?\s+%\*/i)
       ?? content.match(/["']([^"'\r\n]*?\.js)["']\s+%\*/i);
     if (!match) continue;
-    const shimDirectory = dirname(resolve(candidate));
-    const entry = match[1].replace(/^%~dp0/i, `${shimDirectory}\\`).replace(/^%dp0%/i, `${shimDirectory}\\`);
-    return { executable: process.execPath, args: [entry, ...args] };
+    const shimDirectory = pathApi.dirname(pathApi.resolve(candidate));
+    const tokenMatch = match[1].match(/^(%~dp0|%dp0%)(.*)$/i);
+    if (!tokenMatch) continue;
+    const remainder = tokenMatch[2];
+    const separator = remainder.startsWith('\\') ? '' : '\\';
+    return { executable: process.execPath, args: [`${shimDirectory}${separator}${remainder}`, ...args] };
   }
   return { executable, args };
 }
@@ -318,10 +490,107 @@ function classifyFailure(result, args) {
 }
 
 async function discover(executable, kind, request, spawnImpl) {
-  const args = kind === 'UNKNOWN_MODEL' ? ['--list-models', request.provider ?? ''] : ['--help'];
+  const resolved = resolveModel(request);
+  const args = kind === 'UNKNOWN_MODEL' ? ['--list-models', resolved.provider ?? ''] : ['--help'];
   const filteredArgs = args.filter((part) => part !== '');
   const result = await spawnOnce(executable, filteredArgs, { cwd: request.cwd, spawnImpl });
   return { kind, exitCode: result.exitCode, output: redactSensitive(`${result.stdout}${result.stderr}`).slice(0, 12000) };
+}
+
+function extractSessionMetadata(text) {
+  const meta = { sessionId: null, provider: null, model: null, thinking: null };
+  for (const line of String(text).split('\n')) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    let entry;
+    try { entry = JSON.parse(trimmed); } catch { continue; }
+    if (!entry || typeof entry !== 'object') continue;
+    if (entry.type === 'session' && typeof entry.id === 'string') meta.sessionId = entry.id;
+    else if (entry.type === 'model_change' && typeof entry.provider === 'string' && typeof entry.modelId === 'string') {
+      meta.provider = entry.provider;
+      meta.model = entry.modelId;
+    } else if (entry.type === 'thinking_level_change' && typeof entry.thinkingLevel === 'string') {
+      meta.thinking = entry.thinkingLevel;
+    } else if (entry.type === 'message' && entry.message?.role === 'assistant' && typeof entry.message.provider === 'string' && typeof entry.message.model === 'string') {
+      meta.provider = entry.message.provider;
+      meta.model = entry.message.model;
+    }
+  }
+  return meta;
+}
+
+async function readSessionMetadata(sessionFile) {
+  try {
+    const handle = await open(sessionFile, 'r');
+    try {
+      const { size } = await handle.stat();
+      const headBuffer = Buffer.alloc(Math.min(SESSION_METADATA_BYTES, size));
+      const { bytesRead: headBytes } = await handle.read(headBuffer, 0, headBuffer.length, 0);
+      const head = extractSessionMetadata(headBuffer.toString('utf8', 0, headBytes));
+      if (size <= SESSION_METADATA_BYTES) return { ...head, readable: true };
+
+      // Model changes and assistant messages are appended. Inspect the tail too;
+      // if it cannot establish the latest model, fail closed rather than trusting a stale header.
+      const tailLength = Math.min(SESSION_METADATA_BYTES, size);
+      const tailBuffer = Buffer.alloc(tailLength);
+      const { bytesRead: tailBytes } = await handle.read(tailBuffer, 0, tailBuffer.length, size - tailLength);
+      const tail = extractSessionMetadata(tailBuffer.toString('utf8', 0, tailBytes));
+      if (!tail.provider || !tail.model) return { ...head, provider: null, model: null, readable: true };
+      return { ...head, provider: tail.provider, model: tail.model, thinking: tail.thinking ?? head.thinking, readable: true };
+    } finally {
+      await handle.close();
+    }
+  } catch {
+    return { sessionId: null, provider: null, model: null, thinking: null, readable: false };
+  }
+}
+
+function parseTaskReport(text) {
+  const source = typeof text === 'string' ? text : '';
+  const start = source.lastIndexOf(REPORT_START);
+  if (start === -1) return null;
+  const end = source.indexOf(REPORT_END, start + REPORT_START.length);
+  if (end === -1) return null;
+  const candidate = source.slice(start + REPORT_START.length, end).trim();
+  try {
+    const parsed = JSON.parse(candidate);
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function buildTaskReportFields(request, rawFinalText) {
+  const writeScope = normalizeStringList(request.allowedWriteScope);
+  const parsed = parseTaskReport(rawFinalText);
+  const redactList = (value) => (Array.isArray(value) ? value.filter((item) => typeof item === 'string').map(redactSensitive) : null);
+  return {
+    summary: parsed && typeof parsed.summary === 'string' ? redactSensitive(parsed.summary) : null,
+    changedFiles: parsed ? redactList(parsed.changedFiles) : null,
+    validation: parsed ? redactList(parsed.validation) : null,
+    remainingIssue: parsed && typeof parsed.remainingIssue === 'string' ? redactSensitive(parsed.remainingIssue) : null,
+    decisionNeeded: parsed && parsed.decisionNeeded && typeof parsed.decisionNeeded === 'object' ? parsed.decisionNeeded : null,
+    writeScope: writeScope.length ? writeScope : null,
+    scopeExceeded: parsed && typeof parsed.scopeExceeded === 'boolean' ? parsed.scopeExceeded : null,
+    outOfScopeFindings: parsed ? (redactList(parsed.outOfScopeFindings) ?? []) : [],
+    reportParsed: parsed !== null,
+  };
+}
+
+function blockedResult(base, request, startTime, decisionNeeded) {
+  return {
+    ...base,
+    status: 'blocked',
+    requiresHumanAction: true,
+    exitCode: null,
+    durationMs: Date.now() - startTime,
+    finalText: '',
+    usage: null,
+    error: { code: 'NEEDS_DECISION', message: decisionNeeded.reason },
+    ...buildTaskReportFields(request, ''),
+    decisionNeeded,
+  };
 }
 
 async function runRequest(rawRequest, options = {}) {
@@ -330,6 +599,10 @@ async function runRequest(rawRequest, options = {}) {
     request = validateRequest(rawRequest);
     const info = await stat(request.cwd);
     if (!info.isDirectory()) throw new Error('cwd must point to an existing directory.');
+    if (request.sessionFile) {
+      const sessionInfo = await stat(request.sessionFile);
+      if (!sessionInfo.isFile()) throw new Error('sessionFile must point to a file.');
+    }
   } catch (error) {
     return fail('INVALID_REQUEST', error.message);
   }
@@ -337,24 +610,21 @@ async function runRequest(rawRequest, options = {}) {
   const executable = process.env.PI_EXECUTABLE || 'pi';
   const startTime = Date.now();
   const readonly = request.profile === 'readonly';
-  const sessionDir = request.workspaceMode === 'delegated' ? getDelegatedSessionDir(request) : null;
-  if (request.sessionFile) {
-    try {
-      const info = await stat(request.sessionFile);
-      if (!info.isFile()) throw new Error('sessionFile must point to a file.');
-    } catch (error) {
-      return fail('INVALID_REQUEST', `sessionFile is unavailable: ${error.message}`);
-    }
-  }
+  const resolved = resolveModel(request);
+  const sessionDir = request.workspaceMode === 'delegated' || (request.action === 'delegate' && nonEmptyString(request.objective))
+    ? getDelegatedSessionDir(request)
+    : null;
   const base = {
     action: request.action,
     taskId: request.taskId,
     sessionId: request.sessionId,
     cwd: request.cwd,
     workspaceMode: request.workspaceMode,
+    writeMode: request.writeMode ?? null,
     sessionFile: request.sessionFile ?? null,
-    provider: request.provider ?? null,
-    model: request.model ?? null,
+    provider: resolved.provider ?? null,
+    model: resolved.model ?? null,
+    modelDefaulted: resolved.defaulted === true,
     thinking: request.thinking ?? null,
     streaming: true,
     fallbackUsed: false,
@@ -363,6 +633,52 @@ async function runRequest(rawRequest, options = {}) {
     capabilityDiscovery: [],
     capabilityDiscoveryUsed: false,
   };
+
+  // Resolve provider/model (default deepseek/deepseek-flash) before any argv construction.
+  if (resolved.unresolved) {
+    return blockedResult(base, request, startTime, decision('needs_decision', resolved.unresolved));
+  }
+
+  // Never auto-upgrade to a Pro/expensive tier model without a separate authorization signal.
+  if (isExpensiveModel(resolved.model) && request.allowProModel !== true) {
+    const suggested = `${resolved.provider}/${resolved.model}`;
+    return blockedResult(base, request, startTime, decision('needs_decision', 'expensive_model_requires_authorization', {
+      requested_model: suggested,
+      current_model: `${DEFAULT_PROVIDER}/${DEFAULT_MODEL}`,
+      suggested_model: suggested,
+      why_upgrade_is_needed: `The requested model ${suggested} is Pro/expensive tier. Set allowProModel: true only after explicit supervisor authorization; the runner will not auto-upgrade to Pro.`,
+    }));
+  }
+
+  const atomicDecision = assessAtomicTask(request);
+  if (atomicDecision) return blockedResult(base, request, startTime, atomicDecision);
+
+  // Continuation must use the original cwd plus the exact sessionFile, and the session's recorded model must match.
+  if (request.action === 'continue') {
+    if (!request.sessionFile) {
+      return blockedResult(base, request, startTime, decision('needs_decision', 'Continuation requires the exact sessionFile from the prior worker result; sessionId alone is not sufficient.'));
+    }
+    const metadata = await readSessionMetadata(request.sessionFile);
+    const requested = `${resolved.provider}/${resolved.model}`;
+    if (!metadata.provider || !metadata.model) {
+      return blockedResult(base, request, startTime, decision('needs_decision', 'session_metadata_unavailable', {
+        current_model: null,
+        suggested_model: requested,
+        why_upgrade_is_needed: `Could not determine the provider/model recorded in ${request.sessionFile}; refusing to launch so the caller can verify the session.`,
+      }));
+    }
+    const existing = `${metadata.provider}/${metadata.model}`;
+    if (existing !== requested) {
+      return blockedResult(base, request, startTime, decision('needs_decision', 'session_model_conflict', {
+        current_model: existing,
+        suggested_model: requested,
+        why_upgrade_is_needed: `The session file records ${existing}, but the effective model is ${requested}. Pass the session's own model explicitly or start a new session; the runner will not switch a live session's model.`,
+        session_model: existing,
+        requested_model: requested,
+      }));
+    }
+  }
+
   let promptTransport = 'stdin';
   let args = buildArgs(request, true, promptTransport);
   let result = await spawnOnce(executable, args, {
@@ -409,16 +725,23 @@ async function runRequest(rawRequest, options = {}) {
         : !finalText
           ? { code: 'INCOMPLETE_OUTPUT', message: 'Pi text-mode fallback returned no final assistant text.' }
           : null;
+    const fallbackReport = buildTaskReportFields(request, finalText);
+    const fallbackDecision = fallbackReport.decisionNeeded && fallbackStatus === 'completed';
+    const resolvedFallbackStatus = fallbackDecision ? 'blocked' : fallbackStatus;
+    const resolvedFallbackError = fallbackDecision
+      ? { code: 'NEEDS_DECISION', message: 'Pi reported decisionNeeded in the structured task report.' }
+      : fallbackError;
     return {
       ...base,
-      status: fallbackStatus,
-      requiresHumanAction: fallbackStatus !== 'completed',
+      status: resolvedFallbackStatus,
+      requiresHumanAction: resolvedFallbackStatus !== 'completed',
       exitCode: result.exitCode,
       durationMs: Date.now() - startTime,
       finalText: redactSensitive(finalText),
       usage: null,
       sessionFile: request.sessionFile ?? (sessionDir ? await findSessionFile(sessionDir, request.sessionId) : null),
-      ...(fallbackError ? { error: fallbackError } : {}),
+      ...fallbackReport,
+      ...(resolvedFallbackError ? { error: resolvedFallbackError } : {}),
     };
   }
 
@@ -443,15 +766,22 @@ async function runRequest(rawRequest, options = {}) {
     status = 'blocked';
     error = { code: 'NEEDS_DECISION', message: 'Pi marked this task as requiring a decision from the Supervisor.' };
   }
+  const rawFinalText = result.state.finalText || result.state.textDeltas;
+  const reportFields = buildTaskReportFields(request, rawFinalText);
+  if (reportFields.decisionNeeded && status === 'completed') {
+    status = 'blocked';
+    error = { code: 'NEEDS_DECISION', message: 'Pi reported decisionNeeded in the structured task report.' };
+  }
   return {
     ...base,
     status,
     requiresHumanAction: status !== 'completed',
     exitCode: result.exitCode,
     durationMs: Date.now() - startTime,
-    finalText: redactSensitive(result.state.finalText || result.state.textDeltas),
+    finalText: redactSensitive(rawFinalText),
     usage: result.state.usage,
     sessionFile: request.sessionFile ?? (sessionDir ? await findSessionFile(sessionDir, request.sessionId) : null),
+    ...reportFields,
     ...(error ? { error } : {}),
   };
 }
@@ -492,4 +822,27 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
   process.exitCode = 1;
 });
 
-export { buildArgs, buildPrompt, buildWorkspacePolicy, classifyFailure, createEventParser, findSessionFile, getDelegatedSessionDir, makeProgressHandler, normalizeUsage, readRequestFromStdin, resolveWindowsNpmShim, runRequest, spawnOnce, validateRequest };
+export {
+  assessAtomicTask,
+  buildArgs,
+  buildPrompt,
+  buildTaskReportFields,
+  buildWorkspacePolicy,
+  classifyFailure,
+  createEventParser,
+  extractSessionMetadata,
+  findSessionFile,
+  getDelegatedSessionDir,
+  isExpensiveModel,
+  looksVague,
+  makeProgressHandler,
+  normalizeUsage,
+  parseTaskReport,
+  readRequestFromStdin,
+  readSessionMetadata,
+  resolveModel,
+  resolveWindowsNpmShim,
+  runRequest,
+  spawnOnce,
+  validateRequest,
+};
