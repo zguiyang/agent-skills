@@ -11,7 +11,7 @@ Use this skill after the calling Agent has understood the request, decided the a
 
 ## Runner
 
-Use `scripts/pi-worker.mjs` when Node.js is available. It reads one JSON request from stdin, writes one final JSON result to stdout, and sends progress to stderr. Invoke it through the host's process API with an argument array; `shell: false` is internal to the Node runner's `child_process.spawn` of Pi. The calling Agent only needs its normal way to invoke the runner. Never build a shell command string. The runner passes the complete Prompt through Pi's stdin by default. Only a confirmed pre-execution stdin rejection may retry once with the Prompt as a single argv element after `--`. Markdown, backticks, `$`, quotes, newlines, Unicode, and code blocks are never shell-expanded.
+Use `scripts/pi-worker.mjs` when Node.js is available. It reads one JSON request from stdin, writes one final JSON result to stdout, and sends progress to stderr. Invoke it through the host's normal local execution API with an argument array. The runner launches Pi with `child_process.spawn(..., { shell: false })`; this is an internal runner safety requirement and does not require the calling Agent to have a process API of its own. The child inherits the host-provided environment and execution permissions. The host Agent owns sandbox policy and any permission request; the runner cannot grant itself access. Never build a shell command string. The runner passes the complete Prompt through Pi's stdin by default. Only a confirmed pre-execution stdin rejection may retry once with the Prompt as a single argv element after `--`. Markdown, backticks, `$`, quotes, newlines, Unicode, and code blocks are never shell-expanded.
 
 Example invocation shape (API shape, not a shell command):
 
@@ -52,9 +52,15 @@ Example request:
 }
 ```
 
-## Models and authorization
+## Model selection
 
-Provider/model are resolved in the runner before Pi argv is built and the effective values are reported. Absent provider/model resolves to `deepseek` / `deepseek-flash`. Thinking stays caller-selectable; higher thinking on Flash is allowed. The runner passes the selected provider/model explicitly and tells Pi to stay on it. If the model is insufficient, Pi returns a structured decision request; neither runner nor Worker switches to a costlier model or starts a replacement session. An explicit Pro/expensive request without `allowProModel: true` returns `blocked` with `decisionNeeded` carrying `reason`, `current_model`, `suggested_model`, and `why_upgrade_is_needed`, and Pi is not launched. Grant `allowProModel` only with the Supervisor's explicit authorization.
+Pi's native model selection is the source of truth. Configure the desired default in Pi with `/model`, then save it with `Ctrl+S`. When the request omits both `provider` and `model`, the runner omits model-selection flags and lets Pi use that default; it does not keep a second model default or model-tier catalog. When a request explicitly supplies both fields, the runner passes them through. Supplying only one is blocked before launch. Thinking remains caller-selectable. The Worker must not change models or create a replacement session on its own; if the selected or configured model is insufficient, it reports `NEEDS_DECISION`. Results report the model found in Pi's stream/session metadata when available. A new task uses Pi's configured default; a continuation uses the model stored in that session.
+
+Because model choice belongs to Pi, a Pro model saved as Pi's default can be used by an unspecified task. The Supervisor should ensure the Pi default reflects the intended cost policy. No per-task confirmation is needed for the configured default.
+
+## Host permissions
+
+Pi runs within the execution permissions granted to the host Agent. Preserve the caller's environment and Pi's native configuration and credentials; do not replace Pi's config directory or copy credentials into a temporary config. If startup fails with a permission denial, return `SANDBOX_PERMISSION`, the denied path when known, and whether task execution began. Only the host Agent can request permission. It may retry the same request once only when the runner reports that execution did not start. Never replay after a task-start event or when start state is ambiguous.
 
 ## Workspace and concurrency
 
@@ -64,7 +70,7 @@ Serialization: overlapping writes in the same `cwd` must run one at a time. Read
 
 ## Continuation
 
-A `continue` requires the original `cwd` plus the exact `sessionFile` from the prior result, not `sessionId` alone. The runner inspects the session JSONL metadata for its recorded provider/model. If metadata cannot establish the model, or the recorded model conflicts with the authorized/effective model, the runner returns a `blocked` model-mismatch `decisionNeeded` and does not launch. Matching sessions continue normally.
+A `continue` requires the original `cwd` plus the exact `sessionFile` from the prior result, not `sessionId` alone. The runner inspects the session JSONL metadata for its recorded provider/model. Without an explicit model override, Pi continues with the session's recorded model and returns it in the result. If the metadata is unavailable, or an explicit provider/model conflicts with the session, the runner returns a `blocked` model-mismatch `decisionNeeded` before launch.
 
 ## Recovery and result handling
 
@@ -84,6 +90,6 @@ Read [references/worker-contract.md](references/worker-contract.md) for the full
 - Direct write: `writeMode: "direct"`, `allowedWriteScope`, `workspaceStateKnown: true`, `writeAuthorization: true`.
 - Isolated write: Supervisor supplies an isolated worktree as `cwd`; `writeMode: "isolated"` with `allowedWriteScope`.
 - Review correction: `action: "continue"` with the same `cwd`, the prior `sessionFile`, and concrete findings; thinking may change.
-- Pro requested: without `allowProModel`, expect a blocked decision; supply authorization only when the Supervisor approves the cost.
+- Model override requested: pass provider and model together only when the task or Supervisor explicitly selects them; otherwise let Pi use its native default.
 - Multiple independent tasks: separate runner processes with unique task IDs, disjoint scopes, and isolated worktrees for writes; Pi does not schedule them.
 - Streaming unsupported or Pi missing: only a confirmed startup rejection may fall back; a started task is never replayed.

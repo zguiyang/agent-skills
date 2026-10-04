@@ -11,10 +11,6 @@ const PROFILES = new Set(['readonly', 'implementation', 'verification']);
 const WRITE_MODES = new Set(['direct', 'isolated']);
 const READ_TOOLS = 'read,grep,find,ls';
 const VERIFICATION_TOOLS = 'read,grep,find,ls,bash';
-const DEFAULT_PROVIDER = 'deepseek';
-const DEFAULT_MODEL = 'deepseek-flash';
-// Conservative Pro/expensive-tier detection. The runner never upgrades to these on its own.
-const EXPENSIVE_MODEL_PATTERN = /(^|[-_/])(pro|opus|ultra)([-_/]|$)/i;
 const WRITE_INTENT_PATTERN = /\b(implement|add|create|write|edit|modify|refactor|fix|migrate|rename|delete|remove|update|upgrade|apply|patch)\b/i;
 const OBVIOUSLY_BROAD_PATTERN = /\b(entire|whole|all|every)\s+(?:the\s+)?(?:project|repo|repository|codebase|application|system|architecture|module)\b|\b(?:refactor|restructure|optimize|improve)\s+(?:the\s+)?(?:entire|whole|all)\s+(?:project|repo|repository|codebase|architecture)\b|整个(?:项目|仓库|代码库|系统|模块)|全局(?:重构|优化)|整体(?:重构|优化|架构改造)/i;
 const REPORT_START = '---PI_TASK_REPORT---';
@@ -48,7 +44,7 @@ function emptyReportFields() {
 }
 
 function fail(code, message, fields = {}) {
-  return { status: 'failed', requiresHumanAction: true, error: { code, message }, ...emptyReportFields(), ...fields };
+  return { status: 'failed', requiresHumanAction: true, taskStarted: false, error: { code, message }, ...emptyReportFields(), ...fields };
 }
 
 function nonEmptyString(value) {
@@ -73,21 +69,16 @@ function normalizeStringList(value) {
 function resolveModel(request) {
   const provider = nonEmptyString(request.provider);
   const model = nonEmptyString(request.model);
-  if (!provider && !model) return { provider: DEFAULT_PROVIDER, model: DEFAULT_MODEL, defaulted: true };
-  if (provider && !model) {
-    if (provider === DEFAULT_PROVIDER) return { provider, model: DEFAULT_MODEL, defaulted: true };
-    return { provider, model: null, defaulted: true, unresolved: `model must be provided explicitly for provider "${provider}"` };
+  if (!provider && !model) return { provider: null, model: null, source: 'pi_default' };
+  if (!provider || !model) {
+    return {
+      provider,
+      model,
+      source: 'explicit',
+      unresolved: 'provider and model must be supplied together when overriding Pi native model selection',
+    };
   }
-  if (!provider && model) {
-    const inferred = model.includes('/') ? model.split('/')[0] : model.startsWith('deepseek') ? DEFAULT_PROVIDER : null;
-    if (!inferred) return { provider: null, model, defaulted: false, unresolved: 'provider must be provided explicitly for a model outside the deepseek namespace' };
-    return { provider: inferred, model: model.includes('/') ? model.slice(model.indexOf('/') + 1) : model, defaulted: true, providerDefaulted: true };
-  }
-  return { provider, model, defaulted: false };
-}
-
-function isExpensiveModel(model) {
-  return typeof model === 'string' && EXPENSIVE_MODEL_PATTERN.test(model);
+  return { provider, model, source: 'explicit' };
 }
 
 function looksVague(text) {
@@ -156,7 +147,7 @@ function validateRequest(value) {
   if (value.writeMode !== undefined && !WRITE_MODES.has(value.writeMode)) throw new Error('writeMode must be "direct" or "isolated".');
   if (value.writeMode && value.profile === 'readonly') throw new Error('writeMode cannot be combined with profile "readonly".');
   if (value.writeMode && value.workspaceMode === 'delegated') throw new Error('V2 writeMode uses a supervisor-supplied cwd; workspaceMode "delegated" is not allowed together with writeMode.');
-  for (const key of ['workspaceStateKnown', 'writeAuthorization', 'allowProModel']) {
+  for (const key of ['workspaceStateKnown', 'writeAuthorization']) {
     if (value[key] !== undefined && typeof value[key] !== 'boolean') throw new Error(`${key} must be a boolean when provided.`);
   }
   if (value.workspaceState !== undefined && typeof value.workspaceState !== 'string') throw new Error('workspaceState must be a string when provided.');
@@ -252,11 +243,13 @@ function buildReportInstruction() {
 
 function buildModelPolicy(request) {
   const resolved = resolveModel(request);
-  const model = `${resolved.provider ?? 'unknown'}/${resolved.model ?? 'unknown'}`;
-  if (isExpensiveModel(resolved.model)) {
-    return `Model policy: the Supervisor explicitly authorized ${model} for this task. Stay on this exact provider/model; do not switch to another model. If it still cannot complete the bounded task, stop and report a decisionNeeded object with reason, current_model, suggested_model, and why_upgrade_is_needed.`;
+  if (resolved.source === 'explicit') {
+    return `Model policy: use only the explicitly selected provider/model ${resolved.provider}/${resolved.model}. Do not switch models, start a replacement session, or retry on another model. If it is insufficient, stop and report decisionNeeded with reason, current_model, suggested_model, and why_upgrade_is_needed.`;
   }
-  return `Model policy: use only the explicitly selected effective model ${model}. Do not switch to a Pro or more expensive model, start another session, or retry on a different model. If this model is insufficient, stop and report a decisionNeeded object with reason, current_model, suggested_model, and why_upgrade_is_needed; wait for the Supervisor's authorization.`;
+  if (request.action === 'continue') {
+    return 'Model policy: continue with the provider/model recorded in this Pi session. Do not change models or start a replacement session. Report the actual provider/model used.';
+  }
+  return 'Model policy: use the default model selected in the user’s native Pi configuration. Do not select a different model, upgrade, or start a replacement session. If the configured model is insufficient, stop and report decisionNeeded with reason, current_model, suggested_model, and why_upgrade_is_needed.';
 }
 
 function buildPrompt(request) {
@@ -351,6 +344,15 @@ function makeProgressHandler(state) {
   return (event) => {
     if (!event || typeof event !== 'object') return;
     state.eventsSeen += 1;
+    const modelCandidates = [event, event.message, event.assistantMessage, event.assistantMessageEvent, event.assistantMessageEvent?.message, ...(Array.isArray(event.messages) ? event.messages : [])];
+    for (const candidate of modelCandidates) {
+      const provider = candidate?.provider;
+      const model = candidate?.model ?? candidate?.modelId;
+      if (typeof provider === 'string' && typeof model === 'string') {
+        state.provider = provider;
+        state.model = model;
+      }
+    }
     if (['agent_start', 'message_start', 'message_update', 'message_end', 'tool_execution_start', 'tool_execution_end', 'agent_end', 'retry', 'compaction_start', 'auto_compaction_start'].includes(event.type)) state.executionStarted = true;
     if (event.type === 'message_update') {
       const update = event.assistantMessageEvent;
@@ -429,7 +431,7 @@ async function spawnOnce(executable, args, options = {}) {
     });
     let stdout = '';
     let stderr = '';
-    const state = { eventsSeen: 0, executionStarted: false, agentEnded: false, textDeltas: '', finalText: '', usage: normalizeUsage() };
+    const state = { eventsSeen: 0, executionStarted: false, agentEnded: false, textDeltas: '', finalText: '', usage: normalizeUsage(), provider: null, model: null };
     const parser = options.streaming ? createEventParser(makeProgressHandler(state)) : null;
     let spawnError;
     let stdinError;
@@ -442,7 +444,7 @@ async function spawnOnce(executable, args, options = {}) {
     child.stderr.on('data', (chunk) => {
       const text = chunk.toString('utf8');
       stderr += text;
-      if (!/Invalid settings file .*\.lock/.test(text)) process.stderr.write(redactSensitive(text));
+      process.stderr.write(redactSensitive(text));
     });
     child.once('error', (error) => { spawnError = error; });
     if (options.promptTransport === 'stdin') {
@@ -475,6 +477,7 @@ async function spawnOnce(executable, args, options = {}) {
 
 function classifyFailure(result, args) {
   const text = `${result.stderr}\n${result.stdout}`;
+  if (['EACCES', 'EPERM'].includes(result.spawnError?.code) || /\b(?:EACCES|EPERM)\b|permission denied|operation not permitted|access is denied/i.test(text)) return 'SANDBOX_PERMISSION';
   if (result.spawnError?.code === 'ENOENT') return 'PI_NOT_FOUND';
   if (/unknown model|model not found|no model matching/i.test(text)) return 'UNKNOWN_MODEL';
   if (/no (initial )?(message|prompt)( was)? (provided|specified|received)|stdin.{0,32}(unsupported|not supported|unavailable)/i.test(text)) return 'PROMPT_STDIN_UNSUPPORTED';
@@ -489,8 +492,19 @@ function classifyFailure(result, args) {
   return 'PI_FAILED';
 }
 
+function extractDeniedPath(result) {
+  const text = `${result.spawnError?.message ?? ''}\n${result.stderr}\n${result.stdout}`;
+  const operationPath = text.match(/(?:mkdir|open|access|scandir|rename|unlink|rmdir)\s+['"]([^'"\r\n]+)['"]/i);
+  if (operationPath) return operationPath[1];
+  const quotedPath = text.match(/(?:EACCES|EPERM|permission denied|operation not permitted)[^\r\n]*?['"]((?:[A-Za-z]:\\|\/)[^'"\r\n]+)['"]/i);
+  return quotedPath?.[1] ?? null;
+}
+
 async function discover(executable, kind, request, spawnImpl) {
   const resolved = resolveModel(request);
+  if (kind === 'UNKNOWN_MODEL' && !resolved.provider) {
+    return { kind, skipped: true, reason: 'Pi native default provider is not exposed by the failed startup.' };
+  }
   const args = kind === 'UNKNOWN_MODEL' ? ['--list-models', resolved.provider ?? ''] : ['--help'];
   const filteredArgs = args.filter((part) => part !== '');
   const result = await spawnOnce(executable, filteredArgs, { cwd: request.cwd, spawnImpl });
@@ -543,6 +557,16 @@ async function readSessionMetadata(sessionFile) {
   } catch {
     return { sessionId: null, provider: null, model: null, thinking: null, readable: false };
   }
+}
+
+async function updateExecutionMetadata(base, request, sessionDir, result) {
+  const sessionFile = request.sessionFile ?? (sessionDir ? await findSessionFile(sessionDir, request.sessionId) : null);
+  base.sessionFile = sessionFile;
+  base.taskStarted = result.state.executionStarted;
+  const metadata = sessionFile ? await readSessionMetadata(sessionFile) : null;
+  base.provider = metadata?.provider ?? result.state.provider ?? request.provider ?? base.provider ?? null;
+  base.model = metadata?.model ?? result.state.model ?? request.model ?? base.model ?? null;
+  base.thinking = metadata?.thinking ?? request.thinking ?? base.thinking ?? null;
 }
 
 function parseTaskReport(text) {
@@ -604,13 +628,26 @@ async function runRequest(rawRequest, options = {}) {
       if (!sessionInfo.isFile()) throw new Error('sessionFile must point to a file.');
     }
   } catch (error) {
+    if (['EACCES', 'EPERM'].includes(error.code)) {
+      return {
+        ...fail('SANDBOX_PERMISSION', error.message, { taskStarted: false }),
+        status: 'blocked',
+        error: {
+          code: 'SANDBOX_PERMISSION',
+          message: redactSensitive(error.message),
+          permissionDeniedPath: error.path ?? null,
+          taskStarted: false,
+          hostAction: 'Request access through the host Agent permission mechanism, then retry this request once.',
+        },
+      };
+    }
     return fail('INVALID_REQUEST', error.message);
   }
 
   const executable = process.env.PI_EXECUTABLE || 'pi';
   const startTime = Date.now();
   const readonly = request.profile === 'readonly';
-  const resolved = resolveModel(request);
+  let resolved = resolveModel(request);
   const sessionDir = request.workspaceMode === 'delegated' || (request.action === 'delegate' && nonEmptyString(request.objective))
     ? getDelegatedSessionDir(request)
     : null;
@@ -624,7 +661,8 @@ async function runRequest(rawRequest, options = {}) {
     sessionFile: request.sessionFile ?? null,
     provider: resolved.provider ?? null,
     model: resolved.model ?? null,
-    modelDefaulted: resolved.defaulted === true,
+    modelSource: resolved.source,
+    taskStarted: false,
     thinking: request.thinking ?? null,
     streaming: true,
     fallbackUsed: false,
@@ -634,41 +672,31 @@ async function runRequest(rawRequest, options = {}) {
     capabilityDiscoveryUsed: false,
   };
 
-  // Resolve provider/model (default deepseek/deepseek-flash) before any argv construction.
+  // A missing provider/model deliberately leaves selection to Pi's native configuration.
   if (resolved.unresolved) {
     return blockedResult(base, request, startTime, decision('needs_decision', resolved.unresolved));
-  }
-
-  // Never auto-upgrade to a Pro/expensive tier model without a separate authorization signal.
-  if (isExpensiveModel(resolved.model) && request.allowProModel !== true) {
-    const suggested = `${resolved.provider}/${resolved.model}`;
-    return blockedResult(base, request, startTime, decision('needs_decision', 'expensive_model_requires_authorization', {
-      requested_model: suggested,
-      current_model: `${DEFAULT_PROVIDER}/${DEFAULT_MODEL}`,
-      suggested_model: suggested,
-      why_upgrade_is_needed: `The requested model ${suggested} is Pro/expensive tier. Set allowProModel: true only after explicit supervisor authorization; the runner will not auto-upgrade to Pro.`,
-    }));
   }
 
   const atomicDecision = assessAtomicTask(request);
   if (atomicDecision) return blockedResult(base, request, startTime, atomicDecision);
 
-  // Continuation must use the original cwd plus the exact sessionFile, and the session's recorded model must match.
+  // Continuation must use the original cwd plus the exact sessionFile. Pi owns the
+  // model recorded in that session unless the caller explicitly requests a match.
   if (request.action === 'continue') {
     if (!request.sessionFile) {
       return blockedResult(base, request, startTime, decision('needs_decision', 'Continuation requires the exact sessionFile from the prior worker result; sessionId alone is not sufficient.'));
     }
     const metadata = await readSessionMetadata(request.sessionFile);
-    const requested = `${resolved.provider}/${resolved.model}`;
     if (!metadata.provider || !metadata.model) {
       return blockedResult(base, request, startTime, decision('needs_decision', 'session_metadata_unavailable', {
         current_model: null,
-        suggested_model: requested,
+        suggested_model: resolved.provider && resolved.model ? `${resolved.provider}/${resolved.model}` : null,
         why_upgrade_is_needed: `Could not determine the provider/model recorded in ${request.sessionFile}; refusing to launch so the caller can verify the session.`,
       }));
     }
     const existing = `${metadata.provider}/${metadata.model}`;
-    if (existing !== requested) {
+    const requested = resolved.provider && resolved.model ? `${resolved.provider}/${resolved.model}` : null;
+    if (requested && existing !== requested) {
       return blockedResult(base, request, startTime, decision('needs_decision', 'session_model_conflict', {
         current_model: existing,
         suggested_model: requested,
@@ -676,6 +704,13 @@ async function runRequest(rawRequest, options = {}) {
         session_model: existing,
         requested_model: requested,
       }));
+    }
+    if (!requested) {
+      resolved = { provider: metadata.provider, model: metadata.model, source: 'session' };
+      base.provider = metadata.provider;
+      base.model = metadata.model;
+      base.modelSource = 'session';
+      base.thinking = metadata.thinking ?? base.thinking;
     }
   }
 
@@ -709,17 +744,29 @@ async function runRequest(rawRequest, options = {}) {
       cwd: request.cwd, timeoutMs: request.timeoutMs, spawnImpl: options.spawnImpl,
       promptTransport, prompt: buildPrompt(request),
     });
+    await updateExecutionMetadata(base, request, sessionDir, result);
     base.streaming = false;
     base.fallbackUsed = true;
     base.hardReadOnly = readonly && result.exitCode === 0;
     const finalText = result.stdout.trim();
+    const fallbackFailureCode = classifyFailure(result, fallbackArgs);
+    const fallbackPermissionFailure = result.exitCode !== 0 && fallbackFailureCode === 'SANDBOX_PERMISSION';
+    base.taskStarted = fallbackPermissionFailure ? null : (result.exitCode === 0 || Boolean(finalText));
     const fallbackErrorMessage = redactSensitive(result.spawnError?.message ?? (result.stderr.trim() || 'Pi text-mode fallback failed.'));
     const needsDecision = /^\s*\[NEEDS_DECISION\]/i.test(finalText);
-    const fallbackStatus = result.timedOut ? 'timed_out' : result.exitCode !== 0 ? 'failed' : needsDecision ? 'blocked' : finalText ? 'completed' : 'failed';
+    const fallbackStatus = result.timedOut ? 'timed_out' : fallbackPermissionFailure ? 'blocked' : result.exitCode !== 0 ? 'failed' : needsDecision ? 'blocked' : finalText ? 'completed' : 'failed';
     const fallbackError = result.timedOut
       ? { code: 'TIMEOUT', message: 'Pi text-mode fallback timed out. Inspect the session and worktree before continuing.' }
-      : result.exitCode !== 0
-        ? { code: classifyFailure(result, fallbackArgs), message: fallbackErrorMessage }
+      : fallbackPermissionFailure
+        ? {
+          code: 'SANDBOX_PERMISSION',
+          message: fallbackErrorMessage,
+          permissionDeniedPath: extractDeniedPath(result),
+          taskStarted: null,
+          hostAction: 'The text-mode fallback cannot prove whether task execution began. Inspect the session and workspace before any retry; request access through the host Agent.',
+        }
+        : result.exitCode !== 0
+        ? { code: fallbackFailureCode, message: fallbackErrorMessage }
         : needsDecision
           ? { code: 'NEEDS_DECISION', message: 'Pi marked this task as requiring a decision from the Supervisor.' }
         : !finalText
@@ -739,16 +786,17 @@ async function runRequest(rawRequest, options = {}) {
       durationMs: Date.now() - startTime,
       finalText: redactSensitive(finalText),
       usage: null,
-      sessionFile: request.sessionFile ?? (sessionDir ? await findSessionFile(sessionDir, request.sessionId) : null),
       ...fallbackReport,
       ...(resolvedFallbackError ? { error: resolvedFallbackError } : {}),
     };
   }
 
+  await updateExecutionMetadata(base, request, sessionDir, result);
   const failureCode = classifyFailure(result, args);
   if (result.exitCode !== 0 && !result.state.executionStarted && ['UNSUPPORTED_OPTION', 'SESSION_UNSUPPORTED', 'UNKNOWN_MODEL'].includes(failureCode)) {
-    base.capabilityDiscovery.push(await discover(executable, failureCode, request, options.spawnImpl));
-    base.capabilityDiscoveryUsed = true;
+    const discovery = await discover(executable, failureCode, request, options.spawnImpl);
+    base.capabilityDiscovery.push(discovery);
+    base.capabilityDiscoveryUsed = !discovery.skipped;
   }
   let status = 'completed';
   let error;
@@ -757,8 +805,15 @@ async function runRequest(rawRequest, options = {}) {
     status = 'timed_out';
     error = { code: 'TIMEOUT', message: `Pi exceeded timeoutMs=${request.timeoutMs}. The task may have changed files; inspect before continuing.` };
   } else if (result.spawnError || result.exitCode !== 0) {
-    status = failureCode === 'PI_NOT_FOUND' ? 'blocked' : 'failed';
+    status = failureCode === 'PI_NOT_FOUND' || (failureCode === 'SANDBOX_PERMISSION' && !result.state.executionStarted) ? 'blocked' : 'failed';
     error = { code: failureCode, message: redactSensitive(result.spawnError?.message ?? (result.stderr.trim() || `Pi exited with status ${result.exitCode}.`)) };
+    if (failureCode === 'SANDBOX_PERMISSION') {
+      error.permissionDeniedPath = extractDeniedPath(result);
+      error.taskStarted = result.state.executionStarted;
+      error.hostAction = result.state.executionStarted
+        ? 'Do not replay automatically; inspect the session and workspace.'
+        : 'Request access through the host Agent permission mechanism, then retry this request once.';
+    }
   } else if (result.malformedLines > 0 || !result.state.agentEnded || !(result.state.finalText || result.state.textDeltas).trim()) {
     status = 'failed';
     error = { code: result.malformedLines > 0 ? 'MALFORMED_STREAM' : 'INCOMPLETE_OUTPUT', message: 'Pi exited without a complete, parseable agent completion event. Do not replay automatically; inspect the session and worktree.' };
@@ -780,7 +835,6 @@ async function runRequest(rawRequest, options = {}) {
     durationMs: Date.now() - startTime,
     finalText: redactSensitive(rawFinalText),
     usage: result.state.usage,
-    sessionFile: request.sessionFile ?? (sessionDir ? await findSessionFile(sessionDir, request.sessionId) : null),
     ...reportFields,
     ...(error ? { error } : {}),
   };
@@ -833,7 +887,6 @@ export {
   extractSessionMetadata,
   findSessionFile,
   getDelegatedSessionDir,
-  isExpensiveModel,
   looksVague,
   makeProgressHandler,
   normalizeUsage,

@@ -16,7 +16,6 @@ import {
   createEventParser,
   extractSessionMetadata,
   getDelegatedSessionDir,
-  isExpensiveModel,
   looksVague,
   makeProgressHandler,
   parseTaskReport,
@@ -222,14 +221,13 @@ test('V2 write policies forbid worktree creation and bound the write scope', () 
   assert.match(isolated, /disjoint worktrees/);
 });
 
-test('the task prompt prohibits model escalation and requests a structured decision', () => {
-  const flashPrompt = buildPrompt(validRequest({ provider: undefined, model: undefined }));
-  assert.match(flashPrompt, /deepseek\/deepseek-flash/);
-  assert.match(flashPrompt, /Do not switch to a Pro or more expensive model/);
-  assert.match(flashPrompt, /current_model, suggested_model, and why_upgrade_is_needed/);
-  const authorizedProPrompt = buildPrompt(validRequest({ model: 'deepseek-v4-pro', allowProModel: true }));
-  assert.match(authorizedProPrompt, /explicitly authorized deepseek\/deepseek-v4-pro/);
-  assert.match(authorizedProPrompt, /Stay on this exact provider\/model/);
+test('the task prompt honors Pi native model selection and forbids Worker model switching', () => {
+  const nativePrompt = buildPrompt(validRequest({ provider: undefined, model: undefined }));
+  assert.match(nativePrompt, /default model selected in the user’s native Pi configuration/);
+  assert.match(nativePrompt, /Do not select a different model, upgrade/);
+  assert.match(nativePrompt, /current_model, suggested_model, and why_upgrade_is_needed/);
+  const explicitProPrompt = buildPrompt(validRequest({ model: 'deepseek-v4-pro' }));
+  assert.match(explicitProPrompt, /explicitly selected provider\/model deepseek\/deepseek-v4-pro/);
 });
 
 test('runner request accepts a complete JSON object without waiting for EOF', async () => {
@@ -252,6 +250,7 @@ test('non-zero child exit is observable and does not become success', async () =
 test('Pi launch uses stdin with shell:false and does not run routine discovery', async () => {
   const calls = fakeSpawn(({ child, args, options, call }) => {
     assert.equal(options.shell, false);
+    assert.equal(options.env, process.env);
     assert.equal(options.stdio[0], 'pipe');
     assert.equal(args.includes(validRequest().prompt), false);
     assert.match(call.promptText, /Task:\nInspect/);
@@ -266,6 +265,36 @@ test('Pi launch uses stdin with shell:false and does not run routine discovery',
   assert.equal(result.finalText, 'ok');
   assert.equal(calls.calls.length, 1);
   assert.equal(calls.calls[0].options.shell, false);
+});
+
+test('a pre-start permission denial reports the blocked path and host retry route without replay', async () => {
+  const calls = fakeSpawn(({ child }) => {
+    child.stderr.write("Error: EPERM: operation not permitted, mkdir '/Users/example/.pi/agent/sessions/task'\n");
+    closeChild(child, 1);
+  });
+  const result = await runRequest(validRequest(), { spawnImpl: calls.spawnImpl });
+  assert.equal(result.status, 'blocked');
+  assert.equal(result.error.code, 'SANDBOX_PERMISSION');
+  assert.equal(result.error.permissionDeniedPath, '/Users/example/.pi/agent/sessions/task');
+  assert.equal(result.error.taskStarted, false);
+  assert.match(result.error.hostAction, /host Agent permission mechanism/);
+  assert.equal(result.taskStarted, false);
+  assert.equal(calls.calls.length, 1);
+});
+
+test('a permission error after a task-start event is not marked safe to replay', async () => {
+  const calls = fakeSpawn(({ child }) => {
+    child.stdout.write(`${JSON.stringify({ type: 'agent_start' })}\n`);
+    child.stderr.write("Error: EPERM: operation not permitted, open '/repo/src/file.ts'\n");
+    closeChild(child, 1);
+  });
+  const result = await runRequest(validRequest(), { spawnImpl: calls.spawnImpl });
+  assert.equal(result.status, 'failed');
+  assert.equal(result.error.code, 'SANDBOX_PERMISSION');
+  assert.equal(result.error.taskStarted, true);
+  assert.match(result.error.hostAction, /Do not replay automatically/);
+  assert.equal(result.taskStarted, true);
+  assert.equal(calls.calls.length, 1);
 });
 
 test('stdin fallback to argv happens only after an explicit pre-execution prompt failure', async () => {
@@ -306,7 +335,30 @@ test('stream mode rejection runs help and one non-streaming retry', async () => 
   assert.equal(result.streaming, false);
   assert.equal(result.fallbackUsed, true);
   assert.equal(result.finalText, 'final text');
+  assert.equal(result.taskStarted, true);
   assert.deepEqual(calls.calls.map((call) => call.args[0]), ['--provider', '--help', '--provider']);
+});
+
+test('permission denial in text fallback is surfaced without claiming a safe retry', async () => {
+  const calls = fakeSpawn(({ child, args, index }) => {
+    if (index === 0) {
+      child.stderr.write('Unknown option --mode');
+      closeChild(child, 2);
+    } else if (args[0] === '--help') {
+      child.stdout.write('Pi help');
+      closeChild(child, 0);
+    } else {
+      child.stderr.write("Error: EPERM: operation not permitted, mkdir '/Users/example/.pi/agent/sessions/task'\n");
+      closeChild(child, 1);
+    }
+  });
+  const result = await runRequest(validRequest(), { spawnImpl: calls.spawnImpl });
+  assert.equal(result.status, 'blocked');
+  assert.equal(result.error.code, 'SANDBOX_PERMISSION');
+  assert.equal(result.taskStarted, null);
+  assert.equal(result.error.taskStarted, null);
+  assert.match(result.error.hostAction, /cannot prove whether task execution began/);
+  assert.equal(calls.calls.length, 3);
 });
 
 test('unknown model triggers only provider-scoped model discovery', async () => {
@@ -322,6 +374,18 @@ test('unknown model triggers only provider-scoped model discovery', async () => 
   const result = await runRequest(validRequest(), { spawnImpl: calls.spawnImpl });
   assert.equal(result.error.code, 'UNKNOWN_MODEL');
   assert.deepEqual(calls.calls[1].args, ['--list-models', 'deepseek']);
+});
+
+test('unknown Pi native default does not trigger an unscoped model scan', async () => {
+  const calls = fakeSpawn(({ child }) => {
+    child.stderr.write('Unknown model selected from native settings');
+    closeChild(child, 1);
+  });
+  const result = await runRequest(validRequest({ provider: undefined, model: undefined }), { spawnImpl: calls.spawnImpl });
+  assert.equal(result.error.code, 'UNKNOWN_MODEL');
+  assert.equal(result.capabilityDiscoveryUsed, false);
+  assert.equal(result.capabilityDiscovery[0].skipped, true);
+  assert.equal(calls.calls.length, 1);
 });
 
 test('unsupported thinking option gets help but never replays the task', async () => {
@@ -413,21 +477,37 @@ test('runner stays stateless and never executes Git worktree or cleanup commands
   assert.doesNotMatch(source, /git\s+(?:worktree\s+(?:add|remove)|reset|stash|clean)\s+["'`]/);
 });
 
-test('absent provider/model resolve to deepseek/deepseek-flash and are reported as effective values', async () => {
+test('absent provider/model leave selection to Pi native settings', async () => {
   const request = validRequest({ provider: undefined, model: undefined });
   const args = buildArgs(request);
-  assert.equal(args[args.indexOf('--provider') + 1], 'deepseek');
-  assert.equal(args[args.indexOf('--model') + 1], 'deepseek-flash');
+  assert.equal(args.includes('--provider'), false);
+  assert.equal(args.includes('--model'), false);
   const calls = fakeSpawn(({ child }) => {
     child.stdout.write(completeText('ok'));
     closeChild(child, 0);
   });
   const result = await runRequest(request, { spawnImpl: calls.spawnImpl });
   assert.equal(result.status, 'completed');
-  assert.equal(result.provider, 'deepseek');
-  assert.equal(result.model, 'deepseek-flash');
-  assert.equal(result.modelDefaulted, true);
-  assert.deepEqual(resolveModel({ provider: undefined, model: undefined }), { provider: 'deepseek', model: 'deepseek-flash', defaulted: true });
+  assert.equal(result.provider, null);
+  assert.equal(result.model, null);
+  assert.equal(result.modelSource, 'pi_default');
+  assert.deepEqual(resolveModel({ provider: undefined, model: undefined }), { provider: null, model: null, source: 'pi_default' });
+});
+
+test('native-default model is reported from Pi stream metadata when available', async () => {
+  const calls = fakeSpawn(({ child }) => {
+    child.stdout.write([
+      JSON.stringify({ type: 'agent_start' }),
+      JSON.stringify({ type: 'message_end', message: { role: 'assistant', provider: 'custom-provider', model: 'model-from-pi', content: [{ type: 'text', text: 'ok' }] } }),
+      JSON.stringify({ type: 'agent_end', messages: [{ role: 'assistant', provider: 'custom-provider', model: 'model-from-pi', content: [{ type: 'text', text: 'ok' }] }] }),
+    ].join('\n') + '\n');
+    closeChild(child, 0);
+  });
+  const result = await runRequest(validRequest({ provider: undefined, model: undefined }), { spawnImpl: calls.spawnImpl });
+  assert.equal(result.status, 'completed');
+  assert.equal(result.provider, 'custom-provider');
+  assert.equal(result.model, 'model-from-pi');
+  assert.equal(result.modelSource, 'pi_default');
 });
 
 test('explicit Flash with higher thinking is accepted and reported', async () => {
@@ -441,39 +521,39 @@ test('explicit Flash with higher thinking is accepted and reported', async () =>
   assert.equal(result.status, 'completed');
   assert.equal(result.model, 'deepseek-flash');
   assert.equal(result.thinking, 'high');
-  assert.equal(isExpensiveModel('deepseek-flash'), false);
-  assert.equal(isExpensiveModel('deepseek-v4-pro'), true);
 });
 
-test('an unauthorized Pro model is blocked with a decision before any Pi launch', async () => {
-  const calls = fakeSpawn(({ child }) => { closeChild(child, 1); });
-  const result = await runRequest(validRequest({ model: 'deepseek-v4-pro' }), { spawnImpl: calls.spawnImpl });
-  assert.equal(result.status, 'blocked');
-  assert.equal(result.requiresHumanAction, true);
-  assert.equal(result.error.code, 'NEEDS_DECISION');
-  assert.equal(result.decisionNeeded.type, 'needs_decision');
-  assert.equal(result.decisionNeeded.requested_model, 'deepseek/deepseek-v4-pro');
-  assert.equal(result.decisionNeeded.current_model, 'deepseek/deepseek-flash');
-  assert.equal(result.decisionNeeded.suggested_model, 'deepseek/deepseek-v4-pro');
-  assert.match(result.decisionNeeded.why_upgrade_is_needed, /Pro/);
-  assert.equal(calls.calls.length, 0);
-});
-
-test('an explicitly authorized Pro model may launch', async () => {
+test('explicit provider/model is passed through without a runner model-tier gate', async () => {
   const calls = fakeSpawn(({ child, args }) => {
     assert.equal(args[args.indexOf('--model') + 1], 'deepseek-v4-pro');
+    assert.equal(args[args.indexOf('--provider') + 1], 'deepseek');
     child.stdout.write(completeText('ok'));
     closeChild(child, 0);
   });
-  const result = await runRequest(validRequest({ model: 'deepseek-v4-pro', allowProModel: true }), { spawnImpl: calls.spawnImpl });
+  const result = await runRequest(validRequest({ model: 'deepseek-v4-pro' }), { spawnImpl: calls.spawnImpl });
   assert.equal(result.status, 'completed');
   assert.equal(result.model, 'deepseek-v4-pro');
   assert.equal(calls.calls.length, 1);
 });
 
-test('continuation whose session model conflicts with the effective model is blocked before launch', async () => {
+test('continuation without override uses the Pi session model and identifies it in the result', async () => {
+  const calls = fakeSpawn(({ child, args }) => {
+    assert.equal(args.includes('--provider'), false);
+    assert.equal(args.includes('--model'), false);
+    child.stdout.write(completeText('continued'));
+    closeChild(child, 0);
+  });
+  const result = await runRequest(validRequest({ action: 'continue', provider: undefined, model: undefined, sessionFile: proSessionFile }), { spawnImpl: calls.spawnImpl });
+  assert.equal(result.status, 'completed');
+  assert.equal(result.provider, 'deepseek');
+  assert.equal(result.model, 'deepseek-v4-pro');
+  assert.equal(result.modelSource, 'session');
+  assert.equal(calls.calls.length, 1);
+});
+
+test('continuation with an explicit conflicting model is blocked before launch', async () => {
   const calls = fakeSpawn(({ child }) => { closeChild(child, 1); });
-  const result = await runRequest(validRequest({ action: 'continue', sessionFile: proSessionFile }), { spawnImpl: calls.spawnImpl });
+  const result = await runRequest(validRequest({ action: 'continue', sessionFile: proSessionFile, provider: 'deepseek', model: 'deepseek-flash' }), { spawnImpl: calls.spawnImpl });
   assert.equal(result.status, 'blocked');
   assert.equal(result.decisionNeeded.type, 'needs_decision');
   assert.equal(result.decisionNeeded.reason, 'session_model_conflict');
@@ -698,17 +778,17 @@ test('Windows npm shims are resolved to the node entrypoint without a shell', as
 
 test('assessAtomicTask returns null for a complete atomic task', () => {
   assert.equal(assessAtomicTask(validRequest()), null);
-  assert.equal(resolveModel(validRequest()).defaulted, false);
+  assert.equal(resolveModel(validRequest()).source, 'explicit');
 });
 
-test('an authorized Pro continuation of a matching Pro session may launch', async () => {
+test('an explicitly selected model may continue a matching Pi session', async () => {
   const calls = fakeSpawn(({ child, args }) => {
     assert.equal(args[args.indexOf('--model') + 1], 'deepseek-v4-pro');
     assert.equal(args[args.indexOf('--session') + 1], proSessionFile);
     child.stdout.write(completeText('continued'));
     closeChild(child, 0);
   });
-  const result = await runRequest(validRequest({ action: 'continue', sessionFile: proSessionFile, model: 'deepseek-v4-pro', allowProModel: true }), { spawnImpl: calls.spawnImpl });
+  const result = await runRequest(validRequest({ action: 'continue', sessionFile: proSessionFile, model: 'deepseek-v4-pro' }), { spawnImpl: calls.spawnImpl });
   assert.equal(result.status, 'completed');
   assert.equal(result.model, 'deepseek-v4-pro');
   assert.equal(calls.calls.length, 1);
@@ -776,7 +856,7 @@ test('structured new sessions use a managed session directory and return session
   const sessionRoot = mkdtempSync(path.join(tmpdir(), 'pi-delegate-session-root-'));
   const previousRoot = process.env.PI_CODING_AGENT_SESSION_DIR;
   process.env.PI_CODING_AGENT_SESSION_DIR = sessionRoot;
-  const request = validRequest({ taskId: `session-return-${process.pid}` });
+  const request = validRequest({ taskId: `session-return-${process.pid}`, provider: undefined, model: undefined });
   const sessionDir = getDelegatedSessionDir(request);
   mkdirSync(sessionDir, { recursive: true });
   const sessionFile = path.join(sessionDir, `2026-10-04_${request.sessionId}.jsonl`);
@@ -791,6 +871,9 @@ test('structured new sessions use a managed session directory and return session
     assert.equal(result.status, 'completed');
     assert.equal(result.sessionFile, sessionFile);
     assert.equal(result.cwd, cwd);
+    assert.equal(result.provider, 'deepseek');
+    assert.equal(result.model, 'deepseek-flash');
+    assert.equal(result.modelSource, 'pi_default');
   } finally {
     if (previousRoot === undefined) delete process.env.PI_CODING_AGENT_SESSION_DIR;
     else process.env.PI_CODING_AGENT_SESSION_DIR = previousRoot;
@@ -817,11 +900,11 @@ test('continuation model safety inspects the session tail for later model change
   }
 });
 
-test('an explicit non-DeepSeek model requires its provider instead of misreporting DeepSeek', async () => {
+test('an explicit model override requires provider and model together', async () => {
   const calls = fakeSpawn(({ child }) => { closeChild(child, 1); });
   const result = await runRequest(validRequest({ provider: undefined, model: 'claude-3' }), { spawnImpl: calls.spawnImpl });
   assert.equal(result.status, 'blocked');
   assert.equal(result.provider, null);
-  assert.match(result.decisionNeeded.reason, /provider must be provided explicitly/);
+  assert.match(result.decisionNeeded.reason, /provider and model must be supplied together/);
   assert.equal(calls.calls.length, 0);
 });

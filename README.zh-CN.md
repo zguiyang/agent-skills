@@ -34,7 +34,7 @@
 | **test-database-workflow** | 为集成和功能测试安全使用明确隔离的测试数据库。 | [`skills/test-database-workflow/`](skills/test-database-workflow/) |
 | **infrastructure-operations** | 从配置优先地诊断部署、容器、环境变量与运行时状态问题。 | [`skills/infrastructure-operations/`](skills/infrastructure-operations/) |
 | **cursor-delegate** | 当任务边界明确且执行量非琐碎时，优先委派给用户本机的 Cursor CLI；适用时优先使用用户验证过的最简调用，仅在需要时检查 CLI 帮助，并由调用方 Agent 保留范围、授权和最终验收。 | [`skills/cursor-delegate/`](skills/cursor-delegate/) |
-| **pi-delegate** | 将一个由 Supervisor 定义的原子任务委派给本机 Pi Worker：结构化 objective/scope/acceptance 契约、direct/isolated 写策略、默认 DeepSeek Flash 且不自动升级 Pro、按精确 Session 继续，以及结构化 JSON 结果。 | [`skills/pi-delegate/`](skills/pi-delegate/) |
+| **pi-delegate** | 将一个由 Supervisor 定义的原子任务委派给本机 Pi Worker，支持限定写入范围、由宿主 Agent 控制权限、使用 Pi 原生模型默认值、稳定续接 Session 和结构化结果。 | [`skills/pi-delegate/`](skills/pi-delegate/) |
 
 ## 安装
 
@@ -61,9 +61,9 @@ npx skills add zguiyang/agent-skills --skill pi-delegate -a codex -y
 
 此命令仅在项目级安装 `pi-delegate`，且只安装给 Codex。`-y` 会跳过确认提示。当前 `skills` CLI 会将 Codex 项目级 Skill 安装到 `.agents/skills/`。若要交互式确认选项，可省略 `-y`。
 
-前置条件：安装 Pi Coding Agent，并确保可以通过 `pi` 命令调用；至少配置一个可用的 Pi Provider 和 Model；并安装 Node.js 以运行 `.mjs` runner。Runner 会将缺失的 Provider / Model 解析为 `deepseek`/`deepseek-flash` 并报告生效值；未经 `allowProModel` 显式授权，不会启动 Pro 或明显昂贵的模型。Runner 只使用 Node.js 内置模块；不需要 `jq`、额外的 npm runtime dependency、Pi Spawner、Herdsman 或 subagent 插件。
+前置条件：安装 Pi Coding Agent，并确保可以通过 `pi` 命令调用；在 Pi 中用 `/model` 选择默认模型并按 `Ctrl+S` 保存；并安装 Node.js 以运行 `.mjs` runner。任务未指定 Provider / Model 时，Runner 使用 Pi 已保存的默认模型；任务明确指定时，Provider 和 Model 必须成对传入。Pi 子进程继承宿主 Agent 提供的环境和权限；需要权限时由宿主 Agent 处理。Runner 只使用 Node.js 内置模块；不需要 `jq`、额外的 npm runtime dependency、Pi Spawner、Herdsman 或 subagent 插件。
 
-`pi-delegate` 让 Codex 或其他 Supervisor 将一个原子任务委派给本机 Pi Worker。Supervisor 提供结构化任务（objective、cwd、scope、constraints、acceptance criteria）；写任务还要声明 `writeMode: "direct" | "isolated"` 和 `allowedWriteScope`，其中 direct 写还需要已知工作区状态与授权。Pi 不得创建或清理 Worktree，并且只能报告越界发现而不修改它们。Provider / Model 默认 `deepseek`/`deepseek-flash`，thinking 由调用方选择，Pro / 昂贵模型需要显式授权。Continuation 使用原始 `cwd` 加精确的 `sessionFile`，遇到 Session 模型不匹配时拒绝启动。结果是一个 JSON 对象，包含结构化任务报告（`summary`、`changedFiles`、`validation`、`remainingIssue`、`decisionNeeded`、`writeScope`、`scopeExceeded`、`outOfScopeFindings`）。详细说明见 [Skill 文档](skills/pi-delegate/SKILL.md) 和 [Worker 契约](skills/pi-delegate/references/worker-contract.md)。
+`pi-delegate` 让 Codex 或其他 Supervisor 将一个原子任务委派给本机 Pi Worker。Supervisor 提供结构化任务（objective、cwd、scope、constraints、acceptance criteria）；写任务还要声明 `writeMode: "direct" | "isolated"` 和 `allowedWriteScope`，其中 direct 写还需要已知工作区状态与授权。Pi 不得创建或清理 Worktree，并且只能报告越界发现而不修改它们。模型默认来自 Pi 已保存的设置；只有任务明确指定模型时才覆盖。续接沿用 Session 中记录的模型。Worker 不自行升级模型，模型不足时交给 Supervisor 决策。权限错误由宿主 Agent 申请处理。结果是一个 JSON 对象，包含结构化任务报告（`summary`、`changedFiles`、`validation`、`remainingIssue`、`decisionNeeded`、`writeScope`、`scopeExceeded`、`outOfScopeFindings`）。详细说明见 [Skill 文档](skills/pi-delegate/SKILL.md) 和 [Worker 契约](skills/pi-delegate/references/worker-contract.md)。
 
 ### 手动复制
 
