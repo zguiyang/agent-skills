@@ -16,12 +16,34 @@ async function text(file) {
   return readFile(file, 'utf8');
 }
 
-test('pi-delegate has valid identity metadata and an MCP-native discovery description', async () => {
+test('pi-delegate has valid identity metadata and an atomic-execution discovery description', async () => {
   const skill = await text(skillPath);
   assert.match(skill, /^---\nname: pi-delegate\ndescription: >-/);
   assert.match(skill, /short-description: Delegate bounded work through the registered pi-worker MCP\./);
-  assert.match(skill, /independent file\n  investigation, mechanical changes, focused implementation, or verification/);
-  assert.match(skill, /trivial,\n  ambiguous, architectural, and supervisor-context-dependent work local/);
+  assert.match(skill, /bounded atomic execution tasks/);
+  assert.match(skill, /regardless of task size/);
+  assert.match(skill, /requirements, architecture, risk\n  decisions, coordination, integration, and final acceptance with the\n  Supervisor/);
+  assert.doesNotMatch(skill, /non-trivial coding|keep trivial|trivial change|one-file trivial/);
+});
+
+test('policy defaults clear atomic execution to Pi without requiring every micro-operation to spawn', async () => {
+  const [skill, contract] = await Promise.all([text(skillPath), text(contractPath)]);
+  assert.match(skill, /Use Pi by default for a concrete execution task/);
+  assert.match(skill, /a one-file edit, a read-only\nsearch, a single test run, a small bug fix, or a mechanical change/);
+  assert.match(skill, /Do not create a Worker for every\nmicroscopic operation/);
+  assert.match(contract, /small one-file edits, read-only inspection, one targeted test, small\nbug fixes, and mechanical changes/);
+  assert.match(contract, /Task\nsize is not an eligibility rule/);
+});
+
+test('complex work is planned, split, dispatched, reviewed, and safely authorized by the Supervisor', async () => {
+  const [skill, contract] = await Promise.all([text(skillPath), text(contractPath)]);
+  assert.match(skill, /Never hand an ambiguous large goal to one Worker/);
+  assert.match(skill, /splits it into independently verifiable\natomic tasks/);
+  assert.match(skill, /selects serial or parallel execution/);
+  assert.match(skill, /use `pi_continue` for a related follow-up/);
+  assert.match(skill, /must obtain any required user authorization\nbefore destructive data operations, secrets or sensitive configuration work/);
+  assert.match(contract, /The Supervisor keeps requirement interpretation, product and architecture\ndecisions, task decomposition/);
+  assert.match(contract, /Atomicity does not authorize\ndestructive data work/);
 });
 
 test('Skill references all and only the public v0.1.1 MCP tools', async () => {

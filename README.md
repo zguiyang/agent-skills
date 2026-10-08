@@ -78,15 +78,26 @@ does not contain a Pi runner, configure providers or credentials, install the
 MCP, or replace Pi's default model. When the Supervisor leaves out `model`, Pi
 uses its saved local default.
 
-The Supervisor decides whether a bounded task merits delegation, then uses the
-registered MCP tools: `pi_list`, `pi_spawn`, `pi_status`, `pi_steer`,
+The Supervisor uses Pi by default for a concrete, bounded atomic execution
+task—whether it is a small file read, one targeted test, a one-file fix, a
+mechanical edit, or a larger implementation. Task size is not the gate: the
+objective, context, operating boundary, completion check, and side effects
+must be clear. The Supervisor retains requirements, product and architecture
+decisions, planning, permission and risk decisions, task dependencies,
+integration, review, and final acceptance. Complex goals are split into
+coherent, independently verifiable tasks before dispatch; related follow-ups
+prefer `pi_continue`.
+
+The registered MCP tools are `pi_list`, `pi_spawn`, `pi_status`, `pi_steer`,
 `pi_continue`, and `pi_abort`. Independent read-only investigations can run in
 parallel. Writes must avoid conflicts: use deliberate `direct` work only with
 a known workspace state, or use MCP-managed `worktree` mode for isolated
 implementation. `PI_WORKER_ALLOWED_ROOTS` is a path allowlist, not an OS
-sandbox. Spawn acceptance and `settled` state are not proof of correctness;
-the Supervisor verifies source evidence, diffs, scope, checks, and side
-effects before accepting a result. See the [Skill instructions](skills/pi-delegate/SKILL.md)
+sandbox. Atomicity does not authorize destructive data work, sensitive
+configuration, production operations, irreversible changes, Git-history
+rewriting, or scope expansion. Spawn acceptance and `settled` state are not
+proof of correctness; the Supervisor verifies source evidence, diffs, scope,
+checks, and side effects before accepting a result. See the [Skill instructions](skills/pi-delegate/SKILL.md)
 and [MCP contract](skills/pi-delegate/references/mcp-contract.md).
 
 ### Manual copy

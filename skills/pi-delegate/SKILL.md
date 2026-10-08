@@ -1,11 +1,11 @@
 ---
 name: pi-delegate
 description: >-
-  MCP-native policy for deciding when to delegate bounded, non-trivial coding
-  or investigation work to local Pi workers. Use when independent file
-  investigation, mechanical changes, focused implementation, or verification
-  can save supervisor context or run safely in parallel; keep trivial,
-  ambiguous, architectural, and supervisor-context-dependent work local.
+  MCP-native delegation policy for bounded atomic execution tasks: delegate
+  clear investigation, implementation, testing, and mechanical work to local
+  Pi workers regardless of task size. Keep requirements, architecture, risk
+  decisions, coordination, integration, and final acceptance with the
+  Supervisor.
 metadata:
   short-description: Delegate bounded work through the registered pi-worker MCP.
   version: "4"
@@ -25,26 +25,46 @@ configuration, change Pi credentials or defaults, or fall back to the legacy
 Pi CLI runner. If the MCP tools are unavailable, report the missing dependency
 and give the installation route in [the reference](references/mcp-contract.md).
 
-## Decide first
+## Atomic execution first
 
-Consider Pi only when the task is bounded and the expected result is clear,
-and delegation materially saves Supervisor context or enables useful parallel
-progress. Good candidates include:
+Use Pi by default for a concrete execution task once the Supervisor can state
+its objective, relevant context, operating boundary, completion check, and
+expected side effects. Task size is not the gate: a one-file edit, a read-only
+search, a single test run, a small bug fix, or a mechanical change can each be
+a valid atomic delegation. Atomic means one bounded outcome and accountable
+execution, not one file or one command.
 
-- independent, evidence-heavy multi-module investigation;
-- a non-trivial implementation with a fixed scope and acceptance checks;
-- focused test or verification work; and
-- mechanical edits with clear boundaries.
+The Supervisor first understands the user request and makes any product,
+architecture, risk, authorization, and dependency decisions. It then delegates
+the decided execution work: investigation, file reading/search, implementation,
+bug fixing, tests, builds, validation, and mechanical changes. Do not delegate
+an ambiguous request, an unresolved design choice, or final acceptance.
 
-Do the work directly when it is a short question, a one-file trivial change, a
-quick command, ambiguous work, a product or architecture decision, or depends
-on the Supervisor's current context. Do not delegate merely because Pi exists.
+The Supervisor may directly perform coordination, workspace-state checks,
+result verification, and an extremely low-cost action where delegation is
+plainly less efficient. This is a narrow efficiency exception, not a rule that
+uses task size to keep execution local. Do not create a Worker for every
+microscopic operation when it adds no useful execution boundary.
 
-Before an implementation worker, record the workspace state and define the
+Before an implementation worker, record the workspace state and give it the
 objective, allowed scope, constraints, expected result, and validation. A
 Worker must not make product, architecture, authorization, or integration
 decisions, broaden scope, commit, push, merge, reset, stash, or clean unless
 the Supervisor explicitly authorizes that exact action.
+
+## Complex work: split, dispatch, review
+
+Never hand an ambiguous large goal to one Worker. The Supervisor clarifies the
+overall objective, maps dependencies, splits it into independently verifiable
+atomic tasks, and selects serial or parallel execution. Dispatch independent
+tasks separately; parallel work must not overlap writes. Review each result,
+then steer a running Worker or use `pi_continue` for a related follow-up that
+benefits from its context. Integrate only after the Supervisor's review and
+final acceptance.
+
+Atomic tasks can span multiple files or commands when that is the smallest
+coherent responsibility boundary. Do not fragment work merely to increase
+Worker count, and do not force independent-looking tasks to run in parallel.
 
 ## MCP workflow
 
@@ -80,6 +100,12 @@ system sandbox or a complete permission boundary. A direct-worker failure may
 leave partial edits. Inspect the actual workspace before retrying any failed or
 timed-out write task, and never create replacement workers merely to bypass a
 permission, sandbox, authentication, or scope failure.
+
+Atomicity is necessary but not authorization for high-risk work. The
+Supervisor retains the decision and must obtain any required user authorization
+before destructive data operations, secrets or sensitive configuration work,
+production operations, irreversible changes, Git-history rewriting, or action
+outside the user's approved scope. Pi must not expand permissions or scope.
 
 ## Model, failures, and acceptance
 

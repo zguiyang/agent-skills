@@ -18,6 +18,29 @@ needs Node.js 20+, a configured local `pi` executable, and Git for `worktree`
 mode. Skill and MCP are independent repositories; installing this Skill does
 not install or configure the MCP.
 
+## Delegation policy
+
+Delegate a concrete, bounded execution task when its objective, context,
+operating boundary, completion check, and side effects are understood. This
+includes small one-file edits, read-only inspection, one targeted test, small
+bug fixes, and mechanical changes as well as larger implementation work. Task
+size is not an eligibility rule.
+
+The Supervisor keeps requirement interpretation, product and architecture
+decisions, task decomposition, dependency and concurrency planning, risk and
+permission decisions, integration, review, and final acceptance. For a complex
+goal, split work into coherent, independently verifiable atomic tasks before
+calling `pi_spawn`; then choose serial or non-overlapping parallel dispatch.
+Use `pi_continue` for related follow-up after review, rather than repeatedly
+creating unrelated replacement workers.
+
+Do not create a Worker for every microscopic operation when delegation supplies
+no useful execution boundary. The Supervisor may directly coordinate, inspect
+the workspace baseline, and verify results. Atomicity does not authorize
+destructive data work, secrets or sensitive configuration handling, production
+operations, irreversible changes, Git-history rewriting, or work outside user
+authorization; retain those decisions and obtain any needed approval first.
+
 ## Tools and exact inputs
 
 | Tool | Required input | Optional input | Meaning |
@@ -84,7 +107,13 @@ for implementations. A worker's textual report, accepted call, clean exit, or
 
 ## Invocation examples
 
-Read-only, independent investigations may run in parallel:
+Small, bounded execution work is eligible for delegation:
+
+```text
+pi_spawn({ task: "Read src/config.ts and report whether the timeout is parsed as milliseconds, citing the relevant lines.", cwd: "/project", mode: "direct", profile: "inspect" })
+```
+
+Independent read-only investigations may run in parallel:
 
 ```text
 pi_spawn({ task: "Inspect error handling in src/api; report cited findings only.", cwd: "/project", mode: "direct", profile: "inspect" })

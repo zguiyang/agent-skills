@@ -69,7 +69,9 @@ npx skills add zguiyang/agent-skills --skill pi-delegate -a codex -y
 
 MCP 需要 Node.js 20+、已在本机配置好的 `pi` 可执行文件，以及用于 worktree 模式的 Git。MCP 由 Host 启动，不由此 Skill 启动。`pi-delegate` 不包含 Pi runner、不配置 Provider 或凭据、不安装 MCP，也不会替换 Pi 默认模型。Supervisor 不传 `model` 时，Pi 使用已保存的本机默认模型。
 
-Supervisor 判断一个边界明确的任务是否值得委派，然后使用已经注册的 MCP 工具：`pi_list`、`pi_spawn`、`pi_status`、`pi_steer`、`pi_continue` 和 `pi_abort`。独立的只读调查可以并行。写入必须避免冲突：仅在明确且已检查工作区状态时使用 `direct`，或者使用 MCP 管理的 `worktree` 模式执行隔离实现。`PI_WORKER_ALLOWED_ROOTS` 是路径允许列表，而不是操作系统沙箱。Spawn 被接受或 Worker 状态为 `settled` 都不表示结果正确；Supervisor 必须在验收前核对源码证据、diff、范围、检查结果和副作用。详细说明见 [Skill 文档](skills/pi-delegate/SKILL.md) 和 [MCP 契约](skills/pi-delegate/references/mcp-contract.md)。
+对于一个具体、边界明确的原子执行任务，Supervisor 默认优先使用 Pi：无论它是读取一个小文件、运行一次定向测试、单文件修复、机械修改，还是更大的实现。任务大小不是门槛；目标、上下文、操作边界、完成检查和副作用必须清楚。Supervisor 保留需求理解、产品与架构决策、规划、权限与风险判断、任务依赖、整合、审查和最终验收。复杂目标应先拆成连贯、可独立验收的任务再派发；相关后续工作优先使用 `pi_continue`。
+
+已经注册的 MCP 工具为：`pi_list`、`pi_spawn`、`pi_status`、`pi_steer`、`pi_continue` 和 `pi_abort`。独立的只读调查可以并行。写入必须避免冲突：仅在明确且已检查工作区状态时使用 `direct`，或者使用 MCP 管理的 `worktree` 模式执行隔离实现。`PI_WORKER_ALLOWED_ROOTS` 是路径允许列表，而不是操作系统沙箱。原子化不等于获得破坏性数据操作、敏感配置处理、生产环境操作、不可逆修改、Git 历史重写或扩大范围的授权。Spawn 被接受或 Worker 状态为 `settled` 都不表示结果正确；Supervisor 必须在验收前核对源码证据、diff、范围、检查结果和副作用。详细说明见 [Skill 文档](skills/pi-delegate/SKILL.md) 和 [MCP 契约](skills/pi-delegate/references/mcp-contract.md)。
 
 ### 手动复制
 
