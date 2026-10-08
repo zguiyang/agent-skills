@@ -1,3 +1,0 @@
-{"type":"session","version":3,"id":"task-fixture","timestamp":"2026-01-01T00:00:00.000Z","cwd":"/repo"}
-{"type":"model_change","id":"m1","parentId":null,"timestamp":"2026-01-01T00:00:00.001Z","provider":"deepseek","modelId":"deepseek-flash"}
-{"type":"thinking_level_change","id":"t1","parentId":"m1","timestamp":"2026-01-01T00:00:00.002Z","thinkingLevel":"low"}

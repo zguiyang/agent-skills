@@ -34,7 +34,7 @@
 | **test-database-workflow** | 为集成和功能测试安全使用明确隔离的测试数据库。 | [`skills/test-database-workflow/`](skills/test-database-workflow/) |
 | **infrastructure-operations** | 从配置优先地诊断部署、容器、环境变量与运行时状态问题。 | [`skills/infrastructure-operations/`](skills/infrastructure-operations/) |
 | **cursor-delegate** | 当任务边界明确且执行量非琐碎时，优先委派给用户本机的 Cursor CLI；适用时优先使用用户验证过的最简调用，仅在需要时检查 CLI 帮助，并由调用方 Agent 保留范围、授权和最终验收。 | [`skills/cursor-delegate/`](skills/cursor-delegate/) |
-| **pi-delegate** | 将一个由 Supervisor 定义的原子任务委派给本机 Pi Worker，支持限定写入范围、由宿主 Agent 控制权限、使用 Pi 原生模型默认值、稳定续接 Session 和结构化结果。 | [`skills/pi-delegate/`](skills/pi-delegate/) |
+| **pi-delegate** | 用于判断何时值得通过 MCP 委派给 Pi Worker 的策略；Supervisor 仍负责决策、整合和最终验收。 | [`skills/pi-delegate/`](skills/pi-delegate/) |
 
 ## 安装
 
@@ -53,7 +53,13 @@ npx skills add zguiyang/agent-skills --skill lucid
 
 ### 为 Codex 安装 `pi-delegate`
 
-在希望 Codex 使用此 Skill 的项目根目录执行：
+`pi-worker-mcp` 与本 Skill 是两个独立项目。请先为实际使用的 Host 与作用域安装 MCP；它负责 Pi Runtime、Worker 生命周期、RPC 与 Worktree 创建：
+
+```bash
+npx -y @zguiyang/pi-worker-mcp@0.1.1 setup
+```
+
+然后可选地在希望 Codex 应用委派策略的任意项目根目录安装 Skill：
 
 ```bash
 npx skills add zguiyang/agent-skills --skill pi-delegate -a codex -y
@@ -61,9 +67,9 @@ npx skills add zguiyang/agent-skills --skill pi-delegate -a codex -y
 
 此命令仅在项目级安装 `pi-delegate`，且只安装给 Codex。`-y` 会跳过确认提示。当前 `skills` CLI 会将 Codex 项目级 Skill 安装到 `.agents/skills/`。若要交互式确认选项，可省略 `-y`。
 
-前置条件：安装 Pi Coding Agent，并确保可以通过 `pi` 命令调用；在 Pi 中用 `/model` 选择默认模型并按 `Ctrl+S` 保存；并安装 Node.js 以运行 `.mjs` runner。任务未指定 Provider / Model 时，Runner 使用 Pi 已保存的默认模型；任务明确指定时，Provider 和 Model 必须成对传入。Pi 子进程继承宿主 Agent 提供的环境和权限；需要权限时由宿主 Agent 处理。Runner 只使用 Node.js 内置模块；不需要 `jq`、额外的 npm runtime dependency、Pi Spawner、Herdsman 或 subagent 插件。
+MCP 需要 Node.js 20+、已在本机配置好的 `pi` 可执行文件，以及用于 worktree 模式的 Git。MCP 由 Host 启动，不由此 Skill 启动。`pi-delegate` 不包含 Pi runner、不配置 Provider 或凭据、不安装 MCP，也不会替换 Pi 默认模型。Supervisor 不传 `model` 时，Pi 使用已保存的本机默认模型。
 
-`pi-delegate` 让 Codex 或其他 Supervisor 将一个原子任务委派给本机 Pi Worker。Supervisor 提供结构化任务（objective、cwd、scope、constraints、acceptance criteria）；写任务还要声明 `writeMode: "direct" | "isolated"` 和 `allowedWriteScope`，其中 direct 写还需要已知工作区状态与授权。Pi 不得创建或清理 Worktree，并且只能报告越界发现而不修改它们。模型默认来自 Pi 已保存的设置；只有任务明确指定模型时才覆盖。续接沿用 Session 中记录的模型。Worker 不自行升级模型，模型不足时交给 Supervisor 决策。权限错误由宿主 Agent 申请处理。结果是一个 JSON 对象，包含结构化任务报告（`summary`、`changedFiles`、`validation`、`remainingIssue`、`decisionNeeded`、`writeScope`、`scopeExceeded`、`outOfScopeFindings`）。详细说明见 [Skill 文档](skills/pi-delegate/SKILL.md) 和 [Worker 契约](skills/pi-delegate/references/worker-contract.md)。
+Supervisor 判断一个边界明确的任务是否值得委派，然后使用已经注册的 MCP 工具：`pi_list`、`pi_spawn`、`pi_status`、`pi_steer`、`pi_continue` 和 `pi_abort`。独立的只读调查可以并行。写入必须避免冲突：仅在明确且已检查工作区状态时使用 `direct`，或者使用 MCP 管理的 `worktree` 模式执行隔离实现。`PI_WORKER_ALLOWED_ROOTS` 是路径允许列表，而不是操作系统沙箱。Spawn 被接受或 Worker 状态为 `settled` 都不表示结果正确；Supervisor 必须在验收前核对源码证据、diff、范围、检查结果和副作用。详细说明见 [Skill 文档](skills/pi-delegate/SKILL.md) 和 [MCP 契约](skills/pi-delegate/references/mcp-contract.md)。
 
 ### 手动复制
 
