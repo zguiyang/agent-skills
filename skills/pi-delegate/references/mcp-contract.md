@@ -62,10 +62,26 @@ or Skill-managed worker registry.
 
 `direct` uses the supplied checkout. `worktree` asks the MCP to create a Git
 worktree under `.pi-worker-mcp/worktrees`; it creates a `pi-worker/<id>` branch.
-Worktree edits are not automatically merged or deleted. `inspect` exposes only
-read tools; `implement` can edit and run commands. The supplied `cwd` must be
-an existing absolute directory inside `PI_WORKER_ALLOWED_ROOTS` (or the
-runtime's default allowed root). That path check is not an OS sandbox.
+Worktree edits are not automatically merged or deleted. The MCP creates the
+worktree from Git `HEAD`; unstaged, staged, and untracked source-checkout
+changes do not automatically appear there. Before choosing `worktree`, inspect
+the workspace, determine whether the task needs uncommitted work, and confirm
+that `HEAD` is the correct baseline. Never auto-commit user work or alter Git
+history to create one.
+
+`inspect` has exactly `read`, `grep`, `find`, and `ls`. It has no `bash`, so it
+cannot run tests, builds, lint, or any other shell command, even if the command
+is conceptually read-only. `implement` has `read`, `edit`, `write`, `bash`,
+`grep`, `find`, and `ls`; use it for shell-based verification and account for
+command-generated files and side effects. Mode and profile are selected at
+spawn and are not changed by `pi_continue`.
+
+The supplied `cwd` must be an existing absolute directory inside
+`PI_WORKER_ALLOWED_ROOTS` (or the runtime's default allowed root). That path
+check is not an OS sandbox. There is no `allowedWriteScope` input: state the
+intended file boundary in `task`, then inspect actual changed files, newly
+created files, and effects on pre-existing user work. Task wording is not a
+filesystem sandbox, and an `implement` Worker can run `bash`.
 
 Before a direct implementation, preserve and inspect the workspace baseline.
 Never place concurrent direct writes on overlapping scope. Use independent
@@ -84,8 +100,16 @@ observable fields such as `processAlive`, `pid`, `cwd`, `mode`, `profile`,
 does not mean the work is completed or correct. `settled` means only that the
 current activity cycle ended. A settled worker still occupies a live-worker
 slot and can be reused by `pi_continue`; release it with `pi_abort` once no
-related work remains. `pi_continue` cannot reuse aborting or terminal workers.
-`pi_abort` neither reverts direct edits nor deletes a worktree.
+related work remains. `pi_continue` cannot reuse aborting or terminal workers,
+and it retains the profile and mode chosen at spawn. Use an `inspect` Worker
+only for further read-only investigation; start a new `implement` Worker for
+edits or shell-based verification. `pi_abort` neither reverts direct edits nor
+deletes a worktree.
+
+Workers launch Pi with `--no-session` and are stored only in the active MCP
+Server's worker map. `workerId` is not a durable cross-restart session token:
+after an MCP restart or Host reconnection, start a new Worker. An aborted or
+otherwise terminal Worker cannot be revived by `pi_continue`.
 
 Use `pi_steer` only while a worker is running, to correct its current task.
 For a related next task after settlement, use `pi_continue`. Avoid busy

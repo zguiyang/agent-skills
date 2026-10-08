@@ -73,6 +73,8 @@ MCP 需要 Node.js 20+、已在本机配置好的 `pi` 可执行文件，以及�
 
 已经注册的 MCP 工具为：`pi_list`、`pi_spawn`、`pi_status`、`pi_steer`、`pi_continue` 和 `pi_abort`。独立的只读调查可以并行。写入必须避免冲突：仅在明确且已检查工作区状态时使用 `direct`，或者使用 MCP 管理的 `worktree` 模式执行隔离实现。`PI_WORKER_ALLOWED_ROOTS` 是路径允许列表，而不是操作系统沙箱。原子化不等于获得破坏性数据操作、敏感配置处理、生产环境操作、不可逆修改、Git 历史重写或扩大范围的授权。Spawn 被接受或 Worker 状态为 `settled` 都不表示结果正确；Supervisor 必须在验收前核对源码证据、diff、范围、检查结果和副作用。详细说明见 [Skill 文档](skills/pi-delegate/SKILL.md) 和 [MCP 契约](skills/pi-delegate/references/mcp-contract.md)。
 
+`inspect` 仅有读取与搜索工具，不能运行 `bash`；测试、构建、lint 或任何 Shell 命令都要使用 `implement`，并审查命令副作用。Worktree 基于 Git `HEAD` 创建，不包含未提交或未跟踪文件。`pi_continue` 保持 Worker 的 profile 和 mode，且仅在当前 MCP Server 中该 Worker 仍为非终止状态时有效；Worker 使用 `--no-session`，因此 `workerId` 不能跨 MCP 重启使用。
+
 ### 手动复制
 
 ```bash

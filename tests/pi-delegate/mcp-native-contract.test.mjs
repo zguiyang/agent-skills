@@ -72,6 +72,26 @@ test('contract preserves the v0.1.1 inputs and lifecycle semantics', async () =>
   assert.match(contract, /not an OS sandbox/);
 });
 
+test('profile capability and continuation boundaries prevent implicit escalation', async () => {
+  const [skill, contract] = await Promise.all([text(skillPath), text(contractPath)]);
+  assert.match(contract, /`inspect` has exactly `read`, `grep`, `find`, and `ls`/);
+  assert.match(contract, /It has no `bash`, so it\ncannot run tests, builds, lint, or any other shell command/);
+  assert.match(contract, /`implement` has `read`, `edit`, `write`, `bash`,/);
+  assert.match(contract, /Mode and profile are selected at\nspawn and are not changed by `pi_continue`/);
+  assert.match(skill, /cannot continue into a code change or shell-based\nverification: create a new `implement` Worker instead/);
+});
+
+test('worktree, task scope, and worker ID are not stronger isolation or persistence contracts', async () => {
+  const [skill, contract] = await Promise.all([text(skillPath), text(contractPath)]);
+  assert.match(contract, /worktree from Git `HEAD`; unstaged, staged, and untracked/);
+  assert.match(contract, /Never auto-commit user work or alter Git\nhistory/);
+  assert.match(contract, /There is no `allowedWriteScope` input/);
+  assert.match(contract, /Task wording is not a\nfilesystem sandbox, and an `implement` Worker can run `bash`/);
+  assert.match(skill, /Workers use `--no-session` and are held by the current MCP Server only/);
+  assert.match(contract, /`workerId` is not a durable cross-restart session token/);
+  assert.match(contract, /An aborted or\notherwise terminal Worker cannot be revived by `pi_continue`/);
+});
+
 test('policy permits independent read-only parallelism and protects write work', async () => {
   const skill = await text(skillPath);
   const contract = await text(contractPath);

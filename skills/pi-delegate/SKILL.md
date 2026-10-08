@@ -66,6 +66,22 @@ Atomic tasks can span multiple files or commands when that is the smallest
 coherent responsibility boundary. Do not fragment work merely to increase
 Worker count, and do not force independent-looking tasks to run in parallel.
 
+## Profile, mode, and continuation
+
+Choose profile and mode at `pi_spawn` time; `pi_continue` preserves both.
+`inspect` exposes only `read`, `grep`, `find`, and `ls`. It is for investigation
+and cannot run `bash`, so it cannot run tests, builds, lint, or any other shell
+command—even when the intended command is logically read-only. Those commands
+need an `implement` Worker, whose tools include `read`, `edit`, `write`,
+`bash`, `grep`, `find`, and `ls`; account for command-generated files and other
+side effects before using it.
+
+Use `pi_continue` only for a related task that stays within the existing
+Worker's profile and mode. An `inspect` Worker can continue a read-only
+investigation, but cannot continue into a code change or shell-based
+verification: create a new `implement` Worker instead. Continuation is not a
+permission upgrade.
+
 ## MCP workflow
 
 1. Call `pi_list` before spawning when capacity or reusable workers are
@@ -77,8 +93,9 @@ Worker count, and do not force independent-looking tasks to run in parallel.
    successful spawn or a `settled` worker is not proof that the result is
    correct.
 4. Use `pi_steer` only to correct a running worker's current task. Use
-   `pi_continue` with its `workerId` for a related follow-up that benefits from
-   the same worker context; create a new worker for unrelated work.
+   `pi_continue` with its `workerId` only for a related follow-up that fits its
+   unchanged profile and mode; create a new Worker for unrelated work or a
+   capability change.
 5. Call `pi_abort` when a worker is incorrect or no longer needed, including
    after reviewing a settled worker with no follow-up. Then use `pi_list` when
    needed to confirm active capacity and release.
@@ -95,8 +112,16 @@ implementation work; the MCP creates that Git worktree and does not merge or
 delete it automatically. Parallel implementation workers require separate
 worktrees and non-overlapping scope.
 
-`PI_WORKER_ALLOWED_ROOTS` limits eligible `cwd` paths; it is not an operating
-system sandbox or a complete permission boundary. A direct-worker failure may
+MCP worktrees start from Git `HEAD`. Uncommitted changes and untracked files do
+not automatically enter them. Before spawning a worktree Worker, check the
+current workspace, decide whether the task depends on uncommitted work, and
+confirm that `HEAD` is the intended baseline. Never auto-commit user work or
+rewrite Git history to manufacture that baseline.
+
+There is no `allowedWriteScope` parameter. Put the intended file boundary in
+the `pi_spawn.task`, then verify actual changed and newly created files after
+the Worker runs. That textual scope, and `PI_WORKER_ALLOWED_ROOTS`, are not
+filesystem sandboxes; `implement` also has `bash`. A direct-worker failure may
 leave partial edits. Inspect the actual workspace before retrying any failed or
 timed-out write task, and never create replacement workers merely to bypass a
 permission, sandbox, authentication, or scope failure.
@@ -106,6 +131,16 @@ Supervisor retains the decision and must obtain any required user authorization
 before destructive data operations, secrets or sensitive configuration work,
 production operations, irreversible changes, Git-history rewriting, or action
 outside the user's approved scope. Pi must not expand permissions or scope.
+
+## Worker availability and release
+
+Workers use `--no-session` and are held by the current MCP Server only.
+`workerId` identifies that live in-memory Worker; it is not a durable session
+handle and cannot be relied on after an MCP restart or Host reconnection. Use
+`pi_continue` only while the same server still has an operable, non-terminal
+Worker. An aborted or otherwise terminal Worker cannot be revived; inspect its
+result and spawn a new Worker if needed. Release a settled Worker with
+`pi_abort` after related work is complete.
 
 ## Model, failures, and acceptance
 

@@ -100,6 +100,13 @@ proof of correctness; the Supervisor verifies source evidence, diffs, scope,
 checks, and side effects before accepting a result. See the [Skill instructions](skills/pi-delegate/SKILL.md)
 and [MCP contract](skills/pi-delegate/references/mcp-contract.md).
 
+`inspect` is limited to read/search tools and cannot run `bash`; use
+`implement` for tests, builds, lint, or any shell command, and review its
+command side effects. A Worktree starts from Git `HEAD`, not uncommitted or
+untracked files. `pi_continue` preserves the Worker profile and mode, and only
+works while that non-terminal Worker remains in the current MCP Server; workers
+use `--no-session`, so a `workerId` does not survive an MCP restart.
+
 ### Manual copy
 
 ```bash
