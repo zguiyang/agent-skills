@@ -1,95 +1,157 @@
 ---
 name: pi-delegate
-description: Delegate one bounded atomic coding or investigation task to a local Pi worker with a structured task contract, explicit model/session control, direct-or-isolated write policy, and a structured result. Use after the calling agent has decided the task and must independently review the result.
+description: >-
+  MCP-native delegation policy for bounded atomic execution tasks: delegate
+  clear investigation, implementation, testing, and mechanical work to local
+  Pi workers regardless of task size. Keep requirements, architecture, risk
+  decisions, coordination, integration, and final acceptance with the
+  Supervisor.
 metadata:
-  short-description: Delegate one atomic task to a local Pi worker.
+  short-description: Delegate bounded work through the registered pi-worker MCP.
+  version: "4"
+  updated: "2026-10-08"
 ---
 
 # Pi Delegate
 
-Use this skill after the calling Agent has understood the request, decided the approach, and bounded one atomic task. The calling Agent is the Supervisor: it owns architecture, task splitting, model/thinking choices, authorization, review, and final acceptance. Pi is one Worker for one task and one Session. Do not build orchestration, planners, or subagents inside Pi.
+This is a delegation policy, not a Pi runtime. The Supervisor owns requirement
+interpretation, architecture, task decomposition, authorization, integration,
+review, and final acceptance. `pi-worker-mcp` owns Pi processes, RPC,
+worker IDs, concurrency, continuation, steering, timeouts, and release.
 
-## Runner
+Use the Host's already registered `pi-worker-mcp` tools directly. Never start
+the package through a shell, install it automatically, modify MCP
+configuration, change Pi credentials or defaults, or fall back to the legacy
+Pi CLI runner. If the MCP tools are unavailable, report the missing dependency
+and give the installation route in [the reference](references/mcp-contract.md).
 
-Use `scripts/pi-worker.mjs` when Node.js is available. It reads one JSON request from stdin, writes one final JSON result to stdout, and sends progress to stderr. Invoke it through the host's normal local execution API with an argument array. The runner launches Pi with `child_process.spawn(..., { shell: false })`; this is an internal runner safety requirement and does not require the calling Agent to have a process API of its own. The child inherits the host-provided environment and execution permissions. The host Agent owns sandbox policy and any permission request; the runner cannot grant itself access. Never build a shell command string. The runner passes the complete Prompt through Pi's stdin by default. Only a confirmed pre-execution stdin rejection may retry once with the Prompt as a single argv element after `--`. Markdown, backticks, `$`, quotes, newlines, Unicode, and code blocks are never shell-expanded.
+## Atomic execution first
 
-Example invocation shape (API shape, not a shell command):
+Use Pi by default for a concrete execution task once the Supervisor can state
+its objective, relevant context, operating boundary, completion check, and
+expected side effects. Task size is not the gate: a one-file edit, a read-only
+search, a single test run, a small bug fix, or a mechanical change can each be
+a valid atomic delegation. Atomic means one bounded outcome and accountable
+execution, not one file or one command.
 
-```js
-spawn(process.execPath, [runnerPath], { cwd: request.cwd, shell: false, stdio: ['pipe', 'pipe', 'pipe'] });
-// then write JSON.stringify(request) to stdin and parse the single stdout JSON result
-```
+The Supervisor first understands the user request and makes any product,
+architecture, risk, authorization, and dependency decisions. It then delegates
+the decided execution work: investigation, file reading/search, implementation,
+bug fixing, tests, builds, validation, and mechanical changes. Do not delegate
+an ambiguous request, an unresolved design choice, or final acceptance.
 
-## Atomic task contract
+The Supervisor may directly perform coordination, workspace-state checks,
+result verification, and an extremely low-cost action where delegation is
+plainly less efficient. This is a narrow efficiency exception, not a rule that
+uses task size to keep execution local. Do not create a Worker for every
+microscopic operation when it adds no useful execution boundary.
 
-Every `delegate` task must be a supervisor-defined atomic task. Required fields:
+Before an implementation worker, record the workspace state and give it the
+objective, allowed scope, constraints, expected result, and validation. A
+Worker must not make product, architecture, authorization, or integration
+decisions, broaden scope, commit, push, merge, reset, stash, or clean unless
+the Supervisor explicitly authorizes that exact action.
 
-- `objective`: one concrete, bounded outcome.
-- `cwd`: existing absolute workspace directory.
-- `scope`: files/modules/areas in play (string or string[]).
-- `constraints`: array of constraints, possibly empty.
-- `acceptance`: non-empty array of acceptance criteria.
+## Complex work: split, dispatch, review
 
-Writes additionally require `allowedWriteScope` (non-empty) and `writeMode` (`direct` or `isolated`). `direct` also requires `workspaceStateKnown: true` and `writeAuthorization: true`; `isolated` means the Supervisor supplied the isolated worktree and owns its lifecycle. Reads, targeted tests, migrations, lint/typecheck/build tasks are all valid Pi work; write mode is not read-only by default, and profile `readonly` is only for pure reads.
+Never hand an ambiguous large goal to one Worker. The Supervisor clarifies the
+overall objective, maps dependencies, splits it into independently verifiable
+atomic tasks, and selects serial or parallel execution. Dispatch independent
+tasks separately; parallel work must not overlap writes. Review each result,
+then steer a running Worker or use `pi_continue` for a related follow-up that
+benefits from its context. Integrate only after the Supervisor's review and
+final acceptance.
 
-The runner rejects obviously vague/non-atomic requests, missing scope/acceptance, and incomplete write declarations with a `blocked` result and `decisionNeeded` **before** launching Pi. Ordinary implementation detail stays Worker-owned.
+Atomic tasks can span multiple files or commands when that is the smallest
+coherent responsibility boundary. Do not fragment work merely to increase
+Worker count, and do not force independent-looking tasks to run in parallel.
 
-Example request:
+## Profile, mode, and continuation
 
-```json
-{
-  "action": "delegate",
-  "taskId": "task-123",
-  "cwd": "/absolute/path/to/worktree",
-  "objective": "Implement the token refresh guard in src/auth.",
-  "scope": ["src/auth"],
-  "constraints": ["Do not change public APIs"],
-  "acceptance": ["Unit tests for the guard pass"],
-  "profile": "implementation",
-  "writeMode": "isolated",
-  "allowedWriteScope": ["src/auth"],
-  "thinking": "low"
-}
-```
+Choose profile and mode at `pi_spawn` time; `pi_continue` preserves both.
+`inspect` exposes only `read`, `grep`, `find`, and `ls`. It is for investigation
+and cannot run `bash`, so it cannot run tests, builds, lint, or any other shell
+command—even when the intended command is logically read-only. Those commands
+need an `implement` Worker, whose tools include `read`, `edit`, `write`,
+`bash`, `grep`, `find`, and `ls`; account for command-generated files and other
+side effects before using it.
 
-## Model selection
+Use `pi_continue` only for a related task that stays within the existing
+Worker's profile and mode. An `inspect` Worker can continue a read-only
+investigation, but cannot continue into a code change or shell-based
+verification: create a new `implement` Worker instead. Continuation is not a
+permission upgrade.
 
-Pi's native model selection is the source of truth. Configure the desired default in Pi with `/model`, then save it with `Ctrl+S`. When the request omits both `provider` and `model`, the runner omits model-selection flags and lets Pi use that default; it does not keep a second model default or model-tier catalog. When a request explicitly supplies both fields, the runner passes them through. Supplying only one is blocked before launch. Thinking remains caller-selectable. The Worker must not change models or create a replacement session on its own; if the selected or configured model is insufficient, it reports `NEEDS_DECISION`. Results report the model found in Pi's stream/session metadata when available. A new task uses Pi's configured default; a continuation uses the model stored in that session.
+## MCP workflow
 
-Because model choice belongs to Pi, a Pro model saved as Pi's default can be used by an unspecified task. The Supervisor should ensure the Pi default reflects the intended cost policy. No per-task confirmation is needed for the configured default.
+1. Call `pi_list` before spawning when capacity or reusable workers are
+   relevant.
+2. Call `pi_spawn` with a bounded `task`, absolute `cwd`, `mode`, and
+   `profile`. Use `inspect` for read-only work and `implement` for authorized
+   changes. Omit `model` by default so Pi uses its locally configured default.
+3. Use `pi_status` sparingly to inspect progress and the terminal result. A
+   successful spawn or a `settled` worker is not proof that the result is
+   correct.
+4. Use `pi_steer` only to correct a running worker's current task. Use
+   `pi_continue` with its `workerId` only for a related follow-up that fits its
+   unchanged profile and mode; create a new Worker for unrelated work or a
+   capability change.
+5. Call `pi_abort` when a worker is incorrect or no longer needed, including
+   after reviewing a settled worker with no follow-up. Then use `pi_list` when
+   needed to confirm active capacity and release.
 
-## Host permissions
+Read [the MCP contract](references/mcp-contract.md) for exact v0.1.1
+parameters, state semantics, failures, and examples.
 
-Pi runs within the execution permissions granted to the host Agent. Preserve the caller's environment and Pi's native configuration and credentials; do not replace Pi's config directory or copy credentials into a temporary config. If startup fails with a permission denial, return `SANDBOX_PERMISSION`, the denied path when known, and whether task execution began. Only the host Agent can request permission. It may retry the same request once only when the runner reports that execution did not start. Never replay after a task-start event or when start state is ambiguous.
+## Parallelism and writes
 
-## Workspace and concurrency
+Run multiple `inspect` workers only for genuinely independent read-only
+questions. For writes, avoid overlapping paths and user changes. Use `direct`
+only for a deliberate, authorized in-place change. Use `worktree` for isolated
+implementation work; the MCP creates that Git worktree and does not merge or
+delete it automatically. Parallel implementation workers require separate
+worktrees and non-overlapping scope.
 
-`direct` writes stay in the Supervisor-supplied `cwd` and write only inside `allowedWriteScope`. `isolated` writes use the Supervisor-supplied isolated worktree. In both modes Pi must not create, switch, or clean worktrees or checkouts, and must not reset, stash, clean, checkout over user state, commit, push, or merge. Pi reports out-of-scope findings without changing them and returns `[NEEDS_DECISION]` when a needed change falls outside the allowed write scope.
+MCP worktrees start from Git `HEAD`. Uncommitted changes and untracked files do
+not automatically enter them. Before spawning a worktree Worker, check the
+current workspace, decide whether the task depends on uncommitted work, and
+confirm that `HEAD` is the intended baseline. Never auto-commit user work or
+rewrite Git history to manufacture that baseline.
 
-Serialization: overlapping writes in the same `cwd` must run one at a time. Read-only tasks may run in parallel, and isolated writes to disjoint worktrees may run concurrently. V1 `workspaceMode` `existing`/`delegated` semantics remain accepted for callers that do not use `writeMode`; `delegated` keeps the legacy "follow a project worktree Skill/rule or stop" policy but must not be combined with `writeMode`.
+There is no `allowedWriteScope` parameter. Put the intended file boundary in
+the `pi_spawn.task`, then verify actual changed and newly created files after
+the Worker runs. That textual scope, and `PI_WORKER_ALLOWED_ROOTS`, are not
+filesystem sandboxes; `implement` also has `bash`. A direct-worker failure may
+leave partial edits. Inspect the actual workspace before retrying any failed or
+timed-out write task, and never create replacement workers merely to bypass a
+permission, sandbox, authentication, or scope failure.
 
-## Continuation
+Atomicity is necessary but not authorization for high-risk work. The
+Supervisor retains the decision and must obtain any required user authorization
+before destructive data operations, secrets or sensitive configuration work,
+production operations, irreversible changes, Git-history rewriting, or action
+outside the user's approved scope. Pi must not expand permissions or scope.
 
-A `continue` requires the original `cwd` plus the exact `sessionFile` from the prior result, not `sessionId` alone. The runner inspects the session JSONL metadata for its recorded provider/model. Without an explicit model override, Pi continues with the session's recorded model and returns it in the result. If the metadata is unavailable, or an explicit provider/model conflicts with the session, the runner returns a `blocked` model-mismatch `decisionNeeded` before launch.
+## Worker availability and release
 
-## Recovery and result handling
+Workers use `--no-session` and are held by the current MCP Server only.
+`workerId` identifies that live in-memory Worker; it is not a durable session
+handle and cannot be relied on after an MCP restart or Host reconnection. Use
+`pi_continue` only while the same server still has an operable, non-terminal
+Worker. An aborted or otherwise terminal Worker cannot be revived; inspect its
+result and spawn a new Worker if needed. Release a settled Worker with
+`pi_abort` after related work is complete.
 
-The normal path starts Pi directly in JSON streaming mode; do not preflight with version/help/model scans. The runner frames stdout on LF with a streaming UTF-8 decoder, parses `message_update` text/tool deltas, tool start/end, and the final assistant message, and returns the final text and usage only when present. Malformed event lines are reported; usage is never invented.
+## Model, failures, and acceptance
 
-Only a recognized startup capability failure triggers targeted discovery: unsupported options consult local `pi --help`; an unknown model consults `pi --list-models <provider>`; a missing `pi` is reported directly. Current Pi accepts piped Prompt input; if a future CLI explicitly rejects it before execution, the runner may retry once with argv transport. A confirmed pre-execution rejection of JSON mode may retry once in final text mode. If any event indicates that the task started, a stream/parser/transport failure must never re-run the task. Authentication errors and rate limits are returned without login attempts, model substitution, or automatic retry. No behavior branches on Pi version numbers.
+Do not specify `model` unless the user or Supervisor has a concrete reason.
+Pi owns its providers, credentials, available models, and default selection;
+the Worker must not silently change or upgrade models. Report unavailable
+models, permissions, sandbox rejection, authentication failure, timeout,
+stall, crash, or scope conflict to the Supervisor for a decision.
 
-Pi's final response must include a structured report block. The runner exposes compatible fields plus a task report: `status`, `summary`, `changedFiles`, `validation`, `remainingIssue`, `decisionNeeded`, `cwd`, `sessionId`/`sessionFile`, `provider`/`model`, `writeScope`, `scopeExceeded`, and `outOfScopeFindings`. The runner cannot observe source changes or validation itself, so unreported values stay `null`/empty and `reportParsed` records whether Pi followed the format. A zero exit code is a process result, not acceptance: the Supervisor reviews the worktree, diff, and required checks independently.
-
-If Node.js or the runner is unavailable but Pi can run, the calling Agent may invoke Pi through its native process API with an argument array and `shell: false`, capture the final text, and preserve the same session, model, tool-profile, and write policy. Never emulate it with a shell command string.
-
-Read [references/worker-contract.md](references/worker-contract.md) for the full JSON schema, decision triggers, and result fields.
-
-## Examples
-
-- One-time read: `action: "delegate"`, `profile: "readonly"`, one objective, explicit scope, acceptance evidence.
-- Direct write: `writeMode: "direct"`, `allowedWriteScope`, `workspaceStateKnown: true`, `writeAuthorization: true`.
-- Isolated write: Supervisor supplies an isolated worktree as `cwd`; `writeMode: "isolated"` with `allowedWriteScope`.
-- Review correction: `action: "continue"` with the same `cwd`, the prior `sessionFile`, and concrete findings; thinking may change.
-- Model override requested: pass provider and model together only when the task or Supervisor explicitly selects them; otherwise let Pi use its native default.
-- Multiple independent tasks: separate runner processes with unique task IDs, disjoint scopes, and isolated worktrees for writes; Pi does not schedule them.
-- Streaming unsupported or Pi missing: only a confirmed startup rejection may fall back; a started task is never replayed.
+Pi output is evidence, not acceptance. For an investigation, verify key source
+evidence before using its conclusions. For edits, independently inspect the
+diff and scope, run or verify relevant checks, assess side effects, and confirm
+the original request is met. Only the Supervisor may declare the overall task
+complete.
