@@ -34,7 +34,6 @@ Current skills (more will be added from future work scenarios):
 | **test-database-workflow** | Safely use an explicitly isolated test database for integration and functional tests. | [`skills/test-database-workflow/`](skills/test-database-workflow/) |
 | **infrastructure-operations** | Diagnose deployment, container, environment, and runtime-state questions from configuration first. | [`skills/infrastructure-operations/`](skills/infrastructure-operations/) |
 | **cursor-delegate** | Prefer delegating bounded, non-trivial execution to the user's local Cursor CLI. Uses this user's verified minimal invocation where applicable, checks CLI help only when needed, and leaves scope, authorization, and final verification with the calling Agent. | [`skills/cursor-delegate/`](skills/cursor-delegate/) |
-| **pi-delegate** | MCP-native policy for deciding when bounded Pi Worker delegation is worthwhile; preserves Supervisor ownership of decisions, integration, and final review. | [`skills/pi-delegate/`](skills/pi-delegate/) |
 
 ## Installation
 
@@ -51,61 +50,11 @@ npx skills add zguiyang/agent-skills --all
 npx skills add zguiyang/agent-skills --skill lucid
 ```
 
-### Install `pi-delegate` for Codex
+### `pi-delegate` migration
 
-`pi-worker-mcp` and this Skill are independent projects. Install the MCP first
-for the Host and scope you actually use; it owns the Pi runtime, worker
-lifecycle, RPC, and worktree creation:
+`pi-delegate` is now maintained by [Pi TaskExec](https://github.com/zguiyang/pi-task-exec). Install and update it from that repository; this collection no longer maintains a second copy.
 
-```bash
-npx -y @zguiyang/pi-worker-mcp@0.1.1 setup
-```
-
-Then, optionally install the Skill from the root of any project where Codex
-should apply its delegation policy:
-
-```bash
-npx skills add zguiyang/agent-skills --skill pi-delegate -a codex -y
-```
-
-This installs only `pi-delegate`, only for Codex, at project scope. `-y` skips
-the confirmation prompt. The current `skills` CLI installs project skills for
-Codex under `.agents/skills/`. To review the choices interactively, omit `-y`.
-
-The MCP requires Node.js 20+, a locally configured `pi` executable, and Git
-for worktree mode. It is started by the Host, not by this Skill. `pi-delegate`
-does not contain a Pi runner, configure providers or credentials, install the
-MCP, or replace Pi's default model. When the Supervisor leaves out `model`, Pi
-uses its saved local default.
-
-The Supervisor uses Pi by default for a concrete, bounded atomic execution
-task—whether it is a small file read, one targeted test, a one-file fix, a
-mechanical edit, or a larger implementation. Task size is not the gate: the
-objective, context, operating boundary, completion check, and side effects
-must be clear. The Supervisor retains requirements, product and architecture
-decisions, planning, permission and risk decisions, task dependencies,
-integration, review, and final acceptance. Complex goals are split into
-coherent, independently verifiable tasks before dispatch; related follow-ups
-prefer `pi_continue`.
-
-The registered MCP tools are `pi_list`, `pi_spawn`, `pi_status`, `pi_steer`,
-`pi_continue`, and `pi_abort`. Independent read-only investigations can run in
-parallel. Writes must avoid conflicts: use deliberate `direct` work only with
-a known workspace state, or use MCP-managed `worktree` mode for isolated
-implementation. `PI_WORKER_ALLOWED_ROOTS` is a path allowlist, not an OS
-sandbox. Atomicity does not authorize destructive data work, sensitive
-configuration, production operations, irreversible changes, Git-history
-rewriting, or scope expansion. Spawn acceptance and `settled` state are not
-proof of correctness; the Supervisor verifies source evidence, diffs, scope,
-checks, and side effects before accepting a result. See the [Skill instructions](skills/pi-delegate/SKILL.md)
-and [MCP contract](skills/pi-delegate/references/mcp-contract.md).
-
-`inspect` is limited to read/search tools and cannot run `bash`; use
-`implement` for tests, builds, lint, or any shell command, and review its
-command side effects. A Worktree starts from Git `HEAD`, not uncommitted or
-untracked files. `pi_continue` preserves the Worker profile and mode, and only
-works while that non-terminal Worker remains in the current MCP Server; workers
-use `--no-session`, so a `workerId` does not survive an MCP restart.
+[Skill source at v0.1.0](https://github.com/zguiyang/pi-task-exec/tree/v0.1.0/skills/pi-delegate).
 
 ### Manual copy
 
@@ -116,7 +65,6 @@ cp -R skills/adonisjs .cursor/skills/adonisjs
 cp -R skills/lucid .cursor/skills/lucid
 cp -R skills/codebase-guardrails .cursor/skills/codebase-guardrails
 cp -R skills/cursor-delegate .cursor/skills/cursor-delegate
-cp -R skills/pi-delegate .cursor/skills/pi-delegate
 
 # Cursor — user-level
 mkdir -p ~/.cursor/skills
@@ -124,7 +72,6 @@ cp -R skills/adonisjs ~/.cursor/skills/adonisjs
 cp -R skills/lucid ~/.cursor/skills/lucid
 cp -R skills/codebase-guardrails ~/.cursor/skills/codebase-guardrails
 cp -R skills/cursor-delegate ~/.cursor/skills/cursor-delegate
-cp -R skills/pi-delegate ~/.cursor/skills/pi-delegate
 ```
 
 ## How it works
